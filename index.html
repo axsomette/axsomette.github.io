@@ -15,74 +15,83 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
+        /* Masquer la barre de scroll pour le slider horizontal */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
         .tab-active { background-color: white; color: #1e293b; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
         .tab-inactive { color: #64748b; }
         .tab-inactive:hover { color: #334155; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen relative">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen relative flex flex-col">
 
     <!-- Container mis en pleine largeur (w-full) au lieu de max-w-7xl -->
-    <div class="w-full px-4 md:px-8 lg:px-12 py-6">
+    <div class="w-full px-4 md:px-8 lg:px-12 py-6 flex-1">
         
-        <!-- En-tête -->
-        <header class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-8">
+        <!-- En-tête (Responsive repensé) -->
+        <header class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-6 sm:mb-8">
             <div>
-                <h1 class="text-3xl font-bold text-slate-900 flex items-center gap-2">
-                    <i data-lucide="wallet" class="w-8 h-8 text-indigo-600"></i>
-                    Budget de L&L ❤️
+                <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="wallet" class="w-7 h-7 sm:w-8 sm:h-8 text-indigo-600"></i>
+                    Super Calculateur de Budget
                 </h1>
-                <p class="text-slate-500 mt-1">Gérez vos revenus et dépenses intelligemment.</p>
+                <p class="text-sm sm:text-base text-slate-500 mt-1">Gérez vos revenus et dépenses intelligemment.</p>
             </div>
             
-            <div class="flex flex-wrap gap-4 items-center bg-white p-2 rounded-xl shadow-sm border border-slate-200">
+            <!-- Menu Actions : Flex-col sur mobile, Flex-row sur grand écran -->
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-4 items-stretch sm:items-center bg-white p-2 sm:p-3 rounded-xl shadow-sm border border-slate-200 w-full xl:w-auto">
                 
                 <!-- Filtre par Mois -->
-                <div class="flex items-center gap-2 px-2 border-r border-slate-200 pr-4">
-                    <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
-                    <select id="month-filter" onchange="changeMonthFilter()" class="bg-transparent text-sm font-bold text-indigo-700 focus:outline-none cursor-pointer">
+                <div class="flex items-center justify-center sm:justify-start gap-2 px-2 border-b sm:border-b-0 sm:border-r border-slate-200 pb-2 sm:pb-0 pr-0 sm:pr-4">
+                    <i data-lucide="calendar" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                    <select id="month-filter" onchange="changeMonthFilter()" class="bg-transparent text-sm font-bold text-indigo-700 focus:outline-none cursor-pointer w-full sm:w-auto text-center sm:text-left truncate">
                         <option value="all">Tout l'historique</option>
                         <!-- Rempli dynamiquement -->
                     </select>
                 </div>
 
-                <!-- Bouton d'Aide -->
-                <button onclick="openHelpModal()" class="text-sm font-medium text-slate-600 hover:text-indigo-600 flex items-center gap-1.5 px-2 transition-colors" title="Comment ça marche ?">
-                    <i data-lucide="help-circle" class="w-4 h-4"></i> Aide
-                </button>
+                <!-- Boutons d'actions -->
+                <div class="flex flex-wrap justify-center sm:justify-start items-center gap-2 sm:gap-3">
+                    <button onclick="openHelpModal()" class="text-xs sm:text-sm font-medium text-slate-600 hover:text-indigo-600 flex items-center gap-1.5 px-2 transition-colors py-1" title="Comment ça marche ?">
+                        <i data-lucide="help-circle" class="w-4 h-4"></i> Aide
+                    </button>
 
-                <div class="w-px h-5 bg-slate-200"></div> <!-- Séparateur -->
+                    <div class="hidden sm:block w-px h-4 bg-slate-200"></div>
 
-                <button onclick="openCategoryModal()" class="text-sm font-medium text-slate-600 hover:text-indigo-600 flex items-center gap-1.5 px-2 transition-colors" title="Gérer les catégories">
-                    <i data-lucide="settings" class="w-4 h-4"></i> Catégories
-                </button>
+                    <button onclick="openCategoryModal()" class="text-xs sm:text-sm font-medium text-slate-600 hover:text-indigo-600 flex items-center gap-1.5 px-2 transition-colors py-1" title="Gérer les catégories">
+                        <i data-lucide="settings" class="w-4 h-4"></i> Catégories
+                    </button>
 
-                <div class="w-px h-5 bg-slate-200"></div> <!-- Séparateur -->
+                    <div class="hidden sm:block w-px h-4 bg-slate-200"></div>
 
-                <!-- Input fichier caché pour l'importation -->
-                <input type="file" id="import-file" class="hidden" accept=".json" onchange="importJSON(event)">
-                
-                <button onclick="document.getElementById('import-file').click()" class="text-sm text-slate-500 hover:text-indigo-600 flex items-center gap-1.5 px-2 transition-colors" title="Importer un fichier de sauvegarde">
-                    <i data-lucide="upload" class="w-4 h-4"></i> Importer
-                </button>
-                
-                <button onclick="exportJSON()" class="text-sm text-slate-500 hover:text-emerald-600 flex items-center gap-1.5 px-2 transition-colors" title="Sauvegarder sur le PC">
-                    <i data-lucide="download" class="w-4 h-4"></i> Sauvegarder
-                </button>
+                    <!-- Input fichier caché pour l'importation -->
+                    <input type="file" id="import-file" class="hidden" accept=".json" onchange="importJSON(event)">
+                    
+                    <button onclick="document.getElementById('import-file').click()" class="text-xs sm:text-sm font-medium text-slate-500 hover:text-indigo-600 flex items-center gap-1.5 px-2 transition-colors py-1" title="Importer un fichier de sauvegarde">
+                        <i data-lucide="upload" class="w-4 h-4"></i> Importer
+                    </button>
+                    
+                    <div class="hidden sm:block w-px h-4 bg-slate-200"></div>
 
-                <div class="w-px h-5 bg-slate-200"></div> <!-- Séparateur -->
+                    <button onclick="exportJSON()" class="text-xs sm:text-sm font-medium text-slate-500 hover:text-emerald-600 flex items-center gap-1.5 px-2 transition-colors py-1" title="Sauvegarder sur le PC">
+                        <i data-lucide="download" class="w-4 h-4"></i> Sauvegarder
+                    </button>
 
-                <button onclick="resetData()" class="text-sm text-red-500 hover:text-red-700 flex items-center gap-1.5 px-2 transition-colors">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i> Effacer
-                </button>
+                    <div class="hidden sm:block w-px h-4 bg-slate-200"></div>
+
+                    <button onclick="resetData()" class="text-xs sm:text-sm font-medium text-red-500 hover:text-red-700 flex items-center gap-1.5 px-2 transition-colors py-1">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i> Effacer
+                    </button>
+                </div>
             </div>
         </header>
 
         <!-- Vue d'ensemble (Bilan + Grandes catégories dynamiques) -->
-        <section class="flex flex-col lg:flex-row gap-4 mb-8">
+        <section class="flex flex-col lg:flex-row gap-4 mb-8 w-full max-w-full overflow-hidden">
             
             <!-- Carte Globale Bilan -->
-            <div class="bg-indigo-900 text-white rounded-2xl p-6 shadow-lg shadow-indigo-200 lg:w-1/4 xl:w-1/5 flex flex-col justify-center relative overflow-hidden shrink-0">
+            <div class="bg-indigo-900 text-white rounded-2xl p-6 shadow-lg shadow-indigo-200 lg:w-1/4 xl:w-1/5 flex flex-col justify-center relative overflow-hidden shrink-0 z-20">
                 <div class="absolute top-0 right-0 p-4 opacity-10">
                     <i data-lucide="trending-up" class="w-24 h-24"></i>
                 </div>
@@ -104,10 +113,29 @@
                 </div>
             </div>
 
-            <!-- Cartes des Grandes Catégories -->
-            <div id="summary-cards" class="flex-1 flex gap-4 overflow-x-auto pb-2">
-                <!-- Rempli dynamiquement par JS -->
+            <!-- Cartes des Grandes Catégories (Avec slider intuitif et flèches) -->
+            <div class="flex-1 relative flex items-center min-w-0">
+                
+                <!-- Flèche Gauche -->
+                <div class="absolute left-0 top-0 bottom-0 w-12 sm:w-16 bg-gradient-to-r from-slate-50 via-slate-50/80 to-transparent z-10 flex items-center justify-start pointer-events-none">
+                    <button onclick="document.getElementById('summary-cards').scrollBy({left: -280, behavior: 'smooth'})" class="pointer-events-auto bg-white shadow-md border border-slate-200 rounded-full p-1.5 sm:p-2 text-slate-500 hover:text-indigo-600 transition-all focus:outline-none relative -left-2 sm:left-0">
+                        <i data-lucide="chevron-left" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                    </button>
+                </div>
+
+                <!-- Le Slider -->
+                <div id="summary-cards" class="flex-1 flex gap-4 overflow-x-auto pb-4 pt-2 snap-x snap-mandatory scroll-smooth no-scrollbar px-6 sm:px-10">
+                    <!-- Rempli dynamiquement par JS -->
+                </div>
+
+                <!-- Flèche Droite -->
+                <div class="absolute right-0 top-0 bottom-0 w-12 sm:w-16 bg-gradient-to-l from-slate-50 via-slate-50/80 to-transparent z-10 flex items-center justify-end pointer-events-none">
+                    <button onclick="document.getElementById('summary-cards').scrollBy({left: 280, behavior: 'smooth'})" class="pointer-events-auto bg-white shadow-md border border-slate-200 rounded-full p-1.5 sm:p-2 text-indigo-600 hover:text-indigo-800 transition-all focus:outline-none relative -right-2 sm:right-0">
+                        <i data-lucide="chevron-right" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                    </button>
+                </div>
             </div>
+            
         </section>
 
         <!-- Contenu principal -->
@@ -117,7 +145,7 @@
             <div class="lg:col-span-1 xl:col-span-1 space-y-6">
                 
                 <!-- Formulaire Ajout / Modification -->
-                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-sm">
                     <div class="flex justify-between items-center mb-4">
                         <h3 id="form-title" class="text-lg font-bold flex items-center gap-2">
                             <i data-lucide="plus-circle" class="w-5 h-5 text-indigo-500"></i>
@@ -137,8 +165,8 @@
                     
                     <form id="expense-form" class="space-y-4">
                         
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="col-span-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="col-span-1 sm:col-span-2">
                                 <label class="block text-sm font-medium text-slate-700 mb-1">Date</label>
                                 <input type="date" id="date-input" required 
                                     class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
@@ -168,27 +196,27 @@
                         <!-- Option de Récurrence -->
                         <div id="recurring-wrapper" class="flex items-center gap-2 pt-1 pb-2">
                             <input type="checkbox" id="recurring-input" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer">
-                            <label for="recurring-input" class="text-sm font-medium text-slate-600 cursor-pointer select-none">Dépense/Revenu mensuel(le) automatique</label>
+                            <label for="recurring-input" class="text-sm font-medium text-slate-600 cursor-pointer select-none">Dépense/Revenu mensuel(le) auto</label>
                         </div>
 
-                        <div class="flex gap-2 pt-2">
+                        <div class="flex flex-col sm:flex-row gap-2 pt-2">
                             <button type="submit" id="submit-btn"
-                                class="flex-1 bg-indigo-600 text-white font-medium py-2.5 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 transition-all flex justify-center items-center gap-2">
+                                class="flex-1 w-full bg-indigo-600 text-white font-medium py-2.5 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 transition-all flex justify-center items-center gap-2">
                                 <i data-lucide="check" class="w-5 h-5"></i>
                                 <span id="submit-text">Enregistrer</span>
                             </button>
-                            <button type="button" id="cancel-edit-btn" onclick="cancelEdit()" class="hidden bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-lg hover:bg-slate-300 focus:outline-none transition-all flex justify-center items-center" title="Annuler la modification">
-                                <i data-lucide="x" class="w-5 h-5"></i>
+                            <button type="button" id="cancel-edit-btn" onclick="cancelEdit()" class="hidden w-full sm:w-auto bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-lg hover:bg-slate-300 focus:outline-none transition-all flex justify-center items-center" title="Annuler la modification">
+                                <i data-lucide="x" class="w-5 h-5 shrink-0"></i> <span class="sm:hidden ml-2">Annuler</span>
                             </button>
                         </div>
                     </form>
                 </div>
 
                 <!-- Répartition détaillée & Graphique -->
-                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-sm">
                     <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
                         <i data-lucide="pie-chart" class="w-5 h-5 text-indigo-500"></i>
-                        Répartition des Dépenses
+                        Répartition
                     </h3>
                     
                     <!-- Graphique Camembert -->
@@ -204,7 +232,7 @@
 
             <!-- Colonne de droite : Liste des dépenses/revenus -->
             <div class="lg:col-span-2 xl:col-span-3">
-                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm h-full flex flex-col">
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-sm h-full flex flex-col">
                     
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                         <h3 class="text-lg font-bold flex items-center gap-2">
@@ -213,9 +241,9 @@
                         </h3>
                         
                         <!-- Tri -->
-                        <div class="flex items-center gap-2 text-sm bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
-                            <i data-lucide="arrow-up-down" class="w-4 h-4 text-slate-400"></i>
-                            <select id="sort-select" onchange="changeSort()" class="bg-transparent font-medium text-slate-600 focus:outline-none cursor-pointer">
+                        <div class="flex items-center gap-2 text-sm bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 w-full sm:w-auto">
+                            <i data-lucide="arrow-up-down" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                            <select id="sort-select" onchange="changeSort()" class="bg-transparent font-medium text-slate-600 focus:outline-none cursor-pointer w-full sm:w-auto">
                                 <option value="date-desc">Plus récent d'abord</option>
                                 <option value="date-asc">Plus ancien d'abord</option>
                                 <option value="amount-desc">Plus cher d'abord</option>
@@ -237,59 +265,83 @@
             </div>
 
         </div>
+        
+        <!-- Pied de page avec Copyright -->
+        <footer class="mt-12 pt-6 border-t border-slate-200 text-center text-sm text-slate-500 flex items-center justify-center gap-2">
+            &copy; <span id="current-year"></span> Lucas Jimenez Boulot alias Axsom. Tous droits réservés.
+        </footer>
     </div>
 
     <!-- MODAL AIDE -->
     <div id="help-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
-        <div class="bg-white rounded-2xl p-6 md:p-8 shadow-2xl w-full max-w-3xl max-h-[95vh] overflow-y-auto flex flex-col">
+        <div class="bg-white rounded-2xl p-5 sm:p-6 md:p-8 shadow-2xl w-full max-w-3xl max-h-[95vh] overflow-y-auto flex flex-col">
             <div class="flex justify-between items-center mb-6 sticky top-0 bg-white z-10 pb-4 border-b border-slate-100">
-                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    <i data-lucide="help-circle" class="w-6 h-6 text-indigo-500"></i>
-                    Comment fonctionne l'application ?
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="help-circle" class="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500"></i>
+                    Comment ça marche ?
                 </h2>
-                <button onclick="closeHelpModal()" class="text-slate-400 hover:text-slate-700 p-2 bg-slate-100 rounded-full transition-colors">
+                <button onclick="closeHelpModal()" class="text-slate-400 hover:text-slate-700 p-2 bg-slate-100 rounded-full transition-colors shrink-0 ml-2">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
 
-            <div class="space-y-5 text-slate-600">
-                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="font-bold text-slate-800 text-lg mb-2 flex items-center gap-2">
-                        <i data-lucide="plus-circle" class="w-5 h-5 text-indigo-500"></i> 1. Ajouter une opération
+            <div class="space-y-4 sm:space-y-5 text-slate-600">
+                
+                <!-- Section 1 -->
+                <div class="bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-800 text-base sm:text-lg mb-2 flex items-center gap-2">
+                        <i data-lucide="plus-circle" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500"></i> 1. Ajouter une opération
                     </h3>
-                    <p class="text-sm">Remplissez simplement le formulaire pour ajouter une <b>dépense</b> (vos achats) ou un <b>revenu</b> (votre salaire). N'hésitez pas à jouer avec la date pour enregistrer des opérations passées ou préparer celles à venir.</p>
+                    <p class="text-sm">Utilisez le formulaire pour ajouter une <b>dépense</b> (vos achats, factures) ou un <b>revenu</b> (votre salaire, remboursements). Vous pouvez modifier la date pour enregistrer des opérations passées ou prévoir celles à venir.</p>
                 </div>
 
-                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="font-bold text-slate-800 text-lg mb-2 flex items-center gap-2">
-                        <i data-lucide="refresh-cw" class="w-5 h-5 text-indigo-500"></i> 2. La magie du Récurrent
+                <!-- Section 2 -->
+                <div class="bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-800 text-base sm:text-lg mb-2 flex items-center gap-2">
+                        <i data-lucide="refresh-cw" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500"></i> 2. La magie du "Récurrent"
                     </h3>
-                    <p class="text-sm">En cochant la case <i>"Dépense/Revenu mensuel(le) automatique"</i> lors de l'ajout d'une ligne, l'application mémorisera cette opération. <b>Au 1er jour de chaque nouveau mois</b>, elle recréera cette ligne toute seule. C'est idéal pour automatiser le Loyer, les Abonnements ou le Salaire.</p>
+                    <p class="text-sm">En cochant la case <i>"Mensuel(le) automatique"</i>, l'application va mémoriser cette ligne. <b>Au 1er jour de chaque nouveau mois</b>, elle sera recréée toute seule ! C'est l'outil parfait pour gérer votre loyer, vos abonnements internet ou votre salaire sans rien faire.</p>
                 </div>
 
-                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="font-bold text-slate-800 text-lg mb-2 flex items-center gap-2">
-                        <i data-lucide="folder-tree" class="w-5 h-5 text-indigo-500"></i> 3. Gestion experte des Catégories
+                <!-- Section 3 -->
+                <div class="bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-800 text-base sm:text-lg mb-2 flex items-center gap-2">
+                        <i data-lucide="folder-tree" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500"></i> 3. Gérer les Catégories
                     </h3>
-                    <p class="text-sm">Cliquez sur le bouton <b>"Catégories"</b> en haut de l'écran. Vous y créerez vos propres "Dossiers" (ex: Maison) dans lesquels vous glisserez vos sous-catégories (ex: Électricité). Si vous renommez ou déplacez une catégorie, l'application s'occupe de mettre à jour tout votre historique passé intelligemment.</p>
+                    <p class="text-sm">Cliquez sur <b>"Catégories"</b> en haut. Vous pouvez créer des grands "Dossiers" (ex: Maison) et des sous-catégories à l'intérieur. Si vous renommez ou déplacez une catégorie plus tard, tout votre historique passé se mettra à jour automatiquement !</p>
                 </div>
 
-                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="font-bold text-slate-800 text-lg mb-2 flex items-center gap-2">
-                        <i data-lucide="pie-chart" class="w-5 h-5 text-indigo-500"></i> 4. Suivi et Analyse mensuelle
+                <!-- Section 4 -->
+                <div class="bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-800 text-base sm:text-lg mb-2 flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500"></i> 4. Suivi et Analyse mensuelle
                     </h3>
-                    <p class="text-sm">Le graphique "Camembert", les jauges et le grand Bilan s'adaptent instantanément au mois que vous regardez. Utilisez le <b>menu déroulant des dates</b> (en haut) pour cibler un mois précis et voir exactement combien il vous <b>Reste à vivre</b>.</p>
+                    <p class="text-sm">Le grand graphique "Camembert" et le Bilan financier s'adaptent à vos filtres. Utilisez le <b>sélecteur de date</b> tout en haut de l'écran pour isoler un mois précis et voir en un clin d'œil votre <b>Reste à vivre</b>.</p>
                 </div>
 
-                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="font-bold text-slate-800 text-lg mb-2 flex items-center gap-2">
-                        <i data-lucide="lock" class="w-5 h-5 text-indigo-500"></i> 5. Sécurité & Sauvegarde locale
+                <!-- Section 6 (NOUVEAU - Repensé) -->
+                <div class="bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-800 text-base sm:text-lg mb-2 flex items-center gap-2">
+                        <i data-lucide="hard-drive" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500"></i> 5. Sauvegarder & Importer (Très Important !)
                     </h3>
-                    <p class="text-sm"><b>Rien n'est envoyé sur internet.</b> Tout reste enregistré secrètement dans votre navigateur web. Cependant, si vous videz votre historique web, vous risquez de tout perdre ! Pensez à utiliser régulièrement le bouton <b>"Sauvegarder"</b> pour télécharger une copie de vos données sur votre ordinateur.</p>
+                    <div class="text-sm space-y-3">
+                        <p>Vos informations (prix, historique, catégories créées) sont stockées temporairement dans votre navigateur internet. <b>Pour ne rien perdre lorsque vous quittez l'application ou videz votre historique, vous devez utiliser ces boutons :</b></p>
+                        
+                        <div class="flex items-start gap-3 bg-white p-3 rounded-lg border border-slate-100">
+                            <i data-lucide="download" class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5"></i>
+                            <p><b>Sauvegarder :</b> Télécharge un petit fichier de secours (<i>.json</i>) sur votre appareil. Il contient absolument toutes vos données. Pensez à le faire régulièrement pour conserver votre travail.</p>
+                        </div>
+                        
+                        <div class="flex items-start gap-3 bg-white p-3 rounded-lg border border-slate-100">
+                            <i data-lucide="upload" class="w-5 h-5 text-indigo-600 shrink-0 mt-0.5"></i>
+                            <p><b>Importer :</b> Sert à recharger vos données ! Lors de votre prochaine visite, cliquez ici et sélectionnez votre dernier fichier sauvegardé pour que l'application retrouve instantanément toutes vos dépenses, catégories et paramètres.</p>
+                        </div>
+                    </div>
                 </div>
+
             </div>
 
-            <button onclick="closeHelpModal()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3.5 rounded-xl transition-colors shadow-lg mt-8">
+            <button onclick="closeHelpModal()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3.5 rounded-xl transition-colors shadow-lg mt-6">
                 J'ai compris, fermer l'Aide
             </button>
         </div>
@@ -298,53 +350,57 @@
 
     <!-- MODAL GESTION DES CATÉGORIES -->
     <div id="category-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
-        <div class="bg-white rounded-2xl p-6 md:p-8 shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-y-auto flex flex-col">
+        <div class="bg-white rounded-2xl p-5 sm:p-6 md:p-8 shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-y-auto flex flex-col">
             <div class="flex justify-between items-center mb-6 sticky top-0 bg-white z-10 pb-4 border-b border-slate-100">
-                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    <i data-lucide="settings" class="w-6 h-6 text-indigo-500"></i>
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="settings" class="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500"></i>
                     Gérer les catégories
                 </h2>
-                <button onclick="closeCategoryModal()" class="text-slate-400 hover:text-slate-700 p-2 bg-slate-100 rounded-full transition-colors">
+                <button onclick="closeCategoryModal()" class="text-slate-400 hover:text-slate-700 p-2 bg-slate-100 rounded-full transition-colors shrink-0 ml-2">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
 
+            <!-- Grille d'ajout : s'adapte sur mobile -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="font-bold text-slate-700 mb-3 flex items-center gap-2">
-                        <i data-lucide="layout-grid" class="w-5 h-5 text-indigo-400"></i>
+                <!-- Ajouter Grande Catégorie -->
+                <div class="bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-700 mb-3 flex items-center gap-2 text-sm sm:text-base">
+                        <i data-lucide="layout-grid" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400"></i>
                         Nouvelle Grande Catégorie
                     </h3>
-                    <div class="flex gap-2">
-                        <input type="text" id="new-main-cat-input" placeholder="Ex: Véhicules, Santé..." 
-                            class="flex-1 px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
-                        <button onclick="addMainCategory()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm">
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <input type="text" id="new-main-cat-input" placeholder="Ex: Véhicules..." 
+                            class="w-full sm:flex-1 px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                        <button onclick="addMainCategory()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm">
                             Ajouter
                         </button>
                     </div>
                 </div>
 
-                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="font-bold text-slate-700 mb-3 flex items-center gap-2">
-                        <i data-lucide="tag" class="w-5 h-5 text-indigo-400"></i>
+                <!-- Ajouter Sous-Catégorie -->
+                <div class="bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-700 mb-3 flex items-center gap-2 text-sm sm:text-base">
+                        <i data-lucide="tag" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400"></i>
                         Nouvelle Sous-Catégorie
                     </h3>
                     <div class="flex flex-col sm:flex-row gap-2">
                         <select id="parent-main-cat-select" class="w-full sm:w-1/3 px-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
                         </select>
                         <input type="text" id="new-sub-cat-input" placeholder="Ex: Essence, Médecin..." 
-                            class="flex-1 px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
-                        <button onclick="addSubCategory()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm">
+                            class="w-full sm:flex-1 px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                        <button onclick="addSubCategory()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm">
                             Ajouter
                         </button>
                     </div>
                 </div>
             </div>
 
+            <!-- Édition existant -->
             <div class="mb-6 flex-1">
-                <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <h3 class="text-base sm:text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                     <i data-lucide="edit-3" class="w-5 h-5 text-indigo-500"></i>
-                    Modifier ou Déplacer (Dossiers existants)
+                    Modifier (Dossiers existants)
                 </h3>
                 <div id="edit-categories-list" class="w-full"></div>
             </div>
@@ -356,13 +412,16 @@
     </div>
 
     <script>
+        // Met l'année à jour dynamiquement dans le footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
         // Utilitaire échappement HTML
         function escapeHtml(str) {
             if (!str) return '';
             return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // Palettes complètes avec couleurs Hexadécimales pour le graphique
+        // Palettes complètes
         const availablePalettes = [
             { id: "emerald", icon: "home", text: "text-emerald-600", bgLight: "bg-emerald-100", textDark: "text-emerald-700", border: "border-emerald-200", bar: "bg-emerald-500", hex: "#10b981" },
             { id: "blue", icon: "repeat", text: "text-blue-600", bgLight: "bg-blue-100", textDark: "text-blue-700", border: "border-blue-200", bar: "bg-blue-500", hex: "#3b82f6" },
@@ -375,15 +434,13 @@
         ];
 
         // ÉTAT GLOBAL
-        let expenses = []; // Contient Dépenses ET Revenus (identifiés par type)
+        let expenses = []; 
         let appCategories = {}; 
         let editingId = null;
-        
-        let currentMonthFilter = 'all'; // 'all' ou 'YYYY-MM'
+        let currentMonthFilter = 'all'; 
         let currentSort = 'date-desc';
-        let formType = 'expense'; // 'expense' ou 'income'
-        
-        let chartInstance = null; // Graphique Camembert
+        let formType = 'expense'; 
+        let chartInstance = null; 
 
         // DOM Elements
         const form = document.getElementById('expense-form');
@@ -397,7 +454,6 @@
         // Initialisation
         function init() {
             document.getElementById('date-input').value = new Date().toISOString().split('T')[0];
-            
             loadData();
             processRecurringItems(); 
             populateCategoryDropdown();
@@ -406,41 +462,32 @@
             lucide.createIcons();
         }
 
-        // --- GESTION DES RÉCURRENCES ---
+        // GESTION DES RÉCURRENCES
         function processRecurringItems() {
-            const currentMonthStr = new Date().toISOString().slice(0, 7); // Mois actuel (YYYY-MM)
+            const currentMonthStr = new Date().toISOString().slice(0, 7); 
             let newItemsGenerated = false;
 
             expenses.forEach(item => {
-                // On cherche les éléments récurrents "parents" (ceux créés manuellement)
                 if (item.isRecurring && !item.recurringParentId) {
-                    
                     let dateObj = new Date(item.date);
-                    dateObj.setMonth(dateObj.getMonth() + 1); // On commence à vérifier au mois suivant
+                    dateObj.setMonth(dateObj.getMonth() + 1); 
                     let nextMonthStr = dateObj.toISOString().slice(0, 7);
                     
-                    // Tant que le mois à vérifier est inférieur ou égal au mois actuel
                     while (nextMonthStr <= currentMonthStr) {
-                        
-                        const targetMonth = nextMonthStr; // Figer la variable pour le some()
-                        
-                        // Vérifier si la copie de ce mois précis existe déjà (pour ne pas la dupliquer en boucle)
+                        const targetMonth = nextMonthStr; 
                         const alreadyExists = expenses.some(e => 
                             (e.recurringParentId === item.id || e.id === item.id) && 
                             e.date.startsWith(targetMonth)
                         );
                         
                         if (!alreadyExists) {
-                            // La copie n'existe pas, on la crée pour ce mois-là (le 1er du mois)
                             const clone = { ...item };
                             clone.id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
                             clone.date = `${targetMonth}-01`; 
-                            clone.recurringParentId = item.id; // On indique que c'est un enfant
+                            clone.recurringParentId = item.id; 
                             expenses.push(clone);
                             newItemsGenerated = true;
                         }
-                        
-                        // Passer au mois suivant dans la boucle
                         dateObj.setMonth(dateObj.getMonth() + 1);
                         nextMonthStr = dateObj.toISOString().slice(0, 7);
                     }
@@ -483,7 +530,7 @@
         function saveData() { localStorage.setItem('budgetData', JSON.stringify(expenses)); }
         function saveCategories() { localStorage.setItem('budgetCategories', JSON.stringify(appCategories)); }
 
-        // --- FILTRES ET TRI ---
+        // FILTRES ET TRI
         function updateMonthDropdown() {
             const months = new Set();
             expenses.forEach(item => {
@@ -511,17 +558,9 @@
             }
         }
 
-        function changeMonthFilter() {
-            currentMonthFilter = monthSelect.value;
-            render();
-        }
+        function changeMonthFilter() { currentMonthFilter = monthSelect.value; render(); }
+        function changeSort() { currentSort = document.getElementById('sort-select').value; renderList(); }
 
-        function changeSort() {
-            currentSort = document.getElementById('sort-select').value;
-            renderList(); 
-        }
-
-        // Gestion du Type (Dépense / Revenu) dans le formulaire
         function setFormType(type) {
             formType = type;
             const btnExp = document.getElementById('btn-type-expense');
@@ -541,11 +580,8 @@
             }
         }
 
-        // --- RENDU PRINCIPAL ---
-        function render() {
-            updateTotalsAndCards();
-            renderList();
-        }
+        // RENDU PRINCIPAL
+        function render() { updateTotalsAndCards(); renderList(); }
 
         function getFilteredData() {
             if (currentMonthFilter === 'all') return expenses;
@@ -554,11 +590,8 @@
 
         function updateTotalsAndCards() {
             const filteredData = getFilteredData();
-            
-            let totalDepensesCents = 0;
-            let totalRevenusCents = 0;
-            const totalsLarge = {}; 
-            const totalsSmall = {}; 
+            let totalDepensesCents = 0; let totalRevenusCents = 0;
+            const totalsLarge = {}; const totalsSmall = {}; 
 
             for (const key in appCategories) { totalsLarge[key] = 0; }
 
@@ -567,23 +600,18 @@
                     totalRevenusCents += item.amountCents;
                 } else {
                     totalDepensesCents += item.amountCents;
-                    if(totalsLarge[item.largeCat] !== undefined) {
-                        totalsLarge[item.largeCat] += item.amountCents;
-                    }
+                    if(totalsLarge[item.largeCat] !== undefined) totalsLarge[item.largeCat] += item.amountCents;
                     totalsSmall[item.smallCat] = (totalsSmall[item.smallCat] || 0) + item.amountCents;
                 }
             });
 
-            // Bilan
             document.getElementById('total-revenus').textContent = formatCurrency(totalRevenusCents / 100);
             document.getElementById('total-depenses').textContent = formatCurrency(totalDepensesCents / 100);
-            
             const resteCents = totalRevenusCents - totalDepensesCents;
             const resteEl = document.getElementById('reste-a-vivre');
             resteEl.textContent = formatCurrency(resteCents / 100);
             resteEl.className = `text-3xl font-extrabold ${resteCents >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
 
-            // Cartes dynamiques Dépenses
             let htmlCards = '';
             for (const [largeCat, data] of Object.entries(appCategories)) {
                 const amount = totalsLarge[largeCat];
@@ -593,12 +621,12 @@
                 const pal = data.palette;
 
                 htmlCards += `
-                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex-1 min-w-[200px] max-w-[280px]">
+                    <div class="snap-center shrink-0 w-[75vw] sm:w-[220px] max-w-[280px] bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col">
                         <div class="flex items-center gap-2 mb-2 ${pal.text}">
                             <i data-lucide="${pal.icon}" class="w-5 h-5"></i>
                             <h2 class="font-semibold truncate">${largeCat}</h2>
                         </div>
-                        <div class="text-2xl font-bold text-slate-800">${formatCurrency(amount / 100)}</div>
+                        <div class="text-2xl font-bold text-slate-800 mt-auto">${formatCurrency(amount / 100)}</div>
                         <p class="text-xs text-slate-500 mt-1">${pct}</p>
                     </div>
                 `;
@@ -609,7 +637,7 @@
             lucide.createIcons(); 
         }
 
-        // --- GRAPHIQUE CHART.JS ---
+        // GRAPHIQUE CHART.JS
         function renderDetailedBreakdownAndChart(totalsLarge, totalsSmall, totalDepensesCents) {
             breakdownContainer.innerHTML = '';
             
@@ -619,21 +647,14 @@
                 return;
             }
 
-            // 1. Mise à jour du graphique Camembert (Grandes Catégories)
-            const chartLabels = [];
-            const chartData = [];
-            const chartColors = [];
-
+            const chartLabels = []; const chartData = []; const chartColors = [];
             for (const [largeCat, amount] of Object.entries(totalsLarge)) {
                 if (amount > 0) {
-                    chartLabels.push(largeCat);
-                    chartData.push(amount / 100);
-                    
-                    let hex = '#94a3b8'; // Gris par défaut
+                    chartLabels.push(largeCat); chartData.push(amount / 100);
+                    let hex = '#94a3b8'; 
                     const catPalette = appCategories[largeCat].palette;
-                    if (catPalette.hex) {
-                        hex = catPalette.hex;
-                    } else {
+                    if (catPalette.hex) hex = catPalette.hex;
+                    else {
                         const match = availablePalettes.find(p => p.id === catPalette.id);
                         if (match) hex = match.hex;
                     }
@@ -643,77 +664,55 @@
 
             const ctx = document.getElementById('budgetChart').getContext('2d');
             if(chartInstance) chartInstance.destroy();
-            
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: chartLabels,
-                    datasets: [{
-                        data: chartData,
-                        backgroundColor: chartColors,
-                        borderWidth: 2,
-                        borderColor: '#ffffff',
-                        hoverOffset: 4
-                    }]
+                    datasets: [{ data: chartData, backgroundColor: chartColors, borderWidth: 2, borderColor: '#ffffff', hoverOffset: 4 }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
-                        tooltip: { callbacks: { label: function(context) { return formatCurrency(context.raw); } } }
-                    },
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } }, tooltip: { callbacks: { label: function(context) { return formatCurrency(context.raw); } } } },
                     cutout: '65%'
                 }
             });
 
-            // 2. Mise à jour des barres détaillées (Petites Catégories)
             const sortedSmallCats = Object.entries(totalsSmall).sort((a, b) => b[1] - a[1]);
-
             sortedSmallCats.forEach(([cat, amountCents]) => {
                 const percent = ((amountCents / totalDepensesCents) * 100).toFixed(1);
-                
                 let parentCat = null;
-                for (const [large, data] of Object.entries(appCategories)) {
-                    if (data.subCats.includes(cat)) { parentCat = large; break; }
-                }
+                for (const [large, data] of Object.entries(appCategories)) { if (data.subCats.includes(cat)) { parentCat = large; break; } }
                 const barColor = parentCat && appCategories[parentCat] ? appCategories[parentCat].palette.bar : "bg-slate-400";
 
-                const div = document.createElement('div');
-                div.className = "mb-3";
+                const div = document.createElement('div'); div.className = "mb-3";
                 div.innerHTML = `
                     <div class="flex justify-between text-sm mb-1">
                         <span class="font-medium text-slate-700">${cat}</span>
                         <span class="text-slate-500">${formatCurrency(amountCents / 100)} (${percent}%)</span>
                     </div>
-                    <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                        <div class="${barColor} h-2 rounded-full" style="width: ${percent}%"></div>
-                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden"><div class="${barColor} h-2 rounded-full" style="width: ${percent}%"></div></div>
                 `;
                 breakdownContainer.appendChild(div);
             });
         }
 
-        // --- LISTE ET TRI ---
+        // LISTE ET TRI
         function renderList() {
             expenseList.innerHTML = '';
             let filteredData = getFilteredData();
             
             if (filteredData.length === 0) {
-                expenseList.appendChild(emptyState);
-                emptyState.style.display = 'block';
-                return;
+                expenseList.appendChild(emptyState); emptyState.style.display = 'block'; return;
             }
             emptyState.style.display = 'none';
 
-            // Application du tri
             filteredData.sort((a, b) => {
                 if (currentSort === 'date-desc') return new Date(b.date) - new Date(a.date);
                 if (currentSort === 'date-asc') return new Date(a.date) - new Date(b.date);
                 if (currentSort === 'amount-desc') return b.amountCents - a.amountCents;
                 if (currentSort === 'amount-asc') return a.amountCents - b.amountCents;
                 if (currentSort === 'category') {
-                    const catA = a.type === 'income' ? 'AAA' : a.largeCat + a.smallCat; // Revenus en premier
+                    const catA = a.type === 'income' ? 'AAA' : a.largeCat + a.smallCat; 
                     const catB = b.type === 'income' ? 'AAA' : b.largeCat + b.smallCat;
                     return catA.localeCompare(catB);
                 }
@@ -722,63 +721,58 @@
 
             filteredData.forEach(item => {
                 const li = document.createElement('li');
-                li.className = "flex justify-between items-center p-4 bg-white border border-slate-100 rounded-xl hover:shadow-md transition-shadow group";
+                li.className = "flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 sm:p-4 bg-white border border-slate-100 rounded-xl hover:shadow-md transition-shadow group gap-3 sm:gap-0";
                 
                 const amountFormatted = formatCurrency(item.amountCents / 100);
                 const dateFormatted = new Date(item.date).toLocaleDateString('fr-FR', {day: 'numeric', month: 'short', year: 'numeric'});
-                
                 const recIcon = item.isRecurring ? `<i data-lucide="refresh-cw" class="w-3 h-3 text-slate-400 ml-1 inline" title="Récurrent"></i>` : '';
 
                 if (item.type === 'income') {
-                    // Affichage Revenu
                     li.innerHTML = `
-                        <div class="flex items-start gap-4">
-                            <div class="flex-shrink-0 mt-1">
-                                <span class="inline-block px-2.5 py-1 rounded-md text-xs font-bold border bg-emerald-100 text-emerald-700 border-emerald-200">
-                                    REVENU
-                                </span>
+                        <div class="flex items-start gap-3 w-full sm:w-auto overflow-hidden">
+                            <div class="flex-shrink-0 mt-0.5">
+                                <span class="inline-block px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-bold border bg-emerald-100 text-emerald-700 border-emerald-200">REVENU</span>
                             </div>
-                            <div>
-                                <p class="font-semibold text-slate-800">${escapeHtml(item.desc)} ${recIcon}</p>
-                                <p class="text-xs text-slate-400">${dateFormatted}</p>
+                            <div class="min-w-0 flex-1">
+                                <p class="font-semibold text-sm sm:text-base text-slate-800 truncate">${escapeHtml(item.desc)} ${recIcon}</p>
+                                <p class="text-xs text-slate-400 truncate">${dateFormatted}</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-emerald-600 mr-2">+ ${amountFormatted}</span>
-                            <div class="flex opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                                <button onclick="editItem('${item.id}')" class="text-slate-400 hover:text-amber-500 p-2 rounded-lg hover:bg-amber-50 transition-colors" title="Modifier">
+                        <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto pl-1 sm:pl-0">
+                            <span class="font-bold text-sm sm:text-base text-emerald-600 mr-2">+ ${amountFormatted}</span>
+                            <div class="flex opacity-100 sm:opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity gap-1">
+                                <button onclick="editItem('${item.id}')" class="text-slate-400 hover:text-amber-500 p-1.5 sm:p-2 rounded-lg bg-amber-50 sm:bg-transparent hover:bg-amber-50 transition-colors" title="Modifier">
                                     <i data-lucide="edit-2" class="w-4 h-4"></i>
                                 </button>
-                                <button onclick="deleteItem('${item.id}')" class="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition-colors" title="Supprimer">
+                                <button onclick="deleteItem('${item.id}')" class="text-slate-400 hover:text-red-500 p-1.5 sm:p-2 rounded-lg bg-red-50 sm:bg-transparent hover:bg-red-50 transition-colors" title="Supprimer">
                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                                 </button>
                             </div>
                         </div>
                     `;
                 } else {
-                    // Affichage Dépense
                     const pal = appCategories[item.largeCat] ? appCategories[item.largeCat].palette : null;
                     const colorClass = pal ? `${pal.bgLight} ${pal.textDark} ${pal.border}` : "bg-slate-100 text-slate-700 border-slate-200";
                     
                     li.innerHTML = `
-                        <div class="flex items-start gap-4">
-                            <div class="flex-shrink-0 mt-1">
-                                <span class="inline-block px-2.5 py-1 rounded-md text-xs font-medium border ${colorClass}">
+                        <div class="flex items-start gap-3 w-full sm:w-auto overflow-hidden">
+                            <div class="flex-shrink-0 mt-0.5">
+                                <span class="inline-block px-2 py-1 rounded-md text-[10px] sm:text-xs font-medium border ${colorClass} truncate max-w-[80px] sm:max-w-none">
                                     ${escapeHtml(item.smallCat)}
                                 </span>
                             </div>
-                            <div>
-                                <p class="font-semibold text-slate-800">${escapeHtml(item.desc)} ${recIcon}</p>
-                                <p class="text-xs text-slate-400">${dateFormatted} • ${escapeHtml(item.largeCat)}</p>
+                            <div class="min-w-0 flex-1">
+                                <p class="font-semibold text-sm sm:text-base text-slate-800 truncate">${escapeHtml(item.desc)} ${recIcon}</p>
+                                <p class="text-xs text-slate-400 truncate">${dateFormatted} • ${escapeHtml(item.largeCat)}</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-slate-700 mr-2">- ${amountFormatted}</span>
-                            <div class="flex opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                                <button onclick="editItem('${item.id}')" class="text-slate-400 hover:text-amber-500 p-2 rounded-lg hover:bg-amber-50 transition-colors" title="Modifier">
+                        <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto pl-1 sm:pl-0">
+                            <span class="font-bold text-sm sm:text-base text-slate-700 mr-2">- ${amountFormatted}</span>
+                            <div class="flex opacity-100 sm:opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity gap-1">
+                                <button onclick="editItem('${item.id}')" class="text-slate-400 hover:text-amber-500 p-1.5 sm:p-2 rounded-lg bg-amber-50 sm:bg-transparent hover:bg-amber-50 transition-colors" title="Modifier">
                                     <i data-lucide="edit-2" class="w-4 h-4"></i>
                                 </button>
-                                <button onclick="deleteItem('${item.id}')" class="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition-colors" title="Supprimer">
+                                <button onclick="deleteItem('${item.id}')" class="text-slate-400 hover:text-red-500 p-1.5 sm:p-2 rounded-lg bg-red-50 sm:bg-transparent hover:bg-red-50 transition-colors" title="Supprimer">
                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                                 </button>
                             </div>
@@ -791,10 +785,9 @@
             lucide.createIcons();
         }
 
-        // --- FORMULAIRE D'AJOUT / MODIFICATION ---
+        // FORMULAIRE D'AJOUT / MODIFICATION
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            
             const desc = document.getElementById('desc-input').value;
             const amountCents = Math.round(parseFloat(document.getElementById('amount-input').value) * 100);
             const dateVal = document.getElementById('date-input').value;
@@ -803,87 +796,53 @@
             let smallCat = '', largeCat = '';
             if (formType === 'expense') {
                 const selectedOption = selectCat.options[selectCat.selectedIndex];
-                smallCat = selectedOption.value;
-                largeCat = selectedOption.dataset.largeCategory;
+                smallCat = selectedOption.value; largeCat = selectedOption.dataset.largeCategory;
             }
 
-            const newItem = {
-                id: editingId ? editingId : Date.now().toString(),
-                type: formType,
-                desc: desc,
-                amountCents: amountCents,
-                date: dateVal,
-                isRecurring: isRec
-            };
-
-            if (formType === 'expense') {
-                newItem.smallCat = smallCat;
-                newItem.largeCat = largeCat;
-            }
+            const newItem = { id: editingId ? editingId : Date.now().toString(), type: formType, desc: desc, amountCents: amountCents, date: dateVal, isRecurring: isRec };
+            if (formType === 'expense') { newItem.smallCat = smallCat; newItem.largeCat = largeCat; }
 
             if (editingId) {
                 const index = expenses.findIndex(e => e.id === editingId);
-                // Si on modifie une occurrence récurrente, on garde son lien parent
                 if (index !== -1) {
                     if (expenses[index].recurringParentId) newItem.recurringParentId = expenses[index].recurringParentId;
                     expenses[index] = newItem;
                 }
                 cancelEdit(); 
             } else {
-                expenses.push(newItem); 
-                form.reset();
-                document.getElementById('date-input').value = new Date().toISOString().split('T')[0]; // reset date
+                expenses.push(newItem); form.reset(); document.getElementById('date-input').value = new Date().toISOString().split('T')[0]; 
             }
-            
-            saveData();
-            updateMonthDropdown();
-            render();
+            saveData(); updateMonthDropdown(); render();
         });
 
         function editItem(id) {
             const item = expenses.find(e => e.id === id);
             if (!item) return;
             
-            editingId = id;
-            setFormType(item.type || 'expense');
-            
+            editingId = id; setFormType(item.type || 'expense');
             document.getElementById('date-input').value = item.date;
             document.getElementById('desc-input').value = item.desc;
             document.getElementById('amount-input').value = (item.amountCents / 100).toFixed(2);
             document.getElementById('recurring-input').checked = !!item.isRecurring;
-            
-            if (item.type !== 'income') {
-                document.getElementById('category-input').value = item.smallCat;
-            }
+            if (item.type !== 'income') document.getElementById('category-input').value = item.smallCat;
             
             document.getElementById('form-title').innerHTML = '<i data-lucide="edit-2" class="w-5 h-5 text-amber-500"></i> Modifier la ligne';
             document.getElementById('submit-text').textContent = "Mettre à jour";
             
             const submitBtn = document.getElementById('submit-btn');
-            submitBtn.classList.replace('bg-indigo-600', 'bg-amber-500');
-            submitBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-amber-600');
-            submitBtn.classList.replace('focus:ring-indigo-200', 'focus:ring-amber-200');
-            
+            submitBtn.classList.replace('bg-indigo-600', 'bg-amber-500'); submitBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-amber-600'); submitBtn.classList.replace('focus:ring-indigo-200', 'focus:ring-amber-200');
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
             
-            lucide.createIcons();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            lucide.createIcons(); window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function cancelEdit() {
-            editingId = null;
-            form.reset();
-            document.getElementById('date-input').value = new Date().toISOString().split('T')[0];
-            setFormType('expense');
-            
+            editingId = null; form.reset(); document.getElementById('date-input').value = new Date().toISOString().split('T')[0]; setFormType('expense');
             document.getElementById('form-title').innerHTML = '<i data-lucide="plus-circle" class="w-5 h-5 text-indigo-500"></i> Ajouter une ligne';
             document.getElementById('submit-text').textContent = "Enregistrer";
             
             const submitBtn = document.getElementById('submit-btn');
-            submitBtn.classList.replace('bg-amber-500', 'bg-indigo-600');
-            submitBtn.classList.replace('hover:bg-amber-600', 'hover:bg-indigo-700');
-            submitBtn.classList.replace('focus:ring-amber-200', 'focus:ring-indigo-200');
-            
+            submitBtn.classList.replace('bg-amber-500', 'bg-indigo-600'); submitBtn.classList.replace('hover:bg-amber-600', 'hover:bg-indigo-700'); submitBtn.classList.replace('focus:ring-amber-200', 'focus:ring-indigo-200');
             document.getElementById('cancel-edit-btn').classList.add('hidden');
             
             lucide.createIcons();
@@ -891,87 +850,51 @@
 
         function deleteItem(id) {
             if (editingId === id) return alert("Terminez ou annulez la modification en cours avant de supprimer.");
-            
             const item = expenses.find(e => e.id === id);
-            
-            // Si c'est un parent récurrent, prévenir l'utilisateur
             if (item && item.isRecurring && !item.recurringParentId) {
                 if(!confirm("Ceci est une dépense récurrente parente. Voulez-vous vraiment la supprimer ? (Les occurrences passées seront conservées).")) return;
             }
-
             expenses = expenses.filter(e => e.id !== id);
-            saveData();
-            updateMonthDropdown();
-            render();
+            saveData(); updateMonthDropdown(); render();
         }
 
         function resetData() {
             if(confirm("Êtes-vous sûr de vouloir TOUT effacer (Dépenses, Revenus ET Catégories) ?")) {
-                expenses = [];
-                appCategories = {}; 
-                localStorage.removeItem('budgetData');
-                localStorage.removeItem('budgetCategories');
-                loadData(); 
-                populateCategoryDropdown();
-                updateMonthDropdown();
-                render();
+                expenses = []; appCategories = {}; localStorage.removeItem('budgetData'); localStorage.removeItem('budgetCategories');
+                loadData(); populateCategoryDropdown(); updateMonthDropdown(); render();
             }
         }
 
 
-        // --- MODALS (CATÉGORIES & AIDE) ---
-        function openCategoryModal() {
-            document.getElementById('category-modal').classList.remove('hidden');
-            updateModalSelect();
-            renderEditCategories(); 
-        }
-
-        function closeCategoryModal() {
-            document.getElementById('category-modal').classList.add('hidden');
-        }
-
-        function openHelpModal() {
-            document.getElementById('help-modal').classList.remove('hidden');
-        }
-
-        function closeHelpModal() {
-            document.getElementById('help-modal').classList.add('hidden');
-        }
+        // MODALS (CATÉGORIES & AIDE)
+        function openCategoryModal() { document.getElementById('category-modal').classList.remove('hidden'); updateModalSelect(); renderEditCategories(); }
+        function closeCategoryModal() { document.getElementById('category-modal').classList.add('hidden'); }
+        function openHelpModal() { document.getElementById('help-modal').classList.remove('hidden'); }
+        function closeHelpModal() { document.getElementById('help-modal').classList.add('hidden'); }
 
         function updateModalSelect() {
-            const select = document.getElementById('parent-main-cat-select');
-            select.innerHTML = '';
+            const select = document.getElementById('parent-main-cat-select'); select.innerHTML = '';
             for (const mainCat in appCategories) {
-                const option = document.createElement('option');
-                option.value = mainCat;
-                option.textContent = mainCat;
-                select.appendChild(option);
+                const option = document.createElement('option'); option.value = mainCat; option.textContent = mainCat; select.appendChild(option);
             }
         }
 
         function addMainCategory() {
-            const input = document.getElementById('new-main-cat-input');
-            const name = input.value.trim();
+            const input = document.getElementById('new-main-cat-input'); const name = input.value.trim();
             if (!name) return alert("Veuillez entrer un nom.");
             if (appCategories[name]) return alert("Cette catégorie existe déjà.");
-
             const usedPaletteIds = Object.values(appCategories).map(c => c.palette.id);
             const unusedPalettes = availablePalettes.filter(p => !usedPaletteIds.includes(p.id));
             const selectedPalette = unusedPalettes.length > 0 ? unusedPalettes[0] : availablePalettes[Math.floor(Math.random() * availablePalettes.length)];
-
             appCategories[name] = { palette: selectedPalette, subCats: ["Divers"] };
             saveCategories(); input.value = ''; updateModalSelect(); populateCategoryDropdown(); renderEditCategories(); render(); 
         }
 
         function addSubCategory() {
-            const input = document.getElementById('new-sub-cat-input');
-            const select = document.getElementById('parent-main-cat-select');
-            const name = input.value.trim();
-            const parent = select.value;
-
+            const input = document.getElementById('new-sub-cat-input'); const select = document.getElementById('parent-main-cat-select');
+            const name = input.value.trim(); const parent = select.value;
             if (!name) return alert("Veuillez entrer un nom de sous-catégorie.");
             if (appCategories[parent].subCats.includes(name)) return alert("Cette sous-catégorie existe déjà ici.");
-
             appCategories[parent].subCats.push(name);
             saveCategories(); input.value = ''; populateCategoryDropdown(); renderEditCategories(); 
         }
@@ -991,22 +914,25 @@
 
                 let subCatsHtml = '';
                 data.subCats.forEach((subCat, subIndex) => {
+                    // Refonte de la ligne des sous-catégories pour un meilleur responsive
                     subCatsHtml += `
                         <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                            <div class="flex items-center gap-2 mb-2.5">
+                            <div class="flex flex-col sm:flex-row gap-2 mb-2.5">
                                 <input type="text" id="input_name_sub_${mainIndex}_${subIndex}" value="${escapeHtml(subCat)}" 
                                     onkeypress="if(event.key === 'Enter') updateSubCategory(${mainIndex}, ${subIndex})"
-                                    class="flex-1 w-full px-2.5 py-1.5 text-sm font-medium text-slate-700 border border-slate-200 rounded-md focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 focus:outline-none transition-colors">
-                                <button onclick="updateSubCategory(${mainIndex}, ${subIndex})" class="text-indigo-600 hover:text-white hover:bg-indigo-500 p-1.5 bg-indigo-50 rounded-md transition-colors" title="Enregistrer">
-                                    <i data-lucide="save" class="w-4 h-4"></i>
-                                </button>
-                                <button onclick="deleteSubCategory(${mainIndex}, ${subIndex})" class="text-red-500 hover:text-white hover:bg-red-500 p-1.5 bg-red-50 rounded-md transition-colors" title="Supprimer">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                </button>
+                                    class="w-full sm:flex-1 px-2.5 py-1.5 text-sm font-medium text-slate-700 border border-slate-200 rounded-md focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 focus:outline-none transition-colors">
+                                <div class="flex gap-2 w-full sm:w-auto">
+                                    <button onclick="updateSubCategory(${mainIndex}, ${subIndex})" class="flex-1 sm:flex-none flex justify-center text-indigo-600 hover:text-white hover:bg-indigo-500 p-1.5 bg-indigo-50 rounded-md transition-colors" title="Enregistrer">
+                                        <i data-lucide="save" class="w-4 h-4"></i>
+                                    </button>
+                                    <button onclick="deleteSubCategory(${mainIndex}, ${subIndex})" class="flex-1 sm:flex-none flex justify-center text-red-500 hover:text-white hover:bg-red-500 p-1.5 bg-red-50 rounded-md transition-colors" title="Supprimer">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-2 bg-slate-50 rounded-md px-2 py-1.5 border border-slate-100">
+                            <div class="flex items-center gap-2 bg-slate-50 rounded-md px-2 py-1.5 border border-slate-100 w-full overflow-hidden">
                                 <i data-lucide="folder" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                                <select id="select_move_sub_${mainIndex}_${subIndex}" onchange="updateSubCategory(${mainIndex}, ${subIndex})" class="flex-1 text-xs text-slate-600 bg-transparent focus:outline-none cursor-pointer">
+                                <select id="select_move_sub_${mainIndex}_${subIndex}" onchange="updateSubCategory(${mainIndex}, ${subIndex})" class="w-full text-xs text-slate-600 bg-transparent focus:outline-none cursor-pointer truncate">
                                     ${moveOptions}
                                 </select>
                             </div>
@@ -1014,20 +940,21 @@
                     `;
                 });
 
+                // Refonte de l'en-tête de la carte grande catégorie pour le responsive
                 html += `
                     <div class="flex flex-col bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden h-full">
-                        <div class="bg-white p-4 border-b border-slate-200 flex flex-col gap-3">
-                            <div class="flex items-center gap-3">
-                                <div class="p-2 rounded-xl ${data.palette.bgLight} ${data.palette.textDark} shrink-0"><i data-lucide="${data.palette.icon}" class="w-5 h-5"></i></div>
+                        <div class="bg-white p-3 sm:p-4 border-b border-slate-200 flex flex-col gap-3">
+                            <div class="flex items-center gap-2 sm:gap-3">
+                                <div class="p-1.5 sm:p-2 rounded-xl ${data.palette.bgLight} ${data.palette.textDark} shrink-0"><i data-lucide="${data.palette.icon}" class="w-4 h-4 sm:w-5 sm:h-5"></i></div>
                                 <input type="text" id="input_main_${mainIndex}" value="${escapeHtml(mainCat)}" onkeypress="if(event.key === 'Enter') updateMainCategory(${mainIndex})"
-                                    class="font-bold text-lg text-slate-800 w-full bg-transparent border-b-2 border-transparent hover:border-slate-300 focus:border-indigo-500 focus:outline-none px-1 py-0.5">
+                                    class="font-bold text-base sm:text-lg text-slate-800 w-full bg-transparent border-b-2 border-transparent hover:border-slate-300 focus:border-indigo-500 focus:outline-none px-1 py-0.5 truncate">
                             </div>
-                            <div class="flex gap-2">
+                            <div class="flex flex-col sm:flex-row gap-2">
                                 <button onclick="updateMainCategory(${mainIndex})" class="flex-1 flex justify-center items-center gap-1.5 text-xs font-medium text-indigo-700 bg-indigo-100 hover:bg-indigo-200 py-2 rounded-lg transition-colors"><i data-lucide="save" class="w-3.5 h-3.5"></i> Renommer</button>
                                 <button onclick="deleteMainCategory(${mainIndex})" class="flex-1 flex justify-center items-center gap-1.5 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 py-2 rounded-lg transition-colors"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Supprimer</button>
                             </div>
                         </div>
-                        <div class="p-4 space-y-3 flex-1 overflow-y-auto" style="max-height: 350px;">
+                        <div class="p-3 sm:p-4 space-y-3 flex-1 overflow-y-auto" style="max-height: 350px;">
                             ${subCatsHtml || '<div class="text-center py-6 text-sm text-slate-400 italic bg-white rounded-xl border border-dashed border-slate-200">Aucune sous-catégorie.</div>'}
                         </div>
                     </div>
@@ -1086,8 +1013,7 @@
             }
         }
 
-
-        // --- EXPORT / IMPORT ---
+        // EXPORT / IMPORT
         function exportJSON() {
             const exportData = { expenses: expenses, categories: appCategories };
             const dataStr = JSON.stringify(exportData, null, 2);
