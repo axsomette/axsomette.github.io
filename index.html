@@ -145,7 +145,7 @@
             <div class="lg:col-span-1 xl:col-span-1 space-y-6 max-w-full">
                 
                 <!-- Formulaire Ajout / Modification -->
-                <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-sm w-full max-w-full overflow-hidden">
+                <div id="form-container" class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-sm w-full max-w-full overflow-hidden transition-all duration-300">
                     <div class="flex justify-between items-center mb-4">
                         <h3 id="form-title" class="text-lg font-bold flex items-center gap-2">
                             <i data-lucide="plus-circle" class="w-5 h-5 text-indigo-500"></i>
@@ -165,29 +165,31 @@
                     
                     <form id="expense-form" class="space-y-4 w-full">
                         
-                        <!-- Champ Date corrigé : structure simplifiée et box-sizing strict pour iOS -->
+                        <!-- Champ Date corrigé : Utilisation d'un wrapper pour bloquer le bug Safari/iOS -->
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Date</label>
-                            <input type="date" id="date-input" required 
-                                class="w-full block box-border appearance-none min-w-0 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                            <div class="w-full bg-slate-50 border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 transition-shadow flex items-center">
+                                <input type="date" id="date-input" required 
+                                    class="w-full px-4 py-2 bg-transparent border-none outline-none focus:outline-none focus:ring-0 text-slate-800 m-0">
+                            </div>
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Nom / Description</label>
                             <input type="text" id="desc-input" required placeholder="Ex: Auchan, Salaire..." 
-                                class="w-full block box-border min-w-0 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow text-slate-800">
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Montant (€)</label>
                             <input type="number" id="amount-input" required min="0.01" step="0.01" placeholder="0.00" 
-                                class="w-full block box-border min-w-0 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow text-slate-800">
                         </div>
 
                         <div id="category-wrapper">
                             <label class="block text-sm font-medium text-slate-700 mb-1">Catégorie</label>
                             <select id="category-input" 
-                                class="w-full block box-border min-w-0 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow text-slate-800">
                                 <!-- Rempli dynamiquement par JS -->
                             </select>
                         </div>
@@ -600,7 +602,10 @@
                 } else {
                     totalDepensesCents += item.amountCents;
                     if(totalsLarge[item.largeCat] !== undefined) totalsLarge[item.largeCat] += item.amountCents;
-                    totalsSmall[item.smallCat] = (totalsSmall[item.smallCat] || 0) + item.amountCents;
+                    
+                    // NOUVEAU : On crée une clé unique combinant Dossier + Sous-catégorie pour éviter les doublons
+                    const compoundKey = item.largeCat + '__||__' + item.smallCat;
+                    totalsSmall[compoundKey] = (totalsSmall[compoundKey] || 0) + item.amountCents;
                 }
             });
 
@@ -677,17 +682,18 @@
                 }
             });
 
+            // NOUVEAU : On décode notre clé unique pour afficher la bonne barre avec la bonne couleur
             const sortedSmallCats = Object.entries(totalsSmall).sort((a, b) => b[1] - a[1]);
-            sortedSmallCats.forEach(([cat, amountCents]) => {
+            sortedSmallCats.forEach(([compoundKey, amountCents]) => {
+                const [largeCat, cat] = compoundKey.split('__||__');
                 const percent = ((amountCents / totalDepensesCents) * 100).toFixed(1);
-                let parentCat = null;
-                for (const [large, data] of Object.entries(appCategories)) { if (data.subCats.includes(cat)) { parentCat = large; break; } }
-                const barColor = parentCat && appCategories[parentCat] ? appCategories[parentCat].palette.bar : "bg-slate-400";
+                
+                const barColor = appCategories[largeCat] ? appCategories[largeCat].palette.bar : "bg-slate-400";
 
                 const div = document.createElement('div'); div.className = "mb-3";
                 div.innerHTML = `
                     <div class="flex justify-between text-sm mb-1">
-                        <span class="font-medium text-slate-700">${cat}</span>
+                        <span class="font-medium text-slate-700">${escapeHtml(cat)}</span>
                         <span class="text-slate-500">${formatCurrency(amountCents / 100)} (${percent}%)</span>
                     </div>
                     <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden"><div class="${barColor} h-2 rounded-full" style="width: ${percent}%"></div></div>
@@ -833,6 +839,11 @@
             submitBtn.classList.replace('bg-indigo-600', 'bg-amber-500'); submitBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-amber-600'); submitBtn.classList.replace('focus:ring-indigo-200', 'focus:ring-amber-200');
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
             
+            // Met en surbrillance le bloc formulaire
+            const formContainer = document.getElementById('form-container');
+            formContainer.classList.remove('border-slate-200', 'shadow-sm');
+            formContainer.classList.add('border-amber-500', 'ring-4', 'ring-amber-500/20', 'shadow-lg', 'shadow-amber-500/20');
+            
             lucide.createIcons(); window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -844,6 +855,11 @@
             const submitBtn = document.getElementById('submit-btn');
             submitBtn.classList.replace('bg-amber-500', 'bg-indigo-600'); submitBtn.classList.replace('hover:bg-amber-600', 'hover:bg-indigo-700'); submitBtn.classList.replace('focus:ring-amber-200', 'focus:ring-indigo-200');
             document.getElementById('cancel-edit-btn').classList.add('hidden');
+            
+            // Retire la surbrillance du bloc formulaire
+            const formContainer = document.getElementById('form-container');
+            formContainer.classList.remove('border-amber-500', 'ring-4', 'ring-amber-500/20', 'shadow-lg', 'shadow-amber-500/20');
+            formContainer.classList.add('border-slate-200', 'shadow-sm');
             
             lucide.createIcons();
         }
