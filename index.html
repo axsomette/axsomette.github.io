@@ -24,10 +24,10 @@
         .tab-inactive:hover { color: #334155; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen relative flex flex-col">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen relative flex flex-col overflow-x-hidden">
 
     <!-- Container mis en pleine largeur (w-full) au lieu de max-w-7xl -->
-    <div class="w-full px-4 md:px-8 lg:px-12 py-6 flex-1">
+    <div class="w-full px-4 md:px-8 lg:px-12 py-6 flex-1 max-w-full">
         
         <!-- En-tête (Responsive repensé) -->
         <header class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-6 sm:mb-8">
@@ -139,13 +139,13 @@
         </section>
 
         <!-- Contenu principal -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8 max-w-full">
             
             <!-- Colonne de gauche : Formulaire & Graphique -->
-            <div class="lg:col-span-1 xl:col-span-1 space-y-6">
+            <div class="lg:col-span-1 xl:col-span-1 space-y-6 max-w-full">
                 
                 <!-- Formulaire Ajout / Modification -->
-                <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-sm">
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-sm w-full max-w-full overflow-hidden">
                     <div class="flex justify-between items-center mb-4">
                         <h3 id="form-title" class="text-lg font-bold flex items-center gap-2">
                             <i data-lucide="plus-circle" class="w-5 h-5 text-indigo-500"></i>
@@ -163,40 +163,39 @@
                         </button>
                     </div>
                     
-                    <form id="expense-form" class="space-y-4">
+                    <form id="expense-form" class="space-y-4 w-full">
                         
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div class="col-span-1 sm:col-span-2">
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Date</label>
-                                <input type="date" id="date-input" required 
-                                    class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
-                            </div>
+                        <!-- Champ Date corrigé pour éviter les dépassements sur iOS -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Date</label>
+                            <input type="date" id="date-input" required 
+                                class="w-full block max-w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Nom / Description</label>
                             <input type="text" id="desc-input" required placeholder="Ex: Auchan, Salaire..." 
-                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                                class="w-full block max-w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Montant (€)</label>
                             <input type="number" id="amount-input" required min="0.01" step="0.01" placeholder="0.00" 
-                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                                class="w-full block max-w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
                         </div>
 
                         <div id="category-wrapper">
                             <label class="block text-sm font-medium text-slate-700 mb-1">Catégorie</label>
                             <select id="category-input" 
-                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                                class="w-full block max-w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
                                 <!-- Rempli dynamiquement par JS -->
                             </select>
                         </div>
 
                         <!-- Option de Récurrence -->
-                        <div id="recurring-wrapper" class="flex items-center gap-2 pt-1 pb-2">
-                            <input type="checkbox" id="recurring-input" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer">
-                            <label for="recurring-input" class="text-sm font-medium text-slate-600 cursor-pointer select-none">Dépense/Revenu mensuel(le) auto</label>
+                        <div id="recurring-wrapper" class="flex items-start sm:items-center gap-2 pt-1 pb-2">
+                            <input type="checkbox" id="recurring-input" class="w-4 h-4 mt-0.5 sm:mt-0 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer shrink-0">
+                            <label for="recurring-input" class="text-sm font-medium text-slate-600 cursor-pointer select-none leading-tight">Dépense/Revenu mensuel(le) auto</label>
                         </div>
 
                         <div class="flex flex-col sm:flex-row gap-2 pt-2">
@@ -213,7 +212,7 @@
                 </div>
 
                 <!-- Répartition détaillée & Graphique -->
-                <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-sm">
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-sm w-full max-w-full overflow-hidden">
                     <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
                         <i data-lucide="pie-chart" class="w-5 h-5 text-indigo-500"></i>
                         Répartition
@@ -232,7 +231,7 @@
 
             <!-- Colonne de droite : Liste des dépenses/revenus -->
             <div class="lg:col-span-2 xl:col-span-3">
-                <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-sm h-full flex flex-col">
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-sm h-full flex flex-col w-full max-w-full overflow-hidden">
                     
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                         <h3 class="text-lg font-bold flex items-center gap-2">
@@ -243,7 +242,7 @@
                         <!-- Tri -->
                         <div class="flex items-center gap-2 text-sm bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 w-full sm:w-auto">
                             <i data-lucide="arrow-up-down" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                            <select id="sort-select" onchange="changeSort()" class="bg-transparent font-medium text-slate-600 focus:outline-none cursor-pointer w-full sm:w-auto">
+                            <select id="sort-select" onchange="changeSort()" class="bg-transparent font-medium text-slate-600 focus:outline-none cursor-pointer w-full sm:w-auto truncate">
                                 <option value="date-desc">Plus récent d'abord</option>
                                 <option value="date-asc">Plus ancien d'abord</option>
                                 <option value="amount-desc">Plus cher d'abord</option>
