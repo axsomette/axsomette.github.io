@@ -124,7 +124,7 @@
                 </div>
 
                 <!-- Le Slider -->
-                <div id="summary-cards" class="flex-1 flex gap-4 overflow-x-auto pb-4 pt-2 snap-x snap-mandatory scroll-smooth no-scrollbar px-6 sm:px-10">
+                <div id="summary-cards" class="flex-1 flex gap-4 overflow-x-auto pb-4 pt-2 snap-x snap-mandatory scroll-smooth no-scrollbar px-6 sm:px-10 overscroll-x-contain scroll-px-6 sm:scroll-px-10 after:content-[''] after:w-1 after:shrink-0">
                     <!-- Rempli dynamiquement par JS -->
                 </div>
 
@@ -165,29 +165,29 @@
                     
                     <form id="expense-form" class="space-y-4 w-full">
                         
-                        <!-- Champ Date corrigé pour éviter les dépassements sur iOS -->
+                        <!-- Champ Date corrigé : structure simplifiée et box-sizing strict pour iOS -->
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Date</label>
                             <input type="date" id="date-input" required 
-                                class="w-full block max-w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                                class="w-full block box-border appearance-none min-w-0 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Nom / Description</label>
                             <input type="text" id="desc-input" required placeholder="Ex: Auchan, Salaire..." 
-                                class="w-full block max-w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                                class="w-full block box-border min-w-0 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Montant (€)</label>
                             <input type="number" id="amount-input" required min="0.01" step="0.01" placeholder="0.00" 
-                                class="w-full block max-w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                                class="w-full block box-border min-w-0 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
                         </div>
 
                         <div id="category-wrapper">
                             <label class="block text-sm font-medium text-slate-700 mb-1">Catégorie</label>
                             <select id="category-input" 
-                                class="w-full block max-w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                                class="w-full block box-border min-w-0 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
                                 <!-- Rempli dynamiquement par JS -->
                             </select>
                         </div>
@@ -318,7 +318,7 @@
                     <p class="text-sm">Le grand graphique "Camembert" et le Bilan financier s'adaptent à vos filtres. Utilisez le <b>sélecteur de date</b> tout en haut de l'écran pour isoler un mois précis et voir en un clin d'œil votre <b>Reste à vivre</b>.</p>
                 </div>
 
-                <!-- Section 6 (NOUVEAU - Repensé) -->
+                <!-- Section 5 -->
                 <div class="bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
                     <h3 class="font-bold text-slate-800 text-base sm:text-lg mb-2 flex items-center gap-2">
                         <i data-lucide="hard-drive" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500"></i> 5. Sauvegarder & Importer (Très Important !)
@@ -619,8 +619,9 @@
                 const pct = calcPercent(amount, totalDepensesCents);
                 const pal = data.palette;
 
+                // snap-start mis ici pour résoudre le bug d'alignement iOS/Desktop au premier item
                 htmlCards += `
-                    <div class="snap-center shrink-0 w-[75vw] sm:w-[220px] max-w-[280px] bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col">
+                    <div class="snap-start shrink-0 w-[80vw] sm:w-[220px] max-w-[280px] bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col">
                         <div class="flex items-center gap-2 mb-2 ${pal.text}">
                             <i data-lucide="${pal.icon}" class="w-5 h-5"></i>
                             <h2 class="font-semibold truncate">${largeCat}</h2>
