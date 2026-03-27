@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Suivi de Dépenses</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Ajout de Chart.js pour le graphique -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Personnalisation simple de la barre de défilement */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .tab-active { background-color: white; color: #1e293b; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
+        .tab-inactive { color: #64748b; }
+        .tab-inactive:hover { color: #334155; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen relative">
+
+    <!-- Container mis en pleine largeur (w-full) au lieu de max-w-7xl -->
+    <div class="w-full px-4 md:px-8 lg:px-12 py-6">
+        
+        <!-- En-tête -->
+        <header class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="wallet" class="w-8 h-8 text-indigo-600"></i>
+                    Budget de L&L ❤️
+                </h1>
+                <p class="text-slate-500 mt-1">Gérez vos revenus et dépenses intelligemment.</p>
+            </div>
+            
+            <div class="flex flex-wrap gap-4 items-center bg-white p-2 rounded-xl shadow-sm border border-slate-200">
+                
+                <!-- Filtre par Mois -->
+                <div class="flex items-center gap-2 px-2 border-r border-slate-200 pr-4">
+                    <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
+                    <select id="month-filter" onchange="changeMonthFilter()" class="bg-transparent text-sm font-bold text-indigo-700 focus:outline-none cursor-pointer">
+                        <option value="all">Tout l'historique</option>
+                        <!-- Rempli dynamiquement -->
+                    </select>
+                </div>
+
+                <!-- Bouton d'Aide -->
+                <button onclick="openHelpModal()" class="text-sm font-medium text-slate-600 hover:text-indigo-600 flex items-center gap-1.5 px-2 transition-colors" title="Comment ça marche ?">
+                    <i data-lucide="help-circle" class="w-4 h-4"></i> Aide
+                </button>
+
+                <div class="w-px h-5 bg-slate-200"></div> <!-- Séparateur -->
+
+                <button onclick="openCategoryModal()" class="text-sm font-medium text-slate-600 hover:text-indigo-600 flex items-center gap-1.5 px-2 transition-colors" title="Gérer les catégories">
+                    <i data-lucide="settings" class="w-4 h-4"></i> Catégories
+                </button>
+
+                <div class="w-px h-5 bg-slate-200"></div> <!-- Séparateur -->
+
+                <!-- Input fichier caché pour l'importation -->
+                <input type="file" id="import-file" class="hidden" accept=".json" onchange="importJSON(event)">
+                
+                <button onclick="document.getElementById('import-file').click()" class="text-sm text-slate-500 hover:text-indigo-600 flex items-center gap-1.5 px-2 transition-colors" title="Importer un fichier de sauvegarde">
+                    <i data-lucide="upload" class="w-4 h-4"></i> Importer
+                </button>
+                
+                <button onclick="exportJSON()" class="text-sm text-slate-500 hover:text-emerald-600 flex items-center gap-1.5 px-2 transition-colors" title="Sauvegarder sur le PC">
+                    <i data-lucide="download" class="w-4 h-4"></i> Sauvegarder
+                </button>
+
+                <div class="w-px h-5 bg-slate-200"></div> <!-- Séparateur -->
+
+                <button onclick="resetData()" class="text-sm text-red-500 hover:text-red-700 flex items-center gap-1.5 px-2 transition-colors">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> Effacer
+                </button>
+            </div>
+        </header>
+
+        <!-- Vue d'ensemble (Bilan + Grandes catégories dynamiques) -->
+        <section class="flex flex-col lg:flex-row gap-4 mb-8">
+            
+            <!-- Carte Globale Bilan -->
+            <div class="bg-indigo-900 text-white rounded-2xl p-6 shadow-lg shadow-indigo-200 lg:w-1/4 xl:w-1/5 flex flex-col justify-center relative overflow-hidden shrink-0">
+                <div class="absolute top-0 right-0 p-4 opacity-10">
+                    <i data-lucide="trending-up" class="w-24 h-24"></i>
+                </div>
+                <h2 class="text-indigo-200 text-sm font-bold uppercase tracking-wider mb-4">Bilan de la période</h2>
+                
+                <div class="flex justify-between items-end border-b border-indigo-700/50 pb-3 mb-3">
+                    <span class="text-indigo-100 flex items-center gap-2"><i data-lucide="arrow-down-circle" class="w-4 h-4 text-emerald-400"></i> Revenus</span>
+                    <span class="text-xl font-bold text-emerald-300" id="total-revenus">0,00 €</span>
+                </div>
+                
+                <div class="flex justify-between items-end border-b border-indigo-700/50 pb-3 mb-3">
+                    <span class="text-indigo-100 flex items-center gap-2"><i data-lucide="arrow-up-circle" class="w-4 h-4 text-rose-400"></i> Dépenses</span>
+                    <span class="text-xl font-bold text-rose-300" id="total-depenses">0,00 €</span>
+                </div>
+                
+                <div class="flex justify-between items-end mt-2">
+                    <span class="text-indigo-100 font-medium">Reste à vivre</span>
+                    <span class="text-3xl font-extrabold" id="reste-a-vivre">0,00 €</span>
+                </div>
+            </div>
+
+            <!-- Cartes des Grandes Catégories -->
+            <div id="summary-cards" class="flex-1 flex gap-4 overflow-x-auto pb-2">
+                <!-- Rempli dynamiquement par JS -->
+            </div>
+        </section>
+
+        <!-- Contenu principal -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            
+            <!-- Colonne de gauche : Formulaire & Graphique -->
+            <div class="lg:col-span-1 xl:col-span-1 space-y-6">
+                
+                <!-- Formulaire Ajout / Modification -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 id="form-title" class="text-lg font-bold flex items-center gap-2">
+                            <i data-lucide="plus-circle" class="w-5 h-5 text-indigo-500"></i>
+                            Ajouter une ligne
+                        </h3>
+                    </div>
+
+                    <!-- Sélecteur Dépense / Revenu -->
+                    <div class="flex p-1 bg-slate-100 rounded-lg mb-5">
+                        <button type="button" onclick="setFormType('expense')" id="btn-type-expense" class="flex-1 py-1.5 rounded-md text-sm font-medium transition-all tab-active">
+                            Dépense
+                        </button>
+                        <button type="button" onclick="setFormType('income')" id="btn-type-income" class="flex-1 py-1.5 rounded-md text-sm font-medium transition-all tab-inactive">
+                            Revenu
+                        </button>
+                    </div>
+                    
+                    <form id="expense-form" class="space-y-4">
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="col-span-2">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Date</label>
+                                <input type="date" id="date-input" required 
+                                    class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Nom / Description</label>
+                            <input type="text" id="desc-input" required placeholder="Ex: Auchan, Salaire..." 
+                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Montant (€)</label>
+                            <input type="number" id="amount-input" required min="0.01" step="0.01" placeholder="0.00" 
+                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                        </div>
+
+                        <div id="category-wrapper">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Catégorie</label>
+                            <select id="category-input" 
+                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                                <!-- Rempli dynamiquement par JS -->
+                            </select>
+                        </div>
+
+                        <!-- Option de Récurrence -->
+                        <div id="recurring-wrapper" class="flex items-center gap-2 pt-1 pb-2">
+                            <input type="checkbox" id="recurring-input" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer">
+                            <label for="recurring-input" class="text-sm font-medium text-slate-600 cursor-pointer select-none">Dépense/Revenu mensuel(le) automatique</label>
+                        </div>
+
+                        <div class="flex gap-2 pt-2">
+                            <button type="submit" id="submit-btn"
+                                class="flex-1 bg-indigo-600 text-white font-medium py-2.5 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 transition-all flex justify-center items-center gap-2">
+                                <i data-lucide="check" class="w-5 h-5"></i>
+                                <span id="submit-text">Enregistrer</span>
+                            </button>
+                            <button type="button" id="cancel-edit-btn" onclick="cancelEdit()" class="hidden bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-lg hover:bg-slate-300 focus:outline-none transition-all flex justify-center items-center" title="Annuler la modification">
+                                <i data-lucide="x" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Répartition détaillée & Graphique -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="w-5 h-5 text-indigo-500"></i>
+                        Répartition des Dépenses
+                    </h3>
+                    
+                    <!-- Graphique Camembert -->
+                    <div class="mb-6 relative h-48 w-full flex justify-center">
+                        <canvas id="budgetChart"></canvas>
+                    </div>
+
+                    <div id="detailed-breakdown" class="space-y-4 max-h-[300px] overflow-y-auto pr-2 border-t border-slate-100 pt-4">
+                        <!-- Barres remplies par JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colonne de droite : Liste des dépenses/revenus -->
+            <div class="lg:col-span-2 xl:col-span-3">
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm h-full flex flex-col">
+                    
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <h3 class="text-lg font-bold flex items-center gap-2">
+                            <i data-lucide="list" class="w-5 h-5 text-indigo-500"></i>
+                            Historique
+                        </h3>
+                        
+                        <!-- Tri -->
+                        <div class="flex items-center gap-2 text-sm bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                            <i data-lucide="arrow-up-down" class="w-4 h-4 text-slate-400"></i>
+                            <select id="sort-select" onchange="changeSort()" class="bg-transparent font-medium text-slate-600 focus:outline-none cursor-pointer">
+                                <option value="date-desc">Plus récent d'abord</option>
+                                <option value="date-asc">Plus ancien d'abord</option>
+                                <option value="amount-desc">Plus cher d'abord</option>
+                                <option value="amount-asc">Moins cher d'abord</option>
+                                <option value="category">Par Catégorie</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto pr-2" style="max-height: 800px;">
+                        <ul id="expense-list" class="space-y-3">
+                            <!-- Les lignes apparaîtront ici -->
+                            <li class="text-center text-slate-400 py-8 italic" id="empty-state">
+                                Aucune donnée pour cette période.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL AIDE -->
+    <div id="help-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
+        <div class="bg-white rounded-2xl p-6 md:p-8 shadow-2xl w-full max-w-3xl max-h-[95vh] overflow-y-auto flex flex-col">
+            <div class="flex justify-between items-center mb-6 sticky top-0 bg-white z-10 pb-4 border-b border-slate-100">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="help-circle" class="w-6 h-6 text-indigo-500"></i>
+                    Comment fonctionne l'application ?
+                </h2>
+                <button onclick="closeHelpModal()" class="text-slate-400 hover:text-slate-700 p-2 bg-slate-100 rounded-full transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-5 text-slate-600">
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-800 text-lg mb-2 flex items-center gap-2">
+                        <i data-lucide="plus-circle" class="w-5 h-5 text-indigo-500"></i> 1. Ajouter une opération
+                    </h3>
+                    <p class="text-sm">Remplissez simplement le formulaire pour ajouter une <b>dépense</b> (vos achats) ou un <b>revenu</b> (votre salaire). N'hésitez pas à jouer avec la date pour enregistrer des opérations passées ou préparer celles à venir.</p>
+                </div>
+
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-800 text-lg mb-2 flex items-center gap-2">
+                        <i data-lucide="refresh-cw" class="w-5 h-5 text-indigo-500"></i> 2. La magie du Récurrent
+                    </h3>
+                    <p class="text-sm">En cochant la case <i>"Dépense/Revenu mensuel(le) automatique"</i> lors de l'ajout d'une ligne, l'application mémorisera cette opération. <b>Au 1er jour de chaque nouveau mois</b>, elle recréera cette ligne toute seule. C'est idéal pour automatiser le Loyer, les Abonnements ou le Salaire.</p>
+                </div>
+
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-800 text-lg mb-2 flex items-center gap-2">
+                        <i data-lucide="folder-tree" class="w-5 h-5 text-indigo-500"></i> 3. Gestion experte des Catégories
+                    </h3>
+                    <p class="text-sm">Cliquez sur le bouton <b>"Catégories"</b> en haut de l'écran. Vous y créerez vos propres "Dossiers" (ex: Maison) dans lesquels vous glisserez vos sous-catégories (ex: Électricité). Si vous renommez ou déplacez une catégorie, l'application s'occupe de mettre à jour tout votre historique passé intelligemment.</p>
+                </div>
+
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-800 text-lg mb-2 flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="w-5 h-5 text-indigo-500"></i> 4. Suivi et Analyse mensuelle
+                    </h3>
+                    <p class="text-sm">Le graphique "Camembert", les jauges et le grand Bilan s'adaptent instantanément au mois que vous regardez. Utilisez le <b>menu déroulant des dates</b> (en haut) pour cibler un mois précis et voir exactement combien il vous <b>Reste à vivre</b>.</p>
+                </div>
+
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-800 text-lg mb-2 flex items-center gap-2">
+                        <i data-lucide="lock" class="w-5 h-5 text-indigo-500"></i> 5. Sécurité & Sauvegarde locale
+                    </h3>
+                    <p class="text-sm"><b>Rien n'est envoyé sur internet.</b> Tout reste enregistré secrètement dans votre navigateur web. Cependant, si vous videz votre historique web, vous risquez de tout perdre ! Pensez à utiliser régulièrement le bouton <b>"Sauvegarder"</b> pour télécharger une copie de vos données sur votre ordinateur.</p>
+                </div>
+            </div>
+
+            <button onclick="closeHelpModal()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3.5 rounded-xl transition-colors shadow-lg mt-8">
+                J'ai compris, fermer l'Aide
+            </button>
+        </div>
+    </div>
+
+
+    <!-- MODAL GESTION DES CATÉGORIES -->
+    <div id="category-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
+        <div class="bg-white rounded-2xl p-6 md:p-8 shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-y-auto flex flex-col">
+            <div class="flex justify-between items-center mb-6 sticky top-0 bg-white z-10 pb-4 border-b border-slate-100">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="settings" class="w-6 h-6 text-indigo-500"></i>
+                    Gérer les catégories
+                </h2>
+                <button onclick="closeCategoryModal()" class="text-slate-400 hover:text-slate-700 p-2 bg-slate-100 rounded-full transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-700 mb-3 flex items-center gap-2">
+                        <i data-lucide="layout-grid" class="w-5 h-5 text-indigo-400"></i>
+                        Nouvelle Grande Catégorie
+                    </h3>
+                    <div class="flex gap-2">
+                        <input type="text" id="new-main-cat-input" placeholder="Ex: Véhicules, Santé..." 
+                            class="flex-1 px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                        <button onclick="addMainCategory()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm">
+                            Ajouter
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-700 mb-3 flex items-center gap-2">
+                        <i data-lucide="tag" class="w-5 h-5 text-indigo-400"></i>
+                        Nouvelle Sous-Catégorie
+                    </h3>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <select id="parent-main-cat-select" class="w-full sm:w-1/3 px-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                        </select>
+                        <input type="text" id="new-sub-cat-input" placeholder="Ex: Essence, Médecin..." 
+                            class="flex-1 px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                        <button onclick="addSubCategory()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm">
+                            Ajouter
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6 flex-1">
+                <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <i data-lucide="edit-3" class="w-5 h-5 text-indigo-500"></i>
+                    Modifier ou Déplacer (Dossiers existants)
+                </h3>
+                <div id="edit-categories-list" class="w-full"></div>
+            </div>
+
+            <button onclick="closeCategoryModal()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3.5 rounded-xl transition-colors shadow-lg mt-auto">
+                Terminer et Fermer
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Utilitaire échappement HTML
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // Palettes complètes avec couleurs Hexadécimales pour le graphique
+        const availablePalettes = [
+            { id: "emerald", icon: "home", text: "text-emerald-600", bgLight: "bg-emerald-100", textDark: "text-emerald-700", border: "border-emerald-200", bar: "bg-emerald-500", hex: "#10b981" },
+            { id: "blue", icon: "repeat", text: "text-blue-600", bgLight: "bg-blue-100", textDark: "text-blue-700", border: "border-blue-200", bar: "bg-blue-500", hex: "#3b82f6" },
+            { id: "orange", icon: "plane", text: "text-orange-500", bgLight: "bg-orange-100", textDark: "text-orange-700", border: "border-orange-200", bar: "bg-orange-500", hex: "#f97316" },
+            { id: "purple", icon: "star", text: "text-purple-500", bgLight: "bg-purple-100", textDark: "text-purple-700", border: "border-purple-200", bar: "bg-purple-500", hex: "#a855f7" },
+            { id: "pink", icon: "heart", text: "text-pink-500", bgLight: "bg-pink-100", textDark: "text-pink-700", border: "border-pink-200", bar: "bg-pink-500", hex: "#ec4899" },
+            { id: "teal", icon: "briefcase", text: "text-teal-500", bgLight: "bg-teal-100", textDark: "text-teal-700", border: "border-teal-200", bar: "bg-teal-500", hex: "#14b8a6" },
+            { id: "rose", icon: "coffee", text: "text-rose-500", bgLight: "bg-rose-100", textDark: "text-rose-700", border: "border-rose-200", bar: "bg-rose-500", hex: "#f43f5e" },
+            { id: "amber", icon: "shopping-bag", text: "text-amber-500", bgLight: "bg-amber-100", textDark: "text-amber-700", border: "border-amber-200", bar: "bg-amber-500", hex: "#f59e0b" }
+        ];
+
+        // ÉTAT GLOBAL
+        let expenses = []; // Contient Dépenses ET Revenus (identifiés par type)
+        let appCategories = {}; 
+        let editingId = null;
+        
+        let currentMonthFilter = 'all'; // 'all' ou 'YYYY-MM'
+        let currentSort = 'date-desc';
+        let formType = 'expense'; // 'expense' ou 'income'
+        
+        let chartInstance = null; // Graphique Camembert
+
+        // DOM Elements
+        const form = document.getElementById('expense-form');
+        const selectCat = document.getElementById('category-input');
+        const expenseList = document.getElementById('expense-list');
+        const emptyState = document.getElementById('empty-state');
+        const breakdownContainer = document.getElementById('detailed-breakdown');
+        const summaryCardsContainer = document.getElementById('summary-cards');
+        const monthSelect = document.getElementById('month-filter');
+
+        // Initialisation
+        function init() {
+            document.getElementById('date-input').value = new Date().toISOString().split('T')[0];
+            
+            loadData();
+            processRecurringItems(); 
+            populateCategoryDropdown();
+            updateMonthDropdown();
+            render();
+            lucide.createIcons();
+        }
+
+        // --- GESTION DES RÉCURRENCES ---
+        function processRecurringItems() {
+            const currentMonthStr = new Date().toISOString().slice(0, 7); // Mois actuel (YYYY-MM)
+            let newItemsGenerated = false;
+
+            expenses.forEach(item => {
+                // On cherche les éléments récurrents "parents" (ceux créés manuellement)
+                if (item.isRecurring && !item.recurringParentId) {
+                    
+                    let dateObj = new Date(item.date);
+                    dateObj.setMonth(dateObj.getMonth() + 1); // On commence à vérifier au mois suivant
+                    let nextMonthStr = dateObj.toISOString().slice(0, 7);
+                    
+                    // Tant que le mois à vérifier est inférieur ou égal au mois actuel
+                    while (nextMonthStr <= currentMonthStr) {
+                        
+                        const targetMonth = nextMonthStr; // Figer la variable pour le some()
+                        
+                        // Vérifier si la copie de ce mois précis existe déjà (pour ne pas la dupliquer en boucle)
+                        const alreadyExists = expenses.some(e => 
+                            (e.recurringParentId === item.id || e.id === item.id) && 
+                            e.date.startsWith(targetMonth)
+                        );
+                        
+                        if (!alreadyExists) {
+                            // La copie n'existe pas, on la crée pour ce mois-là (le 1er du mois)
+                            const clone = { ...item };
+                            clone.id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+                            clone.date = `${targetMonth}-01`; 
+                            clone.recurringParentId = item.id; // On indique que c'est un enfant
+                            expenses.push(clone);
+                            newItemsGenerated = true;
+                        }
+                        
+                        // Passer au mois suivant dans la boucle
+                        dateObj.setMonth(dateObj.getMonth() + 1);
+                        nextMonthStr = dateObj.toISOString().slice(0, 7);
+                    }
+                }
+            });
+
+            if (newItemsGenerated) {
+                saveData();
+                updateMonthDropdown();
+            }
+        }
+
+        // Chargement / Sauvegarde
+        function loadData() {
+            const savedCats = localStorage.getItem('budgetCategories');
+            if (savedCats) {
+                try { appCategories = JSON.parse(savedCats); } catch(e) {}
+            }
+            if (Object.keys(appCategories).length === 0) {
+                appCategories = {
+                    "Essentielles": { palette: availablePalettes[0], subCats: ["Loyer", "Assurance", "Courses", "Électricité / Eau", "Transports", "Santé"] },
+                    "Abonnements": { palette: availablePalettes[1], subCats: ["Internet & TV", "Téléphone", "Streaming", "Salle de sport", "Logiciels"] },
+                    "Loisirs / Autre": { palette: availablePalettes[2], subCats: ["Shopping", "Restaurants", "Voyages", "Sorties", "Cadeaux", "Imprévus"] }
+                };
+                saveCategories();
+            }
+
+            const savedExp = localStorage.getItem('budgetData');
+            if (savedExp) {
+                try { 
+                    expenses = JSON.parse(savedExp); 
+                    expenses.forEach(e => {
+                        if(!e.type) e.type = 'expense';
+                        if(!e.date) e.date = new Date().toISOString().split('T')[0];
+                    });
+                } catch(e) { expenses = []; }
+            }
+        }
+
+        function saveData() { localStorage.setItem('budgetData', JSON.stringify(expenses)); }
+        function saveCategories() { localStorage.setItem('budgetCategories', JSON.stringify(appCategories)); }
+
+        // --- FILTRES ET TRI ---
+        function updateMonthDropdown() {
+            const months = new Set();
+            expenses.forEach(item => {
+                if(item.date) months.add(item.date.slice(0, 7));
+            });
+            
+            const sortedMonths = Array.from(months).sort().reverse();
+            const currentSelection = monthSelect.value;
+            
+            monthSelect.innerHTML = '<option value="all">Tout l\'historique</option>';
+            sortedMonths.forEach(m => {
+                const [year, month] = m.split('-');
+                const dateObj = new Date(year, month - 1);
+                const monthName = dateObj.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+                const capitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+                
+                const option = document.createElement('option');
+                option.value = m;
+                option.textContent = capitalized;
+                monthSelect.appendChild(option);
+            });
+
+            if (currentSelection !== 'all' && sortedMonths.includes(currentSelection)) {
+                monthSelect.value = currentSelection;
+            }
+        }
+
+        function changeMonthFilter() {
+            currentMonthFilter = monthSelect.value;
+            render();
+        }
+
+        function changeSort() {
+            currentSort = document.getElementById('sort-select').value;
+            renderList(); 
+        }
+
+        // Gestion du Type (Dépense / Revenu) dans le formulaire
+        function setFormType(type) {
+            formType = type;
+            const btnExp = document.getElementById('btn-type-expense');
+            const btnInc = document.getElementById('btn-type-income');
+            const catWrapper = document.getElementById('category-wrapper');
+
+            if (type === 'expense') {
+                btnExp.className = "flex-1 py-1.5 rounded-md text-sm font-medium transition-all tab-active";
+                btnInc.className = "flex-1 py-1.5 rounded-md text-sm font-medium transition-all tab-inactive";
+                catWrapper.style.display = 'block';
+                document.getElementById('category-input').required = true;
+            } else {
+                btnInc.className = "flex-1 py-1.5 rounded-md text-sm font-medium transition-all tab-active";
+                btnExp.className = "flex-1 py-1.5 rounded-md text-sm font-medium transition-all tab-inactive";
+                catWrapper.style.display = 'none';
+                document.getElementById('category-input').required = false;
+            }
+        }
+
+        // --- RENDU PRINCIPAL ---
+        function render() {
+            updateTotalsAndCards();
+            renderList();
+        }
+
+        function getFilteredData() {
+            if (currentMonthFilter === 'all') return expenses;
+            return expenses.filter(e => e.date.startsWith(currentMonthFilter));
+        }
+
+        function updateTotalsAndCards() {
+            const filteredData = getFilteredData();
+            
+            let totalDepensesCents = 0;
+            let totalRevenusCents = 0;
+            const totalsLarge = {}; 
+            const totalsSmall = {}; 
+
+            for (const key in appCategories) { totalsLarge[key] = 0; }
+
+            filteredData.forEach(item => {
+                if (item.type === 'income') {
+                    totalRevenusCents += item.amountCents;
+                } else {
+                    totalDepensesCents += item.amountCents;
+                    if(totalsLarge[item.largeCat] !== undefined) {
+                        totalsLarge[item.largeCat] += item.amountCents;
+                    }
+                    totalsSmall[item.smallCat] = (totalsSmall[item.smallCat] || 0) + item.amountCents;
+                }
+            });
+
+            // Bilan
+            document.getElementById('total-revenus').textContent = formatCurrency(totalRevenusCents / 100);
+            document.getElementById('total-depenses').textContent = formatCurrency(totalDepensesCents / 100);
+            
+            const resteCents = totalRevenusCents - totalDepensesCents;
+            const resteEl = document.getElementById('reste-a-vivre');
+            resteEl.textContent = formatCurrency(resteCents / 100);
+            resteEl.className = `text-3xl font-extrabold ${resteCents >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+            // Cartes dynamiques Dépenses
+            let htmlCards = '';
+            for (const [largeCat, data] of Object.entries(appCategories)) {
+                const amount = totalsLarge[largeCat];
+                if (amount === 0 && currentMonthFilter !== 'all') continue; 
+                
+                const pct = calcPercent(amount, totalDepensesCents);
+                const pal = data.palette;
+
+                htmlCards += `
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex-1 min-w-[200px] max-w-[280px]">
+                        <div class="flex items-center gap-2 mb-2 ${pal.text}">
+                            <i data-lucide="${pal.icon}" class="w-5 h-5"></i>
+                            <h2 class="font-semibold truncate">${largeCat}</h2>
+                        </div>
+                        <div class="text-2xl font-bold text-slate-800">${formatCurrency(amount / 100)}</div>
+                        <p class="text-xs text-slate-500 mt-1">${pct}</p>
+                    </div>
+                `;
+            }
+            summaryCardsContainer.innerHTML = htmlCards || '<p class="text-slate-400 py-6 px-4 italic">Aucune dépense catégorisée pour cette période.</p>';
+            
+            renderDetailedBreakdownAndChart(totalsLarge, totalsSmall, totalDepensesCents);
+            lucide.createIcons(); 
+        }
+
+        // --- GRAPHIQUE CHART.JS ---
+        function renderDetailedBreakdownAndChart(totalsLarge, totalsSmall, totalDepensesCents) {
+            breakdownContainer.innerHTML = '';
+            
+            if(totalDepensesCents === 0) {
+                breakdownContainer.innerHTML = '<p class="text-sm text-slate-400 italic">Ajoutez des dépenses pour voir la répartition.</p>';
+                if(chartInstance) chartInstance.destroy();
+                return;
+            }
+
+            // 1. Mise à jour du graphique Camembert (Grandes Catégories)
+            const chartLabels = [];
+            const chartData = [];
+            const chartColors = [];
+
+            for (const [largeCat, amount] of Object.entries(totalsLarge)) {
+                if (amount > 0) {
+                    chartLabels.push(largeCat);
+                    chartData.push(amount / 100);
+                    
+                    let hex = '#94a3b8'; // Gris par défaut
+                    const catPalette = appCategories[largeCat].palette;
+                    if (catPalette.hex) {
+                        hex = catPalette.hex;
+                    } else {
+                        const match = availablePalettes.find(p => p.id === catPalette.id);
+                        if (match) hex = match.hex;
+                    }
+                    chartColors.push(hex);
+                }
+            }
+
+            const ctx = document.getElementById('budgetChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+            
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        data: chartData,
+                        backgroundColor: chartColors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
+                        tooltip: { callbacks: { label: function(context) { return formatCurrency(context.raw); } } }
+                    },
+                    cutout: '65%'
+                }
+            });
+
+            // 2. Mise à jour des barres détaillées (Petites Catégories)
+            const sortedSmallCats = Object.entries(totalsSmall).sort((a, b) => b[1] - a[1]);
+
+            sortedSmallCats.forEach(([cat, amountCents]) => {
+                const percent = ((amountCents / totalDepensesCents) * 100).toFixed(1);
+                
+                let parentCat = null;
+                for (const [large, data] of Object.entries(appCategories)) {
+                    if (data.subCats.includes(cat)) { parentCat = large; break; }
+                }
+                const barColor = parentCat && appCategories[parentCat] ? appCategories[parentCat].palette.bar : "bg-slate-400";
+
+                const div = document.createElement('div');
+                div.className = "mb-3";
+                div.innerHTML = `
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="font-medium text-slate-700">${cat}</span>
+                        <span class="text-slate-500">${formatCurrency(amountCents / 100)} (${percent}%)</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                        <div class="${barColor} h-2 rounded-full" style="width: ${percent}%"></div>
+                    </div>
+                `;
+                breakdownContainer.appendChild(div);
+            });
+        }
+
+        // --- LISTE ET TRI ---
+        function renderList() {
+            expenseList.innerHTML = '';
+            let filteredData = getFilteredData();
+            
+            if (filteredData.length === 0) {
+                expenseList.appendChild(emptyState);
+                emptyState.style.display = 'block';
+                return;
+            }
+            emptyState.style.display = 'none';
+
+            // Application du tri
+            filteredData.sort((a, b) => {
+                if (currentSort === 'date-desc') return new Date(b.date) - new Date(a.date);
+                if (currentSort === 'date-asc') return new Date(a.date) - new Date(b.date);
+                if (currentSort === 'amount-desc') return b.amountCents - a.amountCents;
+                if (currentSort === 'amount-asc') return a.amountCents - b.amountCents;
+                if (currentSort === 'category') {
+                    const catA = a.type === 'income' ? 'AAA' : a.largeCat + a.smallCat; // Revenus en premier
+                    const catB = b.type === 'income' ? 'AAA' : b.largeCat + b.smallCat;
+                    return catA.localeCompare(catB);
+                }
+                return 0;
+            });
+
+            filteredData.forEach(item => {
+                const li = document.createElement('li');
+                li.className = "flex justify-between items-center p-4 bg-white border border-slate-100 rounded-xl hover:shadow-md transition-shadow group";
+                
+                const amountFormatted = formatCurrency(item.amountCents / 100);
+                const dateFormatted = new Date(item.date).toLocaleDateString('fr-FR', {day: 'numeric', month: 'short', year: 'numeric'});
+                
+                const recIcon = item.isRecurring ? `<i data-lucide="refresh-cw" class="w-3 h-3 text-slate-400 ml-1 inline" title="Récurrent"></i>` : '';
+
+                if (item.type === 'income') {
+                    // Affichage Revenu
+                    li.innerHTML = `
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 mt-1">
+                                <span class="inline-block px-2.5 py-1 rounded-md text-xs font-bold border bg-emerald-100 text-emerald-700 border-emerald-200">
+                                    REVENU
+                                </span>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-slate-800">${escapeHtml(item.desc)} ${recIcon}</p>
+                                <p class="text-xs text-slate-400">${dateFormatted}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-emerald-600 mr-2">+ ${amountFormatted}</span>
+                            <div class="flex opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                                <button onclick="editItem('${item.id}')" class="text-slate-400 hover:text-amber-500 p-2 rounded-lg hover:bg-amber-50 transition-colors" title="Modifier">
+                                    <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deleteItem('${item.id}')" class="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition-colors" title="Supprimer">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Affichage Dépense
+                    const pal = appCategories[item.largeCat] ? appCategories[item.largeCat].palette : null;
+                    const colorClass = pal ? `${pal.bgLight} ${pal.textDark} ${pal.border}` : "bg-slate-100 text-slate-700 border-slate-200";
+                    
+                    li.innerHTML = `
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 mt-1">
+                                <span class="inline-block px-2.5 py-1 rounded-md text-xs font-medium border ${colorClass}">
+                                    ${escapeHtml(item.smallCat)}
+                                </span>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-slate-800">${escapeHtml(item.desc)} ${recIcon}</p>
+                                <p class="text-xs text-slate-400">${dateFormatted} • ${escapeHtml(item.largeCat)}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-slate-700 mr-2">- ${amountFormatted}</span>
+                            <div class="flex opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                                <button onclick="editItem('${item.id}')" class="text-slate-400 hover:text-amber-500 p-2 rounded-lg hover:bg-amber-50 transition-colors" title="Modifier">
+                                    <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deleteItem('${item.id}')" class="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition-colors" title="Supprimer">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+                expenseList.appendChild(li);
+            });
+
+            lucide.createIcons();
+        }
+
+        // --- FORMULAIRE D'AJOUT / MODIFICATION ---
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const desc = document.getElementById('desc-input').value;
+            const amountCents = Math.round(parseFloat(document.getElementById('amount-input').value) * 100);
+            const dateVal = document.getElementById('date-input').value;
+            const isRec = document.getElementById('recurring-input').checked;
+            
+            let smallCat = '', largeCat = '';
+            if (formType === 'expense') {
+                const selectedOption = selectCat.options[selectCat.selectedIndex];
+                smallCat = selectedOption.value;
+                largeCat = selectedOption.dataset.largeCategory;
+            }
+
+            const newItem = {
+                id: editingId ? editingId : Date.now().toString(),
+                type: formType,
+                desc: desc,
+                amountCents: amountCents,
+                date: dateVal,
+                isRecurring: isRec
+            };
+
+            if (formType === 'expense') {
+                newItem.smallCat = smallCat;
+                newItem.largeCat = largeCat;
+            }
+
+            if (editingId) {
+                const index = expenses.findIndex(e => e.id === editingId);
+                // Si on modifie une occurrence récurrente, on garde son lien parent
+                if (index !== -1) {
+                    if (expenses[index].recurringParentId) newItem.recurringParentId = expenses[index].recurringParentId;
+                    expenses[index] = newItem;
+                }
+                cancelEdit(); 
+            } else {
+                expenses.push(newItem); 
+                form.reset();
+                document.getElementById('date-input').value = new Date().toISOString().split('T')[0]; // reset date
+            }
+            
+            saveData();
+            updateMonthDropdown();
+            render();
+        });
+
+        function editItem(id) {
+            const item = expenses.find(e => e.id === id);
+            if (!item) return;
+            
+            editingId = id;
+            setFormType(item.type || 'expense');
+            
+            document.getElementById('date-input').value = item.date;
+            document.getElementById('desc-input').value = item.desc;
+            document.getElementById('amount-input').value = (item.amountCents / 100).toFixed(2);
+            document.getElementById('recurring-input').checked = !!item.isRecurring;
+            
+            if (item.type !== 'income') {
+                document.getElementById('category-input').value = item.smallCat;
+            }
+            
+            document.getElementById('form-title').innerHTML = '<i data-lucide="edit-2" class="w-5 h-5 text-amber-500"></i> Modifier la ligne';
+            document.getElementById('submit-text').textContent = "Mettre à jour";
+            
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.classList.replace('bg-indigo-600', 'bg-amber-500');
+            submitBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-amber-600');
+            submitBtn.classList.replace('focus:ring-indigo-200', 'focus:ring-amber-200');
+            
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            
+            lucide.createIcons();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            editingId = null;
+            form.reset();
+            document.getElementById('date-input').value = new Date().toISOString().split('T')[0];
+            setFormType('expense');
+            
+            document.getElementById('form-title').innerHTML = '<i data-lucide="plus-circle" class="w-5 h-5 text-indigo-500"></i> Ajouter une ligne';
+            document.getElementById('submit-text').textContent = "Enregistrer";
+            
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.classList.replace('bg-amber-500', 'bg-indigo-600');
+            submitBtn.classList.replace('hover:bg-amber-600', 'hover:bg-indigo-700');
+            submitBtn.classList.replace('focus:ring-amber-200', 'focus:ring-indigo-200');
+            
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+            
+            lucide.createIcons();
+        }
+
+        function deleteItem(id) {
+            if (editingId === id) return alert("Terminez ou annulez la modification en cours avant de supprimer.");
+            
+            const item = expenses.find(e => e.id === id);
+            
+            // Si c'est un parent récurrent, prévenir l'utilisateur
+            if (item && item.isRecurring && !item.recurringParentId) {
+                if(!confirm("Ceci est une dépense récurrente parente. Voulez-vous vraiment la supprimer ? (Les occurrences passées seront conservées).")) return;
+            }
+
+            expenses = expenses.filter(e => e.id !== id);
+            saveData();
+            updateMonthDropdown();
+            render();
+        }
+
+        function resetData() {
+            if(confirm("Êtes-vous sûr de vouloir TOUT effacer (Dépenses, Revenus ET Catégories) ?")) {
+                expenses = [];
+                appCategories = {}; 
+                localStorage.removeItem('budgetData');
+                localStorage.removeItem('budgetCategories');
+                loadData(); 
+                populateCategoryDropdown();
+                updateMonthDropdown();
+                render();
+            }
+        }
+
+
+        // --- MODALS (CATÉGORIES & AIDE) ---
+        function openCategoryModal() {
+            document.getElementById('category-modal').classList.remove('hidden');
+            updateModalSelect();
+            renderEditCategories(); 
+        }
+
+        function closeCategoryModal() {
+            document.getElementById('category-modal').classList.add('hidden');
+        }
+
+        function openHelpModal() {
+            document.getElementById('help-modal').classList.remove('hidden');
+        }
+
+        function closeHelpModal() {
+            document.getElementById('help-modal').classList.add('hidden');
+        }
+
+        function updateModalSelect() {
+            const select = document.getElementById('parent-main-cat-select');
+            select.innerHTML = '';
+            for (const mainCat in appCategories) {
+                const option = document.createElement('option');
+                option.value = mainCat;
+                option.textContent = mainCat;
+                select.appendChild(option);
+            }
+        }
+
+        function addMainCategory() {
+            const input = document.getElementById('new-main-cat-input');
+            const name = input.value.trim();
+            if (!name) return alert("Veuillez entrer un nom.");
+            if (appCategories[name]) return alert("Cette catégorie existe déjà.");
+
+            const usedPaletteIds = Object.values(appCategories).map(c => c.palette.id);
+            const unusedPalettes = availablePalettes.filter(p => !usedPaletteIds.includes(p.id));
+            const selectedPalette = unusedPalettes.length > 0 ? unusedPalettes[0] : availablePalettes[Math.floor(Math.random() * availablePalettes.length)];
+
+            appCategories[name] = { palette: selectedPalette, subCats: ["Divers"] };
+            saveCategories(); input.value = ''; updateModalSelect(); populateCategoryDropdown(); renderEditCategories(); render(); 
+        }
+
+        function addSubCategory() {
+            const input = document.getElementById('new-sub-cat-input');
+            const select = document.getElementById('parent-main-cat-select');
+            const name = input.value.trim();
+            const parent = select.value;
+
+            if (!name) return alert("Veuillez entrer un nom de sous-catégorie.");
+            if (appCategories[parent].subCats.includes(name)) return alert("Cette sous-catégorie existe déjà ici.");
+
+            appCategories[parent].subCats.push(name);
+            saveCategories(); input.value = ''; populateCategoryDropdown(); renderEditCategories(); 
+        }
+
+        function renderEditCategories() {
+            const container = document.getElementById('edit-categories-list');
+            let html = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">';
+            const mainCatsArray = Object.keys(appCategories);
+
+            mainCatsArray.forEach((mainCat, mainIndex) => {
+                const data = appCategories[mainCat];
+                let moveOptions = '';
+                mainCatsArray.forEach((mCat, mIdx) => {
+                    const selected = mCat === mainCat ? 'selected' : '';
+                    moveOptions += `<option value="${mIdx}" ${selected}>Dossier : ${escapeHtml(mCat)}</option>`;
+                });
+
+                let subCatsHtml = '';
+                data.subCats.forEach((subCat, subIndex) => {
+                    subCatsHtml += `
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center gap-2 mb-2.5">
+                                <input type="text" id="input_name_sub_${mainIndex}_${subIndex}" value="${escapeHtml(subCat)}" 
+                                    onkeypress="if(event.key === 'Enter') updateSubCategory(${mainIndex}, ${subIndex})"
+                                    class="flex-1 w-full px-2.5 py-1.5 text-sm font-medium text-slate-700 border border-slate-200 rounded-md focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 focus:outline-none transition-colors">
+                                <button onclick="updateSubCategory(${mainIndex}, ${subIndex})" class="text-indigo-600 hover:text-white hover:bg-indigo-500 p-1.5 bg-indigo-50 rounded-md transition-colors" title="Enregistrer">
+                                    <i data-lucide="save" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deleteSubCategory(${mainIndex}, ${subIndex})" class="text-red-500 hover:text-white hover:bg-red-500 p-1.5 bg-red-50 rounded-md transition-colors" title="Supprimer">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2 bg-slate-50 rounded-md px-2 py-1.5 border border-slate-100">
+                                <i data-lucide="folder" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                                <select id="select_move_sub_${mainIndex}_${subIndex}" onchange="updateSubCategory(${mainIndex}, ${subIndex})" class="flex-1 text-xs text-slate-600 bg-transparent focus:outline-none cursor-pointer">
+                                    ${moveOptions}
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                    <div class="flex flex-col bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden h-full">
+                        <div class="bg-white p-4 border-b border-slate-200 flex flex-col gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 rounded-xl ${data.palette.bgLight} ${data.palette.textDark} shrink-0"><i data-lucide="${data.palette.icon}" class="w-5 h-5"></i></div>
+                                <input type="text" id="input_main_${mainIndex}" value="${escapeHtml(mainCat)}" onkeypress="if(event.key === 'Enter') updateMainCategory(${mainIndex})"
+                                    class="font-bold text-lg text-slate-800 w-full bg-transparent border-b-2 border-transparent hover:border-slate-300 focus:border-indigo-500 focus:outline-none px-1 py-0.5">
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="updateMainCategory(${mainIndex})" class="flex-1 flex justify-center items-center gap-1.5 text-xs font-medium text-indigo-700 bg-indigo-100 hover:bg-indigo-200 py-2 rounded-lg transition-colors"><i data-lucide="save" class="w-3.5 h-3.5"></i> Renommer</button>
+                                <button onclick="deleteMainCategory(${mainIndex})" class="flex-1 flex justify-center items-center gap-1.5 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 py-2 rounded-lg transition-colors"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Supprimer</button>
+                            </div>
+                        </div>
+                        <div class="p-4 space-y-3 flex-1 overflow-y-auto" style="max-height: 350px;">
+                            ${subCatsHtml || '<div class="text-center py-6 text-sm text-slate-400 italic bg-white rounded-xl border border-dashed border-slate-200">Aucune sous-catégorie.</div>'}
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>'; container.innerHTML = html; lucide.createIcons();
+        }
+
+        function updateMainCategory(mainIndex) {
+            const oldName = Object.keys(appCategories)[mainIndex];
+            const newName = document.getElementById(`input_main_${mainIndex}`).value.trim();
+            if (!newName || newName === oldName) return;
+            if (appCategories[newName]) return alert("Existe déjà.");
+            appCategories[newName] = appCategories[oldName]; delete appCategories[oldName];
+            expenses.forEach(exp => { if (exp.largeCat === oldName) exp.largeCat = newName; });
+            saveCategories(); saveData(); updateModalSelect(); populateCategoryDropdown(); renderEditCategories(); render();
+        }
+
+        function deleteMainCategory(mainIndex) {
+            const name = Object.keys(appCategories)[mainIndex];
+            if(!confirm(`Supprimer "${name}" ?`)) return;
+            delete appCategories[name]; saveCategories(); updateModalSelect(); populateCategoryDropdown(); renderEditCategories(); render();
+        }
+
+        function updateSubCategory(mainIndex, subIndex) {
+            const mainCat = Object.keys(appCategories)[mainIndex];
+            const oldSubName = appCategories[mainCat].subCats[subIndex];
+            const newSubName = document.getElementById(`input_name_sub_${mainIndex}_${subIndex}`).value.trim();
+            const destMainIndex = document.getElementById(`select_move_sub_${mainIndex}_${subIndex}`).value;
+            const destMainCat = Object.keys(appCategories)[destMainIndex];
+            if (!newSubName) return;
+            if ((newSubName !== oldSubName || mainCat !== destMainCat) && appCategories[destMainCat].subCats.includes(newSubName)) return alert("Existe déjà.");
+            appCategories[mainCat].subCats.splice(subIndex, 1); appCategories[destMainCat].subCats.push(newSubName);
+            expenses.forEach(exp => { if (exp.smallCat === oldSubName && exp.largeCat === mainCat) { exp.smallCat = newSubName; exp.largeCat = destMainCat; } });
+            saveCategories(); saveData(); populateCategoryDropdown(); renderEditCategories(); render();
+        }
+
+        function deleteSubCategory(mainIndex, subIndex) {
+            const mainCat = Object.keys(appCategories)[mainIndex];
+            const subName = appCategories[mainCat].subCats[subIndex];
+            if(!confirm(`Supprimer "${subName}" ?`)) return;
+            appCategories[mainCat].subCats.splice(subIndex, 1); saveCategories(); populateCategoryDropdown(); renderEditCategories(); render();
+        }
+
+        function populateCategoryDropdown() {
+            selectCat.innerHTML = '<option value="" disabled selected>Choisir une catégorie...</option>';
+            for (const [largeCat, data] of Object.entries(appCategories)) {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = `--- ${largeCat.toUpperCase()} ---`;
+                data.subCats.forEach(smallCat => {
+                    const option = document.createElement('option');
+                    option.value = smallCat; option.textContent = smallCat; option.dataset.largeCategory = largeCat; 
+                    optgroup.appendChild(option);
+                });
+                selectCat.appendChild(optgroup);
+            }
+        }
+
+
+        // --- EXPORT / IMPORT ---
+        function exportJSON() {
+            const exportData = { expenses: expenses, categories: appCategories };
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url;
+            a.download = `budget_backup_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        }
+
+        function importJSON(event) {
+            const file = event.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (confirm("Remplacer vos données actuelles ?")) {
+                        if (Array.isArray(importedData)) expenses = importedData;
+                        else if (importedData.expenses && importedData.categories) {
+                            expenses = importedData.expenses; appCategories = importedData.categories; saveCategories();
+                        } else throw new Error("Format non reconnu");
+                        saveData(); populateCategoryDropdown(); updateMonthDropdown(); render();
+                        alert("Données importées !");
+                    }
+                } catch (err) { alert("Format invalide."); }
+            };
+            reader.readAsText(file); event.target.value = '';
+        }
+
+        // Helpers
+        function formatCurrency(amount) { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount); }
+        function calcPercent(part, total) { return total === 0 ? "0%" : ((part / total) * 100).toFixed(1).replace('.', ',') + "%"; }
+
+        // Démarrage
+        init();
+
+    </script>
+</body>
+</html>
