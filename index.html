@@ -225,20 +225,42 @@
 
             <div class="lg:col-span-2 xl:col-span-3">
                 <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-sm h-full flex flex-col w-full max-w-full overflow-hidden">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 shrink-0">
-                        <h3 class="text-lg font-bold flex items-center gap-2">
-                            <i data-lucide="list" class="w-5 h-5 text-indigo-500"></i>
-                            Historique
-                        </h3>
-                        <div class="flex items-center gap-2 text-sm bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 w-full sm:w-auto">
-                            <i data-lucide="arrow-up-down" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                            <select id="sort-select" onchange="changeSort()" class="bg-transparent font-medium text-slate-600 focus:outline-none cursor-pointer w-full sm:w-auto truncate">
-                                <option value="date-desc">Plus récent d'abord</option>
-                                <option value="date-asc">Plus ancien d'abord</option>
-                                <option value="amount-desc">Plus cher d'abord</option>
-                                <option value="amount-asc">Moins cher d'abord</option>
-                                <option value="category">Par Catégorie</option>
-                            </select>
+                    
+                    <div class="flex flex-col gap-4 mb-6 shrink-0">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i data-lucide="list" class="w-5 h-5 text-indigo-500"></i>
+                                Historique
+                            </h3>
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 w-full">
+                            <!-- Barre de recherche -->
+                            <div class="w-full sm:w-[250px] shrink-0 flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 focus-within:border-indigo-400 focus-within:ring-1 focus-within:ring-indigo-400 transition-all">
+                                <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                                <input type="text" id="search-filter" oninput="changeSearchFilter()" placeholder="Rechercher par nom..." class="bg-transparent text-sm font-medium text-slate-700 focus:outline-none w-full placeholder-slate-400">
+                            </div>
+
+                            <!-- Filtre Catégorie -->
+                            <div class="flex items-center gap-2 text-sm bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 w-full sm:w-auto shrink-0">
+                                <i data-lucide="folder" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                                <select id="history-category-filter" onchange="changeCategoryFilter()" class="bg-transparent font-medium text-slate-600 focus:outline-none cursor-pointer w-full sm:w-auto truncate max-w-full sm:max-w-[180px]">
+                                    <option value="all">Toutes les catégories</option>
+                                    <!-- Options ajoutées via JS -->
+                                </select>
+                            </div>
+
+                            <!-- Filtre Tri (Existant) -->
+                            <div class="flex items-center gap-2 text-sm bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 w-full sm:w-auto shrink-0">
+                                <i data-lucide="arrow-up-down" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                                <select id="sort-select" onchange="changeSort()" class="bg-transparent font-medium text-slate-600 focus:outline-none cursor-pointer w-full sm:w-auto truncate">
+                                    <option value="date-desc">Plus récent d'abord</option>
+                                    <option value="date-asc">Plus ancien d'abord</option>
+                                    <option value="amount-desc">Plus cher d'abord</option>
+                                    <option value="amount-asc">Moins cher d'abord</option>
+                                    <option value="category">Par Catégorie</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     
@@ -256,7 +278,7 @@
         
         <footer class="mt-auto pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 pb-2">
             <div>&copy; <span id="current-year"></span> Lucas Jimenez Boulot alias Axsom. Tous droits réservés.</div>
-            <div class="font-medium bg-slate-200/60 px-2.5 py-1 rounded-md tracking-wider">Version 1.12</div>
+            <div class="font-medium bg-slate-200/60 px-2.5 py-1 rounded-md tracking-wider">Version 1.18</div>
         </footer>
     </div>
 
@@ -301,7 +323,7 @@
 
             <div class="flex flex-col lg:flex-row gap-4 mb-8 bg-slate-50 p-4 sm:p-6 rounded-xl border border-slate-200">
                 
-                <div class="flex-1 flex flex-col gap-3 border-b lg:border-b-0 lg:border-r border-slate-200 pb-4 lg:pb-0 lg:pr-4">
+                <div class="flex-1 flex flex-col gap-3 border-b lg:border-b-0 border-slate-200 pb-4 lg:pb-0 lg:pr-4">
                     <label class="text-xs font-bold text-slate-500 uppercase tracking-wider text-center lg:text-left">Période A (Référence)</label>
                     <select id="compare-month-a" onchange="renderComparison()" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 shadow-sm font-bold text-slate-700"></select>
                     
@@ -374,13 +396,19 @@
                 </div>
                 <div class="bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
                     <h3 class="font-bold text-slate-800 text-base sm:text-lg mb-2 flex items-center gap-2">
-                        <i data-lucide="hard-drive" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500"></i> 4. Sauvegarder & Importer
+                        <i data-lucide="filter" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500"></i> 4. Rechercher et Filtrer
+                    </h3>
+                    <p class="text-sm">Au-dessus de votre <b>Historique</b>, vous disposez désormais d'une barre de recherche pour retrouver rapidement une opération par son <b>nom</b>. Vous pouvez également <b>filtrer</b> par <b>Grande Catégorie</b> !</p>
+                </div>
+                <div class="bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-800 text-base sm:text-lg mb-2 flex items-center gap-2">
+                        <i data-lucide="hard-drive" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500"></i> 5. Sauvegarder & Importer
                     </h3>
                     <div class="text-sm space-y-3">
                         <p>Vos informations sont stockées temporairement dans votre navigateur. <b>Pour ne rien perdre, utilisez ces boutons :</b></p>
                         <div class="flex items-start gap-3 bg-white p-3 rounded-lg border border-slate-100">
                             <i data-lucide="download" class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5"></i>
-                            <p><b>Sauvegarder :</b> Télécharge un fichier de secours (<i>.json</i>) contenant toutes vos données. Prenez l'habitude de le faire souvent.</p>
+                            <p><b>Sauvegarder :</b> Télécharge un fichier de secours (<i>.json</i>) contenant toutes vos données. <span class="text-red-600 font-bold uppercase">À faire à chaque fois que vous fermez le navigateur !</span></p>
                         </div>
                         <div class="flex items-start gap-3 bg-white p-3 rounded-lg border border-slate-100">
                             <i data-lucide="upload" class="w-5 h-5 text-indigo-600 shrink-0 mt-0.5"></i>
@@ -522,6 +550,30 @@
         </div>
     </div>
 
+    <!-- MODAL CONFIRMATION SUPPRESSION -->
+    <div id="delete-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-[110] p-4 sm:p-6 transition-opacity">
+        <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-2xl w-full max-w-sm flex flex-col relative text-center">
+            <div class="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="trash-2" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">Supprimer l'opération ?</h3>
+            <p class="text-slate-500 text-sm mb-6">Êtes-vous sûr de vouloir supprimer cette ligne ? Cette action est irréversible.</p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl transition-colors">Annuler</button>
+                <button onclick="executeDelete()" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 rounded-xl transition-colors shadow-sm">Supprimer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EXPORT LOADER -->
+    <div id="export-loader-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-[120] p-4 sm:p-6 transition-opacity">
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-2xl flex flex-col items-center justify-center min-w-[250px]">
+            <i data-lucide="loader-2" class="w-10 h-10 text-indigo-600 animate-spin mb-4"></i>
+            <p class="text-slate-800 font-bold text-lg">Préparation en cours...</p>
+            <p class="text-slate-500 text-sm mt-1">Génération de votre sauvegarde</p>
+        </div>
+    </div>
+
     <script>
         document.getElementById('current-year').textContent = new Date().getFullYear();
 
@@ -571,6 +623,8 @@
         let editingId = null;
         let currentMonthFilter = 'all'; 
         let currentSort = 'date-desc';
+        let currentSearchQuery = ''; 
+        let currentCategoryFilter = 'all'; 
         let formType = 'expense'; 
         let chartInstance = null; 
         
@@ -578,6 +632,7 @@
         let currentCompareChartType = 'bar'; 
         let pendingImportData = null;
         let expandedChartInstance = null; 
+        let itemToDeleteId = null; 
 
         function init() {
             const yearSelect = document.getElementById('year-select');
@@ -594,6 +649,7 @@
             
             loadData();
             populateCategoryDropdown();
+            updateHistoryCategoryFilter(); 
             updateMonthDropdown();
             render();
             lucide.createIcons();
@@ -629,6 +685,40 @@
         function saveData() { localStorage.setItem('budgetData', JSON.stringify(expenses)); }
         function saveCategories() { localStorage.setItem('budgetCategories', JSON.stringify(appCategories)); }
 
+        // --- NOUVEAUX FILTRES HISTORIQUE ---
+        function changeSearchFilter() {
+            currentSearchQuery = document.getElementById('search-filter').value.toLowerCase();
+            renderList();
+        }
+
+        function changeCategoryFilter() {
+            currentCategoryFilter = document.getElementById('history-category-filter').value;
+            renderList();
+        }
+
+        function updateHistoryCategoryFilter() {
+            const select = document.getElementById('history-category-filter');
+            if (!select) return;
+            const currentVal = select.value;
+            
+            select.innerHTML = `<option value="all">Toutes les catégories</option>`;
+            
+            for (const mainCat in appCategories) {
+                const option = document.createElement('option');
+                option.value = 'cat_' + mainCat; 
+                option.textContent = mainCat;
+                select.appendChild(option);
+            }
+
+            if (Array.from(select.options).some(opt => opt.value === currentVal)) {
+                select.value = currentVal;
+            } else {
+                select.value = 'all';
+                currentCategoryFilter = 'all';
+            }
+        }
+        // -----------------------------------
+
         function updateMonthDropdown() {
             const months = new Set();
             expenses.forEach(item => { if(item.date) months.add(item.date.slice(0, 7)); });
@@ -654,7 +744,6 @@
         function changeMonthFilter() { 
             currentMonthFilter = document.getElementById('month-filter').value; 
             
-            // NOUVEAU : Synchronisation du formulaire d'ajout avec le filtre
             if (currentMonthFilter === 'all') {
                 const now = new Date();
                 document.getElementById('month-select').value = String(now.getMonth() + 1).padStart(2, '0');
@@ -856,10 +945,29 @@
         function renderList() {
             const expenseList = document.getElementById('expense-list');
             expenseList.innerHTML = '';
+            
             let filteredData = getFilteredData();
             
+            // --- NOUVEAUX FILTRES APPLIQUÉS ICI ---
+            filteredData = filteredData.filter(item => {
+                // Filtre par recherche texte
+                if (currentSearchQuery && !item.desc.toLowerCase().includes(currentSearchQuery)) {
+                    return false;
+                }
+                
+                // Filtre par catégorie
+                if (currentCategoryFilter !== 'all') {
+                    if (currentCategoryFilter.startsWith('cat_')) {
+                        const targetCat = currentCategoryFilter.replace('cat_', '');
+                        if (item.type === 'income' || item.largeCat !== targetCat) return false;
+                    }
+                }
+                return true;
+            });
+            // ---------------------------------------
+            
             if (filteredData.length === 0) {
-                expenseList.innerHTML = '<li class="text-center text-slate-400 py-8 italic" id="empty-state">Aucune donnée pour cette période.</li>';
+                expenseList.innerHTML = '<li class="text-center text-slate-400 py-8 italic" id="empty-state">Aucune donnée pour cette période/recherche.</li>';
                 return;
             }
             
@@ -933,7 +1041,7 @@
                                 <button onclick="editItem('${item.id}')" class="text-slate-400 hover:text-amber-500 p-1.5 sm:p-2 rounded-lg bg-amber-50 sm:bg-transparent hover:bg-amber-50 transition-colors" title="Modifier">
                                     <i data-lucide="edit-2" class="w-4 h-4"></i>
                                 </button>
-                                <button onclick="deleteItem('${item.id}')" class="text-slate-400 hover:text-red-500 p-1.5 sm:p-2 rounded-lg bg-red-50 sm:bg-transparent hover:bg-red-50 transition-colors" title="Supprimer">
+                                <button onclick="confirmDelete('${item.id}')" class="text-slate-400 hover:text-red-500 p-1.5 sm:p-2 rounded-lg bg-red-50 sm:bg-transparent hover:bg-red-50 transition-colors" title="Supprimer">
                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                                 </button>
                             </div>
@@ -964,7 +1072,7 @@
                                 <button onclick="editItem('${item.id}')" class="text-slate-400 hover:text-amber-500 p-1.5 sm:p-2 rounded-lg bg-amber-50 sm:bg-transparent hover:bg-amber-50 transition-colors" title="Modifier">
                                     <i data-lucide="edit-2" class="w-4 h-4"></i>
                                 </button>
-                                <button onclick="deleteItem('${item.id}')" class="text-slate-400 hover:text-red-500 p-1.5 sm:p-2 rounded-lg bg-red-50 sm:bg-transparent hover:bg-red-50 transition-colors" title="Supprimer">
+                                <button onclick="confirmDelete('${item.id}')" class="text-slate-400 hover:text-red-500 p-1.5 sm:p-2 rounded-lg bg-red-50 sm:bg-transparent hover:bg-red-50 transition-colors" title="Supprimer">
                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                                 </button>
                             </div>
@@ -1077,16 +1185,34 @@
             lucide.createIcons();
         }
 
-        function deleteItem(id) {
+        function confirmDelete(id) {
             if (editingId === id) return showToast("Terminez ou annulez la modification en cours avant de supprimer.", "error");
-            expenses = expenses.filter(e => e.id !== id);
+            itemToDeleteId = id;
+            document.getElementById('delete-modal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            itemToDeleteId = null;
+            document.getElementById('delete-modal').classList.add('hidden');
+        }
+
+        function executeDelete() {
+            if (!itemToDeleteId) return;
+            expenses = expenses.filter(e => e.id !== itemToDeleteId);
             saveData(); updateMonthDropdown(); render(); updateCompareSelects();
+            closeDeleteModal();
+            showToast("Opération supprimée.");
+        }
+
+        function deleteItem(id) {
+            // Remplacée par confirmDelete
+            confirmDelete(id);
         }
 
         function resetData() {
             if(confirm("Êtes-vous sûr de vouloir TOUT effacer (Dépenses, Revenus ET Catégories) ?")) {
                 expenses = []; appCategories = {}; localStorage.removeItem('budgetData'); localStorage.removeItem('budgetCategories');
-                loadData(); populateCategoryDropdown(); updateMonthDropdown(); render(); updateCompareSelects();
+                loadData(); populateCategoryDropdown(); updateHistoryCategoryFilter(); updateMonthDropdown(); render(); updateCompareSelects();
             }
         }
 
@@ -1273,11 +1399,11 @@
                         <div class="flex justify-between items-center mt-auto"><span class="text-xs text-emerald-600 font-bold">ÉVOLUTION :</span> ${renderDiff(totals.A.rev, totals.B.rev, 'income')}</div>
                     </div>
                     
-                    <div class="bg-rose-50 border border-rose-100 rounded-xl p-4 shadow-sm text-center flex flex-col justify-center">
-                        <h4 class="text-xs font-bold text-rose-700 uppercase tracking-wider mb-3">Dépenses Totales</h4>
+                    <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 shadow-sm text-center flex flex-col justify-center">
+                        <h4 class="text-xs font-bold text-blue-700 uppercase tracking-wider mb-3">Dépenses Totales</h4>
                         <div class="flex justify-between items-center text-sm mb-1"><span class="text-slate-500">${nameA}:</span> <span class="font-semibold">${formatCurrency(totals.A.dep/100)}</span></div>
-                        <div class="flex justify-between items-center text-sm border-b border-rose-200/50 pb-2 mb-2"><span class="text-slate-500">${nameB}:</span> <span class="font-semibold">${formatCurrency(totals.B.dep/100)}</span></div>
-                        <div class="flex justify-between items-center mt-auto"><span class="text-xs text-rose-600 font-bold">ÉVOLUTION :</span> ${renderDiff(totals.A.dep, totals.B.dep, 'expense')}</div>
+                        <div class="flex justify-between items-center text-sm border-b border-blue-200/50 pb-2 mb-2"><span class="text-slate-500">${nameB}:</span> <span class="font-semibold">${formatCurrency(totals.B.dep/100)}</span></div>
+                        <div class="flex justify-between items-center mt-auto"><span class="text-xs text-blue-600 font-bold">ÉVOLUTION :</span> ${renderDiff(totals.A.dep, totals.B.dep, 'expense')}</div>
                     </div>
                     
                     <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 shadow-sm text-center flex flex-col justify-center relative overflow-hidden">
@@ -1306,37 +1432,81 @@
                 html += `
                     <div class="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm mb-6">
                         <h4 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2"><i data-lucide="zap" class="w-4 h-4 text-amber-500"></i> Ce qui explique la différence (Top variations)</h4>
-                        <div class="max-h-48 overflow-y-auto pr-2 space-y-2 no-scrollbar bg-slate-50/50">
+                        <div class="max-h-96 overflow-y-auto pr-2 space-y-2 no-scrollbar bg-slate-50/50">
                 `;
-                catDiffs.forEach(diffObj => {
+                catDiffs.forEach((diffObj, index) => {
                     const [large, small] = diffObj.key.split('__||__');
                     const isIncrease = diffObj.diff > 0;
                     const diffColor = isIncrease ? "text-rose-600 bg-rose-50 border-rose-100" : "text-emerald-600 bg-emerald-50 border-emerald-100";
                     const diffIcon = isIncrease ? "trending-up" : "trending-down";
                     const diffSign = isIncrease ? "+" : "-"; 
                     
+                    // NOUVEAU : Récupération des détails pour chaque mois
+                    const itemsA = dataA.filter(item => item.type === 'expense' && item.largeCat === large && item.smallCat === small);
+                    const itemsB = dataB.filter(item => item.type === 'expense' && item.largeCat === large && item.smallCat === small);
+
+                    const listAHtml = itemsA.length > 0 
+                        ? itemsA.map(item => `<li class="flex justify-between text-xs items-center border-b border-slate-100/50 last:border-0 py-1"><span class="text-slate-600 truncate pr-2" title="${escapeHtml(item.desc)}">${escapeHtml(item.desc)}</span><span class="font-semibold text-slate-700 shrink-0">${formatCurrency(item.amountCents/100)}</span></li>`).join('') 
+                        : `<li class="text-xs text-slate-400 italic py-1">Aucune opération</li>`;
+                        
+                    const listBHtml = itemsB.length > 0 
+                        ? itemsB.map(item => `<li class="flex justify-between text-xs items-center border-b border-slate-100/50 last:border-0 py-1"><span class="text-slate-600 truncate pr-2" title="${escapeHtml(item.desc)}">${escapeHtml(item.desc)}</span><span class="font-semibold text-slate-700 shrink-0">${formatCurrency(item.amountCents/100)}</span></li>`).join('') 
+                        : `<li class="text-xs text-slate-400 italic py-1">Aucune opération</li>`;
+                    
                     html += `
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow transition-shadow gap-3">
-                            <div class="flex flex-col min-w-0 pr-2 flex-1">
-                                <span class="font-bold text-sm text-slate-700 truncate">${escapeHtml(small)}</span>
-                                <span class="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider font-semibold truncate">${escapeHtml(large)}</span>
+                        <div class="rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow transition-shadow overflow-hidden">
+                            <!-- En-tête cliquable -->
+                            <div onclick="document.getElementById('details-${index}').classList.toggle('hidden'); document.getElementById('chevron-${index}').classList.toggle('rotate-180');" class="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 gap-3 cursor-pointer group">
+                                <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                                    <i data-lucide="chevron-down" id="chevron-${index}" class="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 group-hover:text-indigo-500 transition-transform shrink-0"></i>
+                                    <div class="flex flex-col min-w-0 pr-2 flex-1">
+                                        <span class="font-bold text-sm text-slate-700 truncate">${escapeHtml(small)}</span>
+                                        <span class="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider font-semibold truncate">${escapeHtml(large)}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto ml-6 sm:ml-0">
+                                    <div class="flex items-center gap-3 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 shrink-0">
+                                        <div class="flex flex-col items-end w-16 sm:w-20">
+                                            <span class="text-[9px] uppercase font-bold text-slate-400 leading-none mb-0.5 truncate w-full text-right">${nameA}</span>
+                                            <span class="font-bold text-slate-700 text-xs sm:text-sm">${formatCurrency(diffObj.valA / 100)}</span>
+                                        </div>
+                                        <i data-lucide="arrow-right" class="w-3 h-3 sm:w-4 sm:h-4 text-slate-300"></i>
+                                        <div class="flex flex-col items-start w-16 sm:w-20">
+                                            <span class="text-[9px] uppercase font-bold text-slate-400 leading-none mb-0.5 truncate w-full text-left">${nameB}</span>
+                                            <span class="font-bold text-slate-700 text-xs sm:text-sm">${formatCurrency(diffObj.valB / 100)}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="${diffColor} px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1 sm:gap-1.5 font-bold text-xs sm:text-sm border whitespace-nowrap shrink-0 justify-center min-w-[80px] sm:min-w-[90px]">
+                                        <i data-lucide="${diffIcon}" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+                                        ${diffSign}${formatCurrency(diffObj.absDiff / 100)}
+                                    </div>
+                                </div>
                             </div>
                             
-                            <div class="flex items-center gap-3 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 shrink-0">
-                                <div class="flex flex-col items-end w-20">
-                                    <span class="text-[9px] uppercase font-bold text-slate-400 leading-none mb-0.5 truncate w-full text-right">${nameA}</span>
-                                    <span class="font-bold text-slate-700 text-sm">${formatCurrency(diffObj.valA / 100)}</span>
+                            <!-- Détails déroulants -->
+                            <div id="details-${index}" class="hidden border-t border-slate-100 bg-slate-50/50 p-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                                    <div>
+                                        <h5 class="text-[10px] font-bold text-slate-400 uppercase mb-2 border-b border-slate-200 pb-1 flex justify-between items-center">
+                                            <span>${nameA}</span>
+                                            <span class="text-slate-500">${itemsA.length} op.</span>
+                                        </h5>
+                                        <ul>
+                                            ${listAHtml}
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h5 class="text-[10px] font-bold text-slate-400 uppercase mb-2 border-b border-slate-200 pb-1 flex justify-between items-center">
+                                            <span>${nameB}</span>
+                                            <span class="text-slate-500">${itemsB.length} op.</span>
+                                        </h5>
+                                        <ul>
+                                            ${listBHtml}
+                                        </ul>
+                                    </div>
                                 </div>
-                                <i data-lucide="arrow-right" class="w-4 h-4 text-slate-300"></i>
-                                <div class="flex flex-col items-start w-20">
-                                    <span class="text-[9px] uppercase font-bold text-slate-400 leading-none mb-0.5 truncate w-full text-left">${nameB}</span>
-                                    <span class="font-bold text-slate-700 text-sm">${formatCurrency(diffObj.valB / 100)}</span>
-                                </div>
-                            </div>
-                            
-                            <div class="${diffColor} px-3 py-1.5 rounded-md flex items-center gap-1.5 font-bold text-sm border whitespace-nowrap shrink-0 justify-center min-w-[90px]">
-                                <i data-lucide="${diffIcon}" class="w-4 h-4"></i>
-                                ${diffSign}${formatCurrency(diffObj.absDiff / 100)}
                             </div>
                         </div>
                     `;
@@ -1468,7 +1638,7 @@
             const unusedPalettes = availablePalettes.filter(p => !usedPaletteIds.includes(p.id));
             const selectedPalette = unusedPalettes.length > 0 ? unusedPalettes[0] : availablePalettes[Math.floor(Math.random() * availablePalettes.length)];
             appCategories[name] = { palette: selectedPalette, subCats: ["Divers"] };
-            saveCategories(); input.value = ''; updateModalSelect(); populateCategoryDropdown(); renderEditCategories(); render(); 
+            saveCategories(); input.value = ''; updateModalSelect(); populateCategoryDropdown(); updateHistoryCategoryFilter(); renderEditCategories(); render(); 
         }
 
         function addSubCategory() {
@@ -1549,13 +1719,13 @@
             if (appCategories[newName]) return showToast("Cette catégorie existe déjà.", "error");
             appCategories[newName] = appCategories[oldName]; delete appCategories[oldName];
             expenses.forEach(exp => { if (exp.largeCat === oldName) exp.largeCat = newName; });
-            saveCategories(); saveData(); updateModalSelect(); populateCategoryDropdown(); renderEditCategories(); render(); updateCompareSelects();
+            saveCategories(); saveData(); updateModalSelect(); populateCategoryDropdown(); updateHistoryCategoryFilter(); renderEditCategories(); render(); updateCompareSelects();
         }
 
         function deleteMainCategory(mainIndex) {
             const name = Object.keys(appCategories)[mainIndex];
             if(!confirm(`Supprimer "${name}" ?`)) return;
-            delete appCategories[name]; saveCategories(); updateModalSelect(); populateCategoryDropdown(); renderEditCategories(); render(); updateCompareSelects();
+            delete appCategories[name]; saveCategories(); updateModalSelect(); populateCategoryDropdown(); updateHistoryCategoryFilter(); renderEditCategories(); render(); updateCompareSelects();
         }
 
         function updateSubCategory(mainIndex, subIndex) {
@@ -1754,13 +1924,51 @@
                     }
                 }
 
-                saveData(); populateCategoryDropdown(); updateMonthDropdown(); render(); updateCompareSelects();
+                saveData(); populateCategoryDropdown(); updateHistoryCategoryFilter(); updateMonthDropdown(); render(); updateCompareSelects();
                 closeImportModal();
                 showToast("Les données ont été intégrées avec succès !");
                 
             } catch (err) {
                 showToast("Erreur lors de l'intégration. Veuillez contacter l'administrateur de l'application pour régler ce bug.", "error");
             }
+        }
+
+        function exportJSON() {
+            document.getElementById('export-loader-modal').classList.remove('hidden');
+            
+            setTimeout(() => {
+                const dataToExport = {
+                    expenses: expenses,
+                    categories: appCategories,
+                    exportDate: new Date().toISOString()
+                };
+                
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport, null, 2));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                
+                // Détermination du nom de fichier intelligent
+                let fileName = "";
+                const todayFormatted = new Date().toISOString().slice(0, 10);
+                if (expenses.length === 0) {
+                    fileName = `budget_vide_${todayFormatted}.json`;
+                } else {
+                    const uniqueMonths = [...new Set(expenses.map(e => e.date ? e.date.slice(0, 7) : ""))].filter(Boolean);
+                    if (uniqueMonths.length === 1) {
+                        fileName = `budget_${uniqueMonths[0]}.json`;
+                    } else {
+                        fileName = `budget_global_${todayFormatted}.json`;
+                    }
+                }
+                
+                downloadAnchorNode.setAttribute("download", fileName);
+                document.body.appendChild(downloadAnchorNode); 
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+                
+                document.getElementById('export-loader-modal').classList.add('hidden');
+                showToast("Sauvegarde téléchargée avec succès !");
+            }, 1200); 
         }
 
         function formatCurrency(amount) { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount); }
