@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mon Suivi de Dépenses</title>
+    <title>MonBudget - Suivi de Dépenses</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -26,15 +26,26 @@
     <!-- Conteneur pour les notifications (Toasts) -->
     <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none w-[90%] sm:w-auto max-w-md"></div>
 
-    <div class="w-full px-4 md:px-8 lg:px-12 py-6 flex-1 max-w-full flex flex-col">
+    <div class="w-full px-4 md:px-8 lg:px-12 py-6 flex-1 max-w-full flex flex-col relative">
         
-        <header class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-6 sm:mb-8">
+        <header class="sticky top-0 z-40 bg-slate-50/95 backdrop-blur-md pt-6 pb-4 -mt-6 -mx-4 md:-mx-8 lg:-mx-12 px-4 md:px-8 lg:px-12 mb-6 sm:mb-8 border-b border-slate-200/60 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.04)] flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 transition-all">
             <div>
-                <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2">
-                    <i data-lucide="wallet" class="w-7 h-7 sm:w-8 sm:h-8 text-indigo-600"></i>
-                    Super Calculateur de Budget
-                </h1>
-                <p class="text-sm sm:text-base text-slate-500 mt-1">Gérez vos revenus et dépenses intelligemment.</p>
+                <!-- NOUVEAU LOGO PRO -->
+                <div class="flex items-center gap-3 sm:gap-4 cursor-default">
+                    <div class="relative flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 bg-gradient-to-tr from-indigo-600 to-indigo-500 rounded-xl shadow-lg shadow-indigo-200/80">
+                        <svg class="w-6 h-6 sm:w-7 sm:h-7 text-white absolute" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 20L7 9L12 14L22 4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 20L7 9L12 14L22 4V20H2Z" fill="currentColor" fill-opacity="0.2"/>
+                        </svg>
+                        <div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-emerald-400 border-2 border-slate-50 rounded-full shadow-sm"></div>
+                    </div>
+                    <div class="flex flex-col">
+                        <h1 class="text-xl sm:text-2xl font-black tracking-tight text-slate-800 leading-none">
+                            Mon<span class="text-indigo-600">Budget</span>
+                        </h1>
+                        <p class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Finance Manager</p>
+                    </div>
+                </div>
             </div>
             
             <div class="flex flex-col sm:flex-row gap-2 sm:gap-4 items-stretch sm:items-center bg-white p-2 sm:p-3 rounded-xl shadow-sm border border-slate-200 w-full xl:w-auto">
@@ -79,7 +90,7 @@
 
                     <div class="hidden sm:block w-px h-4 bg-slate-200"></div>
 
-                    <button onclick="resetData()" class="text-xs sm:text-sm font-medium text-red-500 hover:text-red-700 flex items-center gap-1.5 px-2 transition-colors py-1">
+                    <button onclick="promptResetData()" class="text-xs sm:text-sm font-medium text-red-500 hover:text-red-700 flex items-center gap-1.5 px-2 transition-colors py-1">
                         <i data-lucide="trash-2" class="w-4 h-4"></i> Effacer
                     </button>
                 </div>
@@ -278,7 +289,7 @@
         
         <footer class="mt-auto pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 pb-2">
             <div>&copy; <span id="current-year"></span> Lucas Jimenez Boulot alias Axsom. Tous droits réservés.</div>
-            <div class="font-medium bg-slate-200/60 px-2.5 py-1 rounded-md tracking-wider">Version 1.20</div>
+            <div class="font-medium bg-slate-200/60 px-2.5 py-1 rounded-md tracking-wider">Version 1.30</div>
         </footer>
     </div>
 
@@ -376,6 +387,13 @@
             </div>
 
             <div class="space-y-4 sm:space-y-5 text-slate-600">
+                
+                <!-- NOUVEL ENCART INTRODUCTIF -->
+                <div class="bg-indigo-50 text-indigo-800 p-4 sm:p-5 rounded-xl border border-indigo-100 flex items-start gap-3 shadow-sm">
+                    <i data-lucide="info" class="w-5 h-5 mt-0.5 shrink-0 text-indigo-600"></i>
+                    <p class="text-sm sm:text-base font-medium leading-relaxed">Bienvenue dans <b>MonBudget</b>, votre assistant de gestion financière nouvelle génération. Suivez les étapes ci-dessous pour maîtriser votre budget en toute simplicité.</p>
+                </div>
+
                 <div class="bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
                     <h3 class="font-bold text-slate-800 text-base sm:text-lg mb-2 flex items-center gap-2">
                         <i data-lucide="plus-circle" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500"></i> 1. Ajouter une opération
@@ -565,12 +583,27 @@
         </div>
     </div>
 
-    <!-- MODAL EXPORT LOADER -->
-    <div id="export-loader-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-[120] p-4 sm:p-6 transition-opacity">
-        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-2xl flex flex-col items-center justify-center min-w-[250px]">
+    <!-- MODAL CONFIRMATION RESET TOUT -->
+    <div id="reset-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-[110] p-4 sm:p-6 transition-opacity">
+        <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-2xl w-full max-w-sm flex flex-col relative text-center">
+            <div class="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="alert-octagon" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">Tout effacer ?</h3>
+            <p class="text-slate-500 text-sm mb-6">Êtes-vous absolument sûr de vouloir supprimer <b>toutes vos données</b> ? Cette action est irréversible.</p>
+            <div class="flex gap-3">
+                <button onclick="closeResetModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl transition-colors">Annuler</button>
+                <button onclick="executeReset()" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 rounded-xl transition-colors shadow-sm">Oui, effacer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GLOBAL LOADER -->
+    <div id="global-loader-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-[150] p-4 sm:p-6 transition-opacity">
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-2xl flex flex-col items-center justify-center min-w-[250px] transform transition-transform scale-95 opacity-0 duration-300" id="global-loader-content">
             <i data-lucide="loader-2" class="w-10 h-10 text-indigo-600 animate-spin mb-4"></i>
-            <p class="text-slate-800 font-bold text-lg">Préparation en cours...</p>
-            <p class="text-slate-500 text-sm mt-1">Génération de votre sauvegarde</p>
+            <p class="text-slate-800 font-bold text-lg" id="loader-title">Préparation en cours...</p>
+            <p class="text-slate-500 text-sm mt-1" id="loader-subtitle">Veuillez patienter</p>
         </div>
     </div>
 
@@ -633,6 +666,28 @@
         let pendingImportData = null;
         let expandedChartInstance = null; 
         let itemToDeleteId = null; 
+
+        // --- GESTION DU LOADER GLOBAL ---
+        function showLoader(title, subtitle) {
+            document.getElementById('loader-title').textContent = title;
+            document.getElementById('loader-subtitle').textContent = subtitle;
+            const modal = document.getElementById('global-loader-modal');
+            const content = document.getElementById('global-loader-content');
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            });
+        }
+
+        function hideLoader() {
+            const modal = document.getElementById('global-loader-modal');
+            const content = document.getElementById('global-loader-content');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+        // ---------------------------------
 
         function init() {
             const yearSelect = document.getElementById('year-select');
@@ -946,6 +1001,23 @@
             const expenseList = document.getElementById('expense-list');
             expenseList.innerHTML = '';
             
+            // On vérifie les outliers sur TOUTES les dépenses (correction bug d'affichage masqué)
+            const hasOutliers = expenses.some(e => e.isOutlier);
+            if (hasOutliers) {
+                const warningBox = document.createElement('div');
+                warningBox.className = "flex flex-col sm:flex-row justify-between items-center bg-orange-50 border border-orange-200 rounded-xl p-3 sm:p-4 gap-3 shadow-sm mb-4";
+                warningBox.innerHTML = `
+                    <div class="flex items-center gap-2 text-orange-800">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0 text-orange-500"></i>
+                        <span class="text-xs sm:text-sm font-medium">Certaines dates ne correspondent pas au mois majoritaire importé.</span>
+                    </div>
+                    <button onclick="fixOutliers()" class="w-full sm:w-auto px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs sm:text-sm rounded-lg transition-colors whitespace-nowrap shadow-sm flex items-center justify-center gap-1.5">
+                        <i data-lucide="wrench" class="w-4 h-4"></i> Corriger tout
+                    </button>
+                `;
+                expenseList.appendChild(warningBox);
+            }
+
             let filteredData = getFilteredData();
             
             // --- NOUVEAUX FILTRES APPLIQUÉS ICI ---
@@ -967,24 +1039,12 @@
             // ---------------------------------------
             
             if (filteredData.length === 0) {
-                expenseList.innerHTML = '<li class="text-center text-slate-400 py-8 italic" id="empty-state">Aucune donnée pour cette période/recherche.</li>';
+                const emptyState = document.createElement('li');
+                emptyState.className = "text-center text-slate-400 py-8 italic";
+                emptyState.id = "empty-state";
+                emptyState.textContent = "Aucune donnée pour cette période/recherche.";
+                expenseList.appendChild(emptyState);
                 return;
-            }
-            
-            const hasOutliers = filteredData.some(e => e.isOutlier);
-            if (hasOutliers) {
-                const warningBox = document.createElement('div');
-                warningBox.className = "flex flex-col sm:flex-row justify-between items-center bg-orange-50 border border-orange-200 rounded-xl p-3 sm:p-4 gap-3 shadow-sm mb-4";
-                warningBox.innerHTML = `
-                    <div class="flex items-center gap-2 text-orange-800">
-                        <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0 text-orange-500"></i>
-                        <span class="text-xs sm:text-sm font-medium">Certaines dates ne correspondent pas au mois majoritaire importé.</span>
-                    </div>
-                    <button onclick="fixOutliers()" class="w-full sm:w-auto px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs sm:text-sm rounded-lg transition-colors whitespace-nowrap shadow-sm flex items-center justify-center gap-1.5">
-                        <i data-lucide="wrench" class="w-4 h-4"></i> Corriger tout
-                    </button>
-                `;
-                expenseList.appendChild(warningBox);
             }
 
             filteredData.sort((a, b) => {
@@ -1209,11 +1269,23 @@
             confirmDelete(id);
         }
 
-        function resetData() {
-            if(confirm("Êtes-vous sûr de vouloir TOUT effacer (Dépenses, Revenus ET Catégories) ?")) {
+        function promptResetData() {
+            document.getElementById('reset-modal').classList.remove('hidden');
+        }
+
+        function closeResetModal() {
+            document.getElementById('reset-modal').classList.add('hidden');
+        }
+
+        function executeReset() {
+            closeResetModal();
+            showLoader("Suppression...", "Effacement de vos données");
+            setTimeout(() => {
                 expenses = []; appCategories = {}; localStorage.removeItem('budgetData'); localStorage.removeItem('budgetCategories');
                 loadData(); populateCategoryDropdown(); updateHistoryCategoryFilter(); updateMonthDropdown(); render(); updateCompareSelects();
-            }
+                hideLoader();
+                showToast("Toutes vos données ont été effacées.", "success");
+            }, 800);
         }
 
         function openCategoryModal() { document.getElementById('category-modal').classList.remove('hidden'); updateModalSelect(); renderEditCategories(); }
@@ -1859,82 +1931,91 @@
         function executeImport(mode) {
             if (!pendingImportData) return;
 
-            try {
-                let importedExpenses = Array.isArray(pendingImportData) ? pendingImportData : (pendingImportData.expenses || []);
-                
-                let maxMonth = null;
-                if (importedExpenses.length > 0) {
-                    const monthCounts = {};
-                    importedExpenses.forEach(exp => {
-                        if (exp.date) {
-                            const m = exp.date.slice(0, 7);
-                            monthCounts[m] = (monthCounts[m] || 0) + 1;
-                        }
-                    });
-                    let maxCount = 0;
-                    for (const m in monthCounts) {
-                        if (monthCounts[m] > maxCount) {
-                            maxCount = monthCounts[m];
-                            maxMonth = m;
-                        }
-                    }
-                }
+            // On capture les données avant de fermer la modale (ce qui va réinitialiser pendingImportData)
+            const dataToImport = pendingImportData;
 
-                const existingIds = new Set(expenses.map(exp => exp.id));
-                
-                const processExpense = (exp) => {
-                    if (!exp.id || existingIds.has(exp.id)) {
-                        exp.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
-                    }
-                    existingIds.add(exp.id);
+            closeImportModal();
+            showLoader("Importation...", "Traitement et fusion de vos données");
 
-                    delete exp.isRecurring; delete exp.recurringParentId;
+            setTimeout(() => {
+                try {
+                    let importedExpenses = Array.isArray(dataToImport) ? dataToImport : (dataToImport.expenses || []);
                     
-                    if (maxMonth && exp.date && exp.date.slice(0, 7) !== maxMonth) {
-                        exp.isOutlier = true;
-                        exp.targetMonth = maxMonth;
-                    } else {
-                        delete exp.isOutlier;
-                        delete exp.targetMonth;
-                    }
-                    return exp;
-                };
-
-                if (mode === 'replace') {
-                    expenses = importedExpenses.map(processExpense);
-                    if (pendingImportData.categories && !Array.isArray(pendingImportData)) {
-                        appCategories = pendingImportData.categories; saveCategories();
-                    }
-                } else if (mode === 'merge') {
-                    importedExpenses.forEach(exp => {
-                        const processedExp = processExpense(exp);
-                        expenses.push(processedExp);
-                    });
-                    
-                    if (pendingImportData.categories && !Array.isArray(pendingImportData)) {
-                        for (const cat in pendingImportData.categories) {
-                            if (!appCategories[cat]) appCategories[cat] = pendingImportData.categories[cat];
-                            else {
-                                pendingImportData.categories[cat].subCats.forEach(sub => {
-                                    if (!appCategories[cat].subCats.includes(sub)) appCategories[cat].subCats.push(sub);
-                                });
+                    let maxMonth = null;
+                    if (importedExpenses.length > 0) {
+                        const monthCounts = {};
+                        importedExpenses.forEach(exp => {
+                            if (exp.date) {
+                                const m = exp.date.slice(0, 7);
+                                monthCounts[m] = (monthCounts[m] || 0) + 1;
+                            }
+                        });
+                        let maxCount = 0;
+                        for (const m in monthCounts) {
+                            if (monthCounts[m] > maxCount) {
+                                maxCount = monthCounts[m];
+                                maxMonth = m;
                             }
                         }
-                        saveCategories();
                     }
-                }
 
-                saveData(); populateCategoryDropdown(); updateHistoryCategoryFilter(); updateMonthDropdown(); render(); updateCompareSelects();
-                closeImportModal();
-                showToast("Les données ont été intégrées avec succès !");
-                
-            } catch (err) {
-                showToast("Erreur lors de l'intégration. Veuillez contacter l'administrateur de l'application pour régler ce bug.", "error");
-            }
+                    const existingIds = new Set(expenses.map(exp => exp.id));
+                    
+                    const processExpense = (exp) => {
+                        if (!exp.id || existingIds.has(exp.id)) {
+                            exp.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+                        }
+                        existingIds.add(exp.id);
+
+                        delete exp.isRecurring; delete exp.recurringParentId;
+                        
+                        if (maxMonth && exp.date && exp.date.slice(0, 7) !== maxMonth) {
+                            exp.isOutlier = true;
+                            exp.targetMonth = maxMonth;
+                        } else {
+                            delete exp.isOutlier;
+                            delete exp.targetMonth;
+                        }
+                        return exp;
+                    };
+
+                    if (mode === 'replace') {
+                        expenses = importedExpenses.map(processExpense);
+                        if (dataToImport.categories && !Array.isArray(dataToImport)) {
+                            appCategories = dataToImport.categories; saveCategories();
+                        }
+                    } else if (mode === 'merge') {
+                        importedExpenses.forEach(exp => {
+                            const processedExp = processExpense(exp);
+                            expenses.push(processedExp);
+                        });
+                        
+                        if (dataToImport.categories && !Array.isArray(dataToImport)) {
+                            for (const cat in dataToImport.categories) {
+                                if (!appCategories[cat]) appCategories[cat] = dataToImport.categories[cat];
+                                else {
+                                    dataToImport.categories[cat].subCats.forEach(sub => {
+                                        if (!appCategories[cat].subCats.includes(sub)) appCategories[cat].subCats.push(sub);
+                                    });
+                                }
+                            }
+                            saveCategories();
+                        }
+                    }
+
+                    saveData(); populateCategoryDropdown(); updateHistoryCategoryFilter(); updateMonthDropdown(); render(); updateCompareSelects();
+                    hideLoader();
+                    showToast("Les données ont été intégrées avec succès !");
+                    
+                } catch (err) {
+                    hideLoader();
+                    showToast("Erreur lors de l'intégration. Veuillez contacter l'administrateur de l'application pour régler ce bug.", "error");
+                }
+            }, 800);
         }
 
         function exportJSON() {
-            document.getElementById('export-loader-modal').classList.remove('hidden');
+            showLoader("Préparation en cours...", "Génération de votre fichier de sauvegarde");
             
             setTimeout(() => {
                 const dataToExport = {
@@ -1966,7 +2047,7 @@
                 downloadAnchorNode.click();
                 downloadAnchorNode.remove();
                 
-                document.getElementById('export-loader-modal').classList.add('hidden');
+                hideLoader();
                 showToast("Sauvegarde téléchargée avec succès !");
             }, 1200); 
         }
