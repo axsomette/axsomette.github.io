@@ -1354,10 +1354,10 @@
 
             const reste = currRev - currDep;
             if (reste > 0 && currDep > 0) {
-                html += `<li class="flex items-start gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0"></i> Vous avez un solde positif de <b>${formatCurrency(reste/100)}</b>. Beau travail !</li>`;
+                html += `<li class="flex items-start gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0"></i> <span>Vous avez un solde positif de <b>${formatCurrency(reste/100)}</b>. Beau travail !</span></li>`;
                 hasInsight = true;
             } else if (currDep > 0 && currRev > 0 && reste < 0) {
-                html += `<li class="flex items-start gap-2"><i data-lucide="alert-triangle" class="w-4 h-4 text-rose-500 mt-0.5 shrink-0"></i> Vos dépenses dépassent vos revenus. Attention à votre budget.</li>`;
+                html += `<li class="flex items-start gap-2"><i data-lucide="alert-triangle" class="w-4 h-4 text-rose-500 mt-0.5 shrink-0"></i> <span>Vos dépenses dépassent vos revenus. Attention à votre budget.</span></li>`;
                 hasInsight = true;
             }
 
@@ -1365,17 +1365,17 @@
                 const diff = currDep - prevDep;
                 const pct = Math.abs((diff / prevDep) * 100).toFixed(0);
                 if (diff < 0) {
-                    html += `<li class="flex items-start gap-2"><i data-lucide="trending-down" class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0"></i> Vos dépenses ont baissé de <b>${pct}%</b> par rapport au mois dernier.</li>`;
+                    html += `<li class="flex items-start gap-2"><i data-lucide="trending-down" class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0"></i> <span>Vos dépenses ont baissé de <b>${pct}%</b> par rapport au mois dernier.</span></li>`;
                     hasInsight = true;
                 } else if (diff > 0) {
-                    html += `<li class="flex items-start gap-2"><i data-lucide="trending-up" class="w-4 h-4 text-amber-500 mt-0.5 shrink-0"></i> Vos dépenses ont augmenté de <b>${pct}%</b> par rapport au mois dernier.</li>`;
+                    html += `<li class="flex items-start gap-2"><i data-lucide="trending-up" class="w-4 h-4 text-amber-500 mt-0.5 shrink-0"></i> <span>Vos dépenses ont augmenté de <b>${pct}%</b> par rapport au mois dernier.</span></li>`;
                     hasInsight = true;
                 }
             }
 
             if (topCat && currDep > 0) {
                 const topPct = ((topCatAmt / currDep) * 100).toFixed(0);
-                html += `<li class="flex items-start gap-2"><i data-lucide="pie-chart" class="w-4 h-4 text-indigo-400 mt-0.5 shrink-0"></i> <b>${topCat}</b> représente ${topPct}% de vos dépenses ce mois-ci.</li>`;
+                html += `<li class="flex items-start gap-2"><i data-lucide="pie-chart" class="w-4 h-4 text-indigo-400 mt-0.5 shrink-0"></i> <span><b>${topCat}</b> représente ${topPct}% de vos dépenses ce mois-ci.</span></li>`;
                 hasInsight = true;
             }
 
