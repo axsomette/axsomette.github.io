@@ -1261,7 +1261,7 @@
             lucide.createIcons(); 
         }
 
-        // NOUVEAUTÉ : SMART INSIGHTS ET BILAN GLOBAL
+        // SMART INSIGHTS ET BILAN GLOBAL - VERSION CORRIGÉE
         function renderInsights() {
             const container = document.getElementById('smart-insights-container');
             if (expenses.length === 0) {
@@ -1299,24 +1299,53 @@
                     <h3 class="text-sm font-bold text-indigo-800 dark:text-indigo-300 flex items-center gap-2 mb-3"><i data-lucide="globe" class="w-4 h-4"></i> Bilan Global (${numMonths} mois cumulés)</h3>
                     <ul class="space-y-3 text-sm text-slate-700 dark:text-slate-300">`;
 
+                let hasInsight = false;
+
+                // Correction 1: Si revenus mais aucune dépense
+                if (totalRev > 0 && totalDep === 0) {
+                    html += `<li class="flex items-start gap-2.5 bg-emerald-100/50 dark:bg-emerald-900/20 p-2.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/50"><i data-lucide="piggy-bank" class="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0"></i> <div><span class="block font-bold text-emerald-800 dark:text-emerald-300 mb-0.5">Nouveau départ !</span><span class="text-emerald-700 dark:text-emerald-400/90 text-xs sm:text-sm">Vous avez enregistré vos premiers revenus (<b>${formatCurrency(totalRev/100)}</b>). Commencez à ajouter vos dépenses pour voir vos analyses.</span></div></li>`;
+                    hasInsight = true;
+                }
+
                 if (totalDep > 0) {
                     html += `<li class="flex items-start gap-2.5"><i data-lucide="calculator" class="w-4 h-4 text-indigo-500 mt-0.5 shrink-0"></i> <span>Vous dépensez en moyenne <b>${formatCurrency(avgDep/100)}</b> par mois.</span></li>`;
+                    hasInsight = true;
                 }
 
                 if (totalReste > 0 && totalDep > 0) {
                     html += `<li class="flex items-start gap-2.5 bg-emerald-100/50 dark:bg-emerald-900/20 p-2.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/50"><i data-lucide="piggy-bank" class="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0"></i> <div><span class="block font-bold text-emerald-800 dark:text-emerald-300 mb-0.5">Excellente gestion !</span><span class="text-emerald-700 dark:text-emerald-400/90 text-xs sm:text-sm">Vous avez réussi à conserver <b>${formatCurrency(totalReste/100)}</b> de plus que ce que vous avez dépensé.</span></div></li>`;
+                    hasInsight = true;
                 } else if (totalReste < 0 && totalDep > 0) {
                     html += `<li class="flex items-start gap-2.5 bg-rose-100/50 dark:bg-rose-900/20 p-2.5 rounded-xl border border-rose-200/50 dark:border-rose-800/50"><i data-lucide="alert-octagon" class="w-4 h-4 text-rose-600 dark:text-rose-400 mt-0.5 shrink-0"></i> <div><span class="block font-bold text-rose-800 dark:text-rose-300 mb-0.5">Vous puisez dans vos réserves</span><span class="text-rose-700 dark:text-rose-400/90 text-xs sm:text-sm">Vous avez dépensé <b>${formatCurrency(Math.abs(totalReste)/100)}</b> de plus que vos revenus totaux sur cette période.</span></div></li>`;
+                    hasInsight = true;
                 }
 
                 if (topCat && totalDep > 0) {
                     html += `<li class="flex items-start gap-2.5"><i data-lucide="pie-chart" class="w-4 h-4 text-amber-500 mt-0.5 shrink-0"></i> <span>Votre poste de dépense principal est <b>${topCat}</b> (${formatCurrency(topCatAmt/100)} au total).</span></li>`;
+                    hasInsight = true;
+                }
+
+                // NOUVEAUTÉ : Vérification du dépassement moyen des Budgets Max pour le global
+                for (const [cat, data] of Object.entries(appCategories)) {
+                    if (data.limitCents > 0) {
+                        const avgCat = (catTotals[cat] || 0) / numMonths;
+                        if (avgCat > data.limitCents) {
+                            html += `<li class="flex items-start gap-2.5"><i data-lucide="alert-triangle" class="w-4 h-4 text-rose-500 mt-0.5 shrink-0"></i> <span>En moyenne, vous dépassez le budget ciblé pour <b>${cat}</b> de <b class="text-rose-600 dark:text-rose-400">${formatCurrency((avgCat - data.limitCents)/100)}</b> (${formatCurrency(avgCat/100)}/mois pour une limite de ${formatCurrency(data.limitCents/100)}).</span></li>`;
+                            hasInsight = true;
+                        }
+                    }
                 }
 
                 html += `</ul></div>`;
-                container.innerHTML = html;
-                container.classList.remove('hidden');
-                lucide.createIcons();
+                
+                if (hasInsight) {
+                    container.innerHTML = html;
+                    container.classList.remove('hidden');
+                    lucide.createIcons();
+                } else {
+                    container.innerHTML = '';
+                    container.classList.add('hidden');
+                }
                 return;
             }
 
@@ -1359,6 +1388,10 @@
             } else if (currDep > 0 && currRev > 0 && reste < 0) {
                 html += `<li class="flex items-start gap-2"><i data-lucide="alert-triangle" class="w-4 h-4 text-rose-500 mt-0.5 shrink-0"></i> <span>Vos dépenses dépassent vos revenus. Attention à votre budget.</span></li>`;
                 hasInsight = true;
+            } else if (currRev > 0 && currDep === 0) {
+                // Correction: Si salaire entré mais pas encore de dépense pour ce mois
+                html += `<li class="flex items-start gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0"></i> <span>Un mois parfait pour l'instant ! <b>${formatCurrency(currRev/100)}</b> de revenus et aucune dépense.</span></li>`;
+                hasInsight = true;
             }
 
             if (prevDep > 0) {
@@ -1377,6 +1410,18 @@
                 const topPct = ((topCatAmt / currDep) * 100).toFixed(0);
                 html += `<li class="flex items-start gap-2"><i data-lucide="pie-chart" class="w-4 h-4 text-indigo-400 mt-0.5 shrink-0"></i> <span><b>${topCat}</b> représente ${topPct}% de vos dépenses ce mois-ci.</span></li>`;
                 hasInsight = true;
+            }
+
+            // NOUVEAUTÉ : Avertissements Budget Max en cours de mois avec montant restant/déficit
+            for (const [cat, amt] of Object.entries(currCatTotals)) {
+                const limit = appCategories[cat] ? appCategories[cat].limitCents : 0;
+                if (limit > 0 && amt > limit) {
+                    html += `<li class="flex items-start gap-2"><i data-lucide="alert-circle" class="w-4 h-4 text-rose-500 mt-0.5 shrink-0"></i> <span>Attention : le budget max pour <b>${cat}</b> est dépassé de <b class="text-rose-600 dark:text-rose-400">${formatCurrency((amt - limit)/100)}</b> (${formatCurrency(amt/100)} / ${formatCurrency(limit/100)}).</span></li>`;
+                    hasInsight = true;
+                } else if (limit > 0 && amt >= limit * 0.85) {
+                    html += `<li class="flex items-start gap-2"><i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500 mt-0.5 shrink-0"></i> <span>Vous approchez de la limite pour <b>${cat}</b>. Il ne vous reste que <b class="text-amber-600 dark:text-amber-400">${formatCurrency((limit - amt)/100)}</b> (${formatCurrency(amt/100)} / ${formatCurrency(limit/100)}).</span></li>`;
+                    hasInsight = true;
+                }
             }
 
             html += `</ul></div>`;
@@ -1672,16 +1717,21 @@
                 cancelEdit(); 
             } else {
                 expenses.push(newItem); 
-                document.getElementById('expense-form').reset(); 
                 
-                if (currentMonthFilter !== 'all') {
-                    const [fYear, fMonth] = currentMonthFilter.split('-');
-                    document.getElementById('year-select').value = fYear;
-                    document.getElementById('month-select').value = fMonth;
-                } else {
-                    const now = new Date();
-                    document.getElementById('month-select').value = String(now.getMonth() + 1).padStart(2, '0');
-                    document.getElementById('year-select').value = String(now.getFullYear());
+                // CORRECTION DU BUG DES SAISIES:
+                // Au lieu de faire un reset global du formulaire qui remettait les <select> par défaut (Janvier),
+                // on ne vide volontairement QUE les champs de texte/montant.
+                document.getElementById('desc-input').value = '';
+                document.getElementById('amount-input').value = '';
+                
+                // UX fluide : Si le filtre global "Tout l'historique" n'est pas activé,
+                // on fait basculer le filtre principal sur le mois que l'utilisateur vient de sélectionner
+                // pour qu'il puisse voir son ajout instantanément !
+                const newMonthStr = dateVal.slice(0, 7);
+                if (currentMonthFilter !== 'all' && currentMonthFilter !== newMonthStr) {
+                    currentMonthFilter = newMonthStr;
+                    // On force l'UI du filtre à refléter ce choix
+                    document.getElementById('month-filter').value = currentMonthFilter;
                 }
             }
             saveData(); updateMonthDropdown(); render(); updateCompareSelects();
@@ -1717,17 +1767,10 @@
 
         function cancelEdit() {
             editingId = null; 
-            document.getElementById('expense-form').reset(); 
             
-            if (currentMonthFilter !== 'all') {
-                const [year, month] = currentMonthFilter.split('-');
-                document.getElementById('year-select').value = year;
-                document.getElementById('month-select').value = month;
-            } else {
-                const now = new Date();
-                document.getElementById('month-select').value = String(now.getMonth() + 1).padStart(2, '0');
-                document.getElementById('year-select').value = String(now.getFullYear());
-            }
+            // CORRECTION UX : Même chose que pour l'ajout, on ne reset QUE le texte/montant
+            document.getElementById('desc-input').value = '';
+            document.getElementById('amount-input').value = '';
             
             setFormType('expense');
             
