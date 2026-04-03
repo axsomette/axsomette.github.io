@@ -13,21 +13,19 @@
     <!-- FAVICON (Généré dynamiquement depuis le logo SVG) -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 20L7 9L12 14L22 4V20H2Z' fill='%234f46e5' fill-opacity='0.2'/%3E%3Cpath d='M2 20L7 9L12 14L22 4' stroke='%234f46e5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='20' cy='20' r='3' fill='%2334d399' stroke='white' stroke-width='1'/%3E%3C/svg%3E" type="image/svg+xml">
     
-    <!-- Open Graph (Pour un bel affichage si partage du lien sur Discord, Twitter, iMessage...) -->
+    <!-- Open Graph -->
     <meta property="og:title" content="MonBudget - Finance Manager">
     <meta property="og:description" content="Gérez votre budget de manière intelligente, simulez vos objectifs et suivez vos dépenses en toute simplicité.">
     <meta property="og:type" content="website">
 
-    <!-- OPTIMISATION DES PERFORMANCES (Preconnect aux CDN) -->
+    <!-- OPTIMISATION DES PERFORMANCES -->
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
     <link rel="preconnect" href="https://unpkg.com">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // CONFIGURATION TAILWIND POUR LE DARK MODE
         tailwind.config = { darkMode: 'class' }
-        // THEME CLAIR PAR DEFAUT
         if (localStorage.theme === 'dark') {
             document.documentElement.classList.add('dark');
         } else {
@@ -59,14 +57,12 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-sans min-h-screen relative flex flex-col overflow-x-hidden transition-colors duration-300">
 
-    <!-- Conteneur pour les notifications (Toasts) -->
     <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none w-[90%] sm:w-auto max-w-md"></div>
 
     <div class="w-full px-4 md:px-8 lg:px-12 py-6 flex-1 max-w-full flex flex-col relative">
         
         <header class="sticky top-0 z-40 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md pt-6 pb-4 -mt-6 -mx-4 md:-mx-8 lg:-mx-12 px-4 md:px-8 lg:px-12 mb-6 sm:mb-8 border-b border-slate-200/60 dark:border-slate-800 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_-10px_rgba(0,0,0,0.4)] flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 transition-all">
             <div>
-                <!-- NOUVEAU LOGO PRO -->
                 <div class="flex items-center gap-3 sm:gap-4 cursor-default">
                     <div class="relative flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 bg-gradient-to-tr from-indigo-600 to-indigo-500 rounded-xl shadow-lg shadow-indigo-200/80 dark:shadow-indigo-900/40">
                         <svg class="w-6 h-6 sm:w-7 sm:h-7 text-white absolute" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -86,7 +82,6 @@
             
             <div class="flex flex-col lg:flex-row gap-2 lg:gap-4 items-stretch lg:items-center bg-white dark:bg-slate-800 p-2 sm:p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 w-full xl:w-auto transition-all">
                 
-                <!-- BLOC TOUJOURS VISIBLE (Filtre + Theme + Menu Mobile) -->
                 <div class="flex items-center justify-between lg:justify-start gap-2 px-2 lg:border-r border-slate-200 dark:border-slate-700 lg:pr-4 w-full lg:w-auto">
                     <div class="flex items-center gap-2 overflow-hidden flex-1 lg:flex-none">
                         <i data-lucide="calendar" class="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0"></i>
@@ -98,14 +93,12 @@
                         <button onclick="toggleTheme()" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="Changer de thème">
                             <i data-lucide="moon" id="theme-icon" class="w-5 h-5 sm:w-4 sm:h-4"></i>
                         </button>
-                        <!-- BOUTON MENU MOBILE -->
                         <button onclick="toggleMobileMenu()" class="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="Menu des actions">
                             <i data-lucide="menu" id="mobile-menu-icon" class="w-5 h-5"></i>
                         </button>
                     </div>
                 </div>
 
-                <!-- ACTIONS DU MENU (Cachées sur mobile, visibles sur grand écran) -->
                 <div id="action-menu" class="hidden lg:flex flex-col sm:flex-row flex-wrap justify-start lg:justify-center items-stretch sm:items-center gap-2 sm:gap-3 w-full lg:w-auto pt-3 lg:pt-0 border-t border-slate-100 dark:border-slate-700/50 lg:border-t-0 px-2 lg:px-0 pb-1 lg:pb-0">
 
                     <button onclick="openSimulatorModal()" class="text-sm font-bold text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 flex justify-center items-center gap-1.5 px-3 lg:px-2 py-2 lg:py-1 bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20 rounded-lg border border-purple-200 dark:border-purple-800/30 transition-colors" title="Simuler le mois prochain">
@@ -301,7 +294,7 @@
                         </div>
                         
                         <div class="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 w-full">
-                            <!-- Barre de recherche avec Debounce de sécurité ! -->
+                            <!-- Barre de recherche -->
                             <div class="w-full sm:w-[250px] shrink-0 flex items-center gap-2 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 focus-within:border-indigo-400 dark:focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-400 transition-all">
                                 <i data-lucide="search" class="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0"></i>
                                 <input type="text" id="search-filter" oninput="handleSearchDebounce()" placeholder="Rechercher par nom..." class="bg-transparent text-sm font-medium text-slate-700 dark:text-slate-200 focus:outline-none w-full placeholder-slate-400 dark:placeholder-slate-500">
@@ -347,7 +340,7 @@
         
         <footer class="mt-auto pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-500 pb-2">
             <div>&copy; <span id="current-year"></span> Lucas Jimenez Boulot alias Axsom. Tous droits réservés.</div>
-            <div class="font-medium bg-slate-200/60 dark:bg-slate-800 px-2.5 py-1 rounded-md tracking-wider">Version 2.00</div>
+            <div class="font-medium bg-slate-200/60 dark:bg-slate-800 px-2.5 py-1 rounded-md tracking-wider">Version 2.01</div>
         </footer>
     </div>
 
@@ -371,7 +364,6 @@
 
             <div class="bg-slate-50 dark:bg-slate-900/50 p-5 sm:p-6 rounded-xl border border-slate-200 dark:border-slate-700/50 mb-6 shadow-inner">
                 
-                <!-- CHOIX DU MOIS DE RÉFÉRENCE -->
                 <div class="mb-5 border-b border-slate-200 dark:border-slate-700/50 pb-5">
                     <label class="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">Sur quel mois de référence voulez-vous vous baser ?</label>
                     <select id="simulator-month-select" class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all font-bold text-slate-700 dark:text-slate-200 shadow-sm cursor-pointer"></select>
@@ -392,14 +384,11 @@
                 </div>
             </div>
 
-            <div id="simulator-results" class="hidden flex-col gap-6">
-                <!-- Results injected via JS -->
-            </div>
+            <div id="simulator-results" class="hidden flex-col gap-6"></div>
             
             <div id="simulator-empty" class="text-center py-10 text-slate-500 dark:text-slate-400 italic hidden">
                 Veuillez entrer un montant et cliquer sur "Générer mon plan".
             </div>
-
         </div>
     </div>
 
@@ -497,13 +486,10 @@
             </div>
 
             <div class="space-y-4 sm:space-y-5 text-slate-600 dark:text-slate-300">
-                
-                <!-- ENCART INTRODUCTIF -->
                 <div class="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200 p-4 sm:p-5 rounded-xl border border-indigo-100 dark:border-indigo-800/50 flex items-start gap-3 shadow-sm">
                     <i data-lucide="info" class="w-5 h-5 mt-0.5 shrink-0 text-indigo-600 dark:text-indigo-400"></i>
                     <p class="text-sm sm:text-base font-medium leading-relaxed">Bienvenue dans <b>MonBudget</b>, votre assistant de gestion financière nouvelle génération. Suivez les étapes ci-dessous pour maîtriser votre budget en toute simplicité.</p>
                 </div>
-
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm">
                     <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base sm:text-lg mb-2 flex items-center gap-2">
                         <i data-lucide="plus-circle" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500"></i> 1. Ajouter une opération
@@ -516,14 +502,12 @@
                     </h3>
                     <p class="text-sm">Cliquez sur <b>"Catégories"</b> en haut. Vous pouvez créer des grands "Dossiers" (ex: Maison) et des sous-catégories à l'intérieur. <br><br><b>💡 Budget Max :</b> Vous pouvez définir un <b>Budget Max</b> pour chaque grand dossier. Une barre de progression interactive s'affichera alors pour vous aider à respecter cet objectif !</p>
                 </div>
-                
                 <div class="bg-purple-50 dark:bg-purple-900/10 p-4 sm:p-5 rounded-xl border border-purple-200 dark:border-purple-800/30 shadow-sm">
                     <h3 class="font-bold text-purple-800 dark:text-purple-300 text-base sm:text-lg mb-2 flex items-center gap-2">
                         <i data-lucide="target" class="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 dark:text-purple-400"></i> 3. Simulateur de Budget
                     </h3>
                     <p class="text-sm text-purple-900/80 dark:text-purple-200/80">Le bouton <b>"Simulateur"</b> dans le menu du haut est votre nouvel assistant prévisionnel. Cliquez dessus, <b>choisissez le mois de référence</b> sur lequel vous souhaitez vous baser, indiquez le budget maximal souhaité pour le mois prochain, et l'algorithme calculera automatiquement les catégories exactes où vous devez faire des efforts pour atteindre cet objectif !</p>
                 </div>
-
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm">
                     <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base sm:text-lg mb-2 flex items-center gap-2">
                         <i data-lucide="sparkles" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500"></i> 4. Analyses Intelligentes & Thème
@@ -628,15 +612,41 @@
             
             <p class="text-slate-600 dark:text-slate-300 mb-6 text-sm sm:text-base">Comment souhaitez-vous intégrer ce fichier de sauvegarde à votre historique ?</p>
             
-            <!-- ALERTE DATES SUSPECTES AVEC LISTE DÉROULANTE -->
-            <div id="import-warning" class="hidden mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl p-4 shadow-sm">
+            <!-- NOUVELLE ALERTE MULTI-MOIS DANS L'IMPORT -->
+            <div id="multi-month-warning" class="hidden mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl p-4 shadow-sm">
                 <div class="flex items-start gap-3">
-                    <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500 shrink-0 mt-0.5"></i>
+                    <i data-lucide="calendar-days" class="w-5 h-5 text-amber-500 shrink-0 mt-0.5"></i>
                     <div class="w-full">
-                        <p class="font-bold text-amber-800 dark:text-amber-300 text-sm sm:text-base mb-1">Dates différentes détectées</p>
-                        <p id="import-warning-text" class="text-xs sm:text-sm text-amber-700 dark:text-amber-400/80 mb-2 leading-relaxed"></p>
+                        <p class="font-bold text-amber-800 dark:text-amber-300 text-sm sm:text-base mb-2">Plusieurs mois détectés</p>
+                        <p class="text-xs sm:text-sm text-amber-700 dark:text-amber-400/80 mb-3 leading-relaxed">Ce fichier contient des opérations réparties sur plusieurs mois différents.</p>
+
+                        <div id="detected-months-list" class="flex flex-wrap gap-2 mb-4">
+                           <!-- Mois injectés via JS -->
+                        </div>
+
+                        <p class="text-xs sm:text-sm font-semibold text-amber-800 dark:text-amber-300 mb-2">Que faire avec ces dates ?</p>
                         
-                        <div id="import-warning-list" class="max-h-32 overflow-y-auto bg-white/60 dark:bg-slate-900/40 rounded border border-amber-200/50 dark:border-amber-800/30 p-2 text-xs text-amber-800 dark:text-amber-200 space-y-1 no-scrollbar">
+                        <div class="space-y-3 bg-white/60 dark:bg-slate-900/40 p-3 rounded-lg border border-amber-200/50 dark:border-amber-800/30">
+                            <label class="flex items-start gap-2.5 cursor-pointer group">
+                                <input type="radio" name="import-date-handling" value="keep" checked onchange="toggleForceMonthSelect()" class="mt-1 text-indigo-600 focus:ring-indigo-500 bg-white border-slate-300">
+                                <div>
+                                    <span class="text-sm font-bold text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">C'est normal</span>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">Conserver toutes les dates d'origine (historique complet).</p>
+                                </div>
+                            </label>
+                            
+                            <div class="border-t border-amber-200/50 dark:border-amber-800/30"></div>
+                            
+                            <label class="flex items-start gap-2.5 cursor-pointer group pt-1">
+                                <input type="radio" name="import-date-handling" value="force" onchange="toggleForceMonthSelect()" class="mt-1 text-indigo-600 focus:ring-indigo-500 bg-white border-slate-300">
+                                <div class="w-full">
+                                    <span class="text-sm font-bold text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Ce n'est pas normal</span>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-2">Forcer toutes les opérations vers ce mois unique :</p>
+                                    <select id="force-month-select" disabled class="w-full px-3 py-2 text-sm font-bold bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-700 dark:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity shadow-sm">
+                                        <!-- Options de mois -->
+                                    </select>
+                                </div>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -756,15 +766,14 @@
 
         function updateChartTheme() {
             const isDark = document.documentElement.classList.contains('dark');
-            Chart.defaults.color = isDark ? '#94a3b8' : '#64748b'; // slate-400 vs slate-500
-            Chart.defaults.borderColor = isDark ? '#334155' : '#e2e8f0'; // slate-700 vs slate-200
+            Chart.defaults.color = isDark ? '#94a3b8' : '#64748b'; 
+            Chart.defaults.borderColor = isDark ? '#334155' : '#e2e8f0'; 
             
             if (chartInstance) chartInstance.update();
             if (expandedChartInstance) expandedChartInstance.update();
             if (compareChartInstance) compareChartInstance.update();
         }
 
-        // On vérifie l'icône au chargement
         if (document.documentElement.classList.contains('dark')) {
             setTimeout(() => { 
                 const icon = document.getElementById('theme-icon');
@@ -823,15 +832,13 @@
         let currentCategoryFilter = 'all'; 
         let formType = 'expense'; 
         let chartInstance = null; 
-        
         let compareChartInstance = null;
         let currentCompareChartType = 'bar'; 
         let pendingImportData = null;
         let expandedChartInstance = null; 
         let itemToDeleteId = null; 
-        let searchTimeout = null; // Variable pour le debounce
+        let searchTimeout = null;
 
-        // --- GESTION DU LOADER GLOBAL ---
         function showLoader(title, subtitle) {
             document.getElementById('loader-title').textContent = title;
             document.getElementById('loader-subtitle').textContent = subtitle;
@@ -851,16 +858,13 @@
             content.classList.add('scale-95', 'opacity-0');
             setTimeout(() => modal.classList.add('hidden'), 300);
         }
-        // ---------------------------------
 
-        // --- GESTION DU SIMULATEUR ---
         function openSimulatorModal() {
             document.getElementById('simulator-modal').classList.remove('hidden');
             document.getElementById('simulator-results').classList.add('hidden');
             document.getElementById('simulator-empty').classList.remove('hidden');
             document.getElementById('simulator-target-input').value = '';
 
-            // Peupler la liste des mois de référence disponibles
             const months = Array.from(new Set(expenses.filter(e => e.type === 'expense' && e.date).map(e => e.date.slice(0, 7)))).sort().reverse();
             const selectM = document.getElementById('simulator-month-select');
             
@@ -887,8 +891,6 @@
             if (!targetStr || targetStr <= 0) return showToast("Veuillez entrer un budget valide.", "error");
             
             const targetCents = Math.round(parseFloat(targetStr) * 100);
-            
-            // On récupère le mois choisi explicitement par l'utilisateur
             const baselineMonth = document.getElementById('simulator-month-select').value;
             
             if (!baselineMonth) {
@@ -911,7 +913,6 @@
             resultsContainer.classList.remove('hidden');
 
             const diffCents = baselineTotal - targetCents;
-
             const dateObj = new Date(baselineMonth + '-01');
             const monthName = dateObj.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
@@ -929,20 +930,18 @@
                 return;
             }
 
-            // Algorithme de conseil : grouper et appliquer des coefficients
             const catTotals = {};
             baselineExpenses.forEach(e => {
                 const key = e.largeCat + '__||__' + e.smallCat;
                 catTotals[key] = (catTotals[key] || 0) + e.amountCents;
             });
 
-            // Coefficients de flexibilité : Essentielles (1), Abonnements (2), Autres (4)
             let totalWeightedSpend = 0;
             const weightedCats = [];
 
             for (const key in catTotals) {
                 const [large, small] = key.split('__||__');
-                let weight = 4; // Loisirs etc.
+                let weight = 4;
                 const largeLower = large.toLowerCase();
                 if (largeLower.includes('essentiel')) weight = 1;
                 else if (largeLower.includes('abonnement')) weight = 2;
@@ -956,14 +955,11 @@
             let totalCutApplied = 0;
 
             weightedCats.forEach(cat => {
-                // Proportion du cut basé sur le poids
                 let suggestedCut = diffCents * ((cat.spend * cat.weight) / totalWeightedSpend);
-                
-                // On empêche de couper plus de 80% d'un budget pour rester réaliste
                 const maxCut = cat.spend * 0.8;
                 if (suggestedCut > maxCut) suggestedCut = maxCut;
 
-                if (suggestedCut > 50) { // Ne proposer que les coupes > 0.50€
+                if (suggestedCut > 50) {
                     cuts.push({
                         ...cat,
                         cutAmount: Math.round(suggestedCut),
@@ -1026,7 +1022,6 @@
             resultsContainer.innerHTML = html;
             lucide.createIcons();
         }
-        // ---------------------------------
 
         function init() {
             const yearSelect = document.getElementById('year-select');
@@ -1057,9 +1052,9 @@
             }
             if (Object.keys(appCategories).length === 0) {
                 appCategories = {
-                    "Essentielles": { palette: availablePalettes[0], subCats: ["Loyer", "Assurance", "Courses", "Électricité / Eau", "Transports", "Santé"] },
-                    "Abonnements": { palette: availablePalettes[1], subCats: ["Internet & TV", "Téléphone", "Streaming", "Salle de sport", "Logiciels"] },
-                    "Loisirs / Autre": { palette: availablePalettes[2], subCats: ["Shopping", "Restaurants", "Voyages", "Sorties", "Cadeaux", "Imprévus"] }
+                    "Essentielles": { palette: availablePalettes[0], subCats: ["Loyer", "Assurance", "Courses", "Électricité / Eau", "Transports", "Santé"], limitCents: 0 },
+                    "Abonnements": { palette: availablePalettes[1], subCats: ["Internet & TV", "Téléphone", "Streaming", "Salle de sport", "Logiciels"], limitCents: 0 },
+                    "Loisirs / Autre": { palette: availablePalettes[2], subCats: ["Shopping", "Restaurants", "Voyages", "Sorties", "Cadeaux", "Imprévus"], limitCents: 0 }
                 };
                 saveCategories();
             }
@@ -1072,6 +1067,7 @@
                         if(!e.type) e.type = 'expense';
                         if(!e.date) e.date = new Date().toISOString().slice(0, 7) + '-01';
                         delete e.isRecurring; delete e.recurringParentId;
+                        delete e.isOutlier; delete e.targetMonth; // Nettoyage de l'ancien système
                     });
                 } catch(e) { expenses = []; }
             }
@@ -1080,7 +1076,6 @@
         function saveData() { localStorage.setItem('budgetData', JSON.stringify(expenses)); }
         function saveCategories() { localStorage.setItem('budgetCategories', JSON.stringify(appCategories)); }
 
-        // AJOUT DU DEBOUNCE POUR LA RECHERCHE (Optimisation des performances)
         function handleSearchDebounce() {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
@@ -1223,7 +1218,6 @@
                 const pct = calcPercent(amount, totalDepensesCents);
                 const pal = data.palette;
 
-                // NOUVEAUTÉ : BARRE DE PROGRESSION OBJECTIF BUDGET
                 let progressHtml = `<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">${pct} des dépenses</p>`;
                 if (data.limitCents > 0 && currentMonthFilter !== 'all') {
                     const limitPct = Math.min(100, (amount / data.limitCents) * 100);
@@ -1261,7 +1255,6 @@
             lucide.createIcons(); 
         }
 
-        // SMART INSIGHTS ET BILAN GLOBAL - VERSION CORRIGÉE
         function renderInsights() {
             const container = document.getElementById('smart-insights-container');
             if (expenses.length === 0) {
@@ -1270,7 +1263,6 @@
                 return;
             }
 
-            // --- CAS 1 : "TOUT L'HISTORIQUE" (BILAN GLOBAL) ---
             if (currentMonthFilter === 'all') {
                 let totalDep = 0, totalRev = 0;
                 const catTotals = {};
@@ -1301,7 +1293,6 @@
 
                 let hasInsight = false;
 
-                // Correction 1: Si revenus mais aucune dépense
                 if (totalRev > 0 && totalDep === 0) {
                     html += `<li class="flex items-start gap-2.5 bg-emerald-100/50 dark:bg-emerald-900/20 p-2.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/50"><i data-lucide="piggy-bank" class="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0"></i> <div><span class="block font-bold text-emerald-800 dark:text-emerald-300 mb-0.5">Nouveau départ !</span><span class="text-emerald-700 dark:text-emerald-400/90 text-xs sm:text-sm">Vous avez enregistré vos premiers revenus (<b>${formatCurrency(totalRev/100)}</b>). Commencez à ajouter vos dépenses pour voir vos analyses.</span></div></li>`;
                     hasInsight = true;
@@ -1325,7 +1316,6 @@
                     hasInsight = true;
                 }
 
-                // NOUVEAUTÉ : Vérification du dépassement moyen des Budgets Max pour le global
                 for (const [cat, data] of Object.entries(appCategories)) {
                     if (data.limitCents > 0) {
                         const avgCat = (catTotals[cat] || 0) / numMonths;
@@ -1349,7 +1339,6 @@
                 return;
             }
 
-            // --- CAS 2 : ANALYSE D'UN MOIS UNIQUE ---
             const currentData = getFilteredData(currentMonthFilter);
             let currDep = 0, currRev = 0;
             const currCatTotals = {};
@@ -1389,7 +1378,6 @@
                 html += `<li class="flex items-start gap-2"><i data-lucide="alert-triangle" class="w-4 h-4 text-rose-500 mt-0.5 shrink-0"></i> <span>Vos dépenses dépassent vos revenus. Attention à votre budget.</span></li>`;
                 hasInsight = true;
             } else if (currRev > 0 && currDep === 0) {
-                // Correction: Si salaire entré mais pas encore de dépense pour ce mois
                 html += `<li class="flex items-start gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0"></i> <span>Un mois parfait pour l'instant ! <b>${formatCurrency(currRev/100)}</b> de revenus et aucune dépense.</span></li>`;
                 hasInsight = true;
             }
@@ -1412,7 +1400,6 @@
                 hasInsight = true;
             }
 
-            // NOUVEAUTÉ : Avertissements Budget Max en cours de mois avec montant restant/déficit
             for (const [cat, amt] of Object.entries(currCatTotals)) {
                 const limit = appCategories[cat] ? appCategories[cat].limitCents : 0;
                 if (limit > 0 && amt > limit) {
@@ -1525,49 +1512,14 @@
                     cutout: '50%'
                 }
             });
-            updateChartTheme(); // Force update theme just in case
+            updateChartTheme(); 
         }
         function closeExpandChartModal() { document.getElementById('expand-chart-modal').classList.add('hidden'); }
-
-        function fixOutliers() {
-            let fixedCount = 0;
-            expenses.forEach(e => {
-                if (e.isOutlier && e.targetMonth) {
-                    e.date = e.targetMonth + '-01';
-                    delete e.isOutlier;
-                    delete e.targetMonth;
-                    fixedCount++;
-                }
-            });
-            if (fixedCount > 0) {
-                saveData(); 
-                updateMonthDropdown(); 
-                render(); 
-                updateCompareSelects();
-                showToast(`${fixedCount} opération(s) transférée(s) vers le mois principal !`);
-            }
-        }
 
         function renderList() {
             const expenseList = document.getElementById('expense-list');
             expenseList.innerHTML = '';
             
-            const hasOutliers = expenses.some(e => e.isOutlier);
-            if (hasOutliers) {
-                const warningBox = document.createElement('div');
-                warningBox.className = "flex flex-col sm:flex-row justify-between items-center bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded-xl p-3 sm:p-4 gap-3 shadow-sm mb-4";
-                warningBox.innerHTML = `
-                    <div class="flex items-center gap-2 text-orange-800 dark:text-orange-300">
-                        <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0 text-orange-500"></i>
-                        <span class="text-xs sm:text-sm font-medium">Certaines dates ne correspondent pas au mois majoritaire importé.</span>
-                    </div>
-                    <button onclick="fixOutliers()" class="w-full sm:w-auto px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs sm:text-sm rounded-lg transition-colors whitespace-nowrap shadow-sm flex items-center justify-center gap-1.5">
-                        <i data-lucide="wrench" class="w-4 h-4"></i> Corriger tout
-                    </button>
-                `;
-                expenseList.appendChild(warningBox);
-            }
-
             let filteredData = getFilteredData();
             
             filteredData = filteredData.filter(item => {
@@ -1608,7 +1560,7 @@
             filteredData.forEach(item => {
                 const li = document.createElement('li');
                 
-                const borderClass = item.isOutlier ? "border-orange-400 ring-2 ring-orange-400/20 shadow-orange-100 dark:shadow-orange-900/20 dark:border-orange-500/50" : "border-slate-100 dark:border-slate-700/50";
+                const borderClass = "border-slate-100 dark:border-slate-700/50";
                 li.className = `flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 sm:p-4 bg-white dark:bg-slate-800 border ${borderClass} rounded-xl hover:shadow-md dark:hover:shadow-[0_4px_20px_-10px_rgba(0,0,0,0.5)] transition-shadow group gap-3 sm:gap-0 mt-3`;
                 
                 const amountFormatted = formatCurrency(item.amountCents / 100);
@@ -1616,16 +1568,6 @@
                 const monthStr = dateObj.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
                 const dateFormatted = monthStr.charAt(0).toUpperCase() + monthStr.slice(1);
                 
-                const outlierMarkup = item.isOutlier ? `
-                    <div class="relative flex items-center group/tooltip ml-1.5 mt-0.5">
-                        <i data-lucide="alert-circle" class="w-4 h-4 text-orange-500 cursor-help"></i>
-                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tooltip:block w-48 p-2.5 bg-slate-800 text-white text-xs rounded-lg shadow-lg text-center z-50 whitespace-normal normal-case">
-                            Cette valeur n'est pas dans le mois majoritaire de l'import.
-                            <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
-                        </div>
-                    </div>
-                ` : '';
-
                 if (item.type === 'income') {
                     li.innerHTML = `
                         <div class="flex items-start gap-3 w-full sm:w-auto overflow-visible">
@@ -1636,7 +1578,6 @@
                                 <p class="font-semibold text-sm sm:text-base text-slate-800 dark:text-slate-200 truncate">${escapeHtml(item.desc)}</p>
                                 <div class="flex items-center">
                                     <p class="text-xs text-slate-400 truncate">${dateFormatted}</p>
-                                    ${outlierMarkup}
                                 </div>
                             </div>
                         </div>
@@ -1667,7 +1608,6 @@
                                 <p class="font-semibold text-sm sm:text-base text-slate-800 dark:text-slate-200 truncate">${escapeHtml(item.desc)}</p>
                                 <div class="flex items-center">
                                     <p class="text-xs text-slate-400 truncate">${dateFormatted} • ${escapeHtml(item.largeCat)}</p>
-                                    ${outlierMarkup}
                                 </div>
                             </div>
                         </div>
@@ -1711,26 +1651,16 @@
 
             if (editingId) {
                 const index = expenses.findIndex(e => e.id === editingId);
-                delete newItem.isOutlier;
-                delete newItem.targetMonth;
                 if (index !== -1) expenses[index] = newItem;
                 cancelEdit(); 
             } else {
                 expenses.push(newItem); 
-                
-                // CORRECTION DU BUG DES SAISIES:
-                // Au lieu de faire un reset global du formulaire qui remettait les <select> par défaut (Janvier),
-                // on ne vide volontairement QUE les champs de texte/montant.
                 document.getElementById('desc-input').value = '';
                 document.getElementById('amount-input').value = '';
                 
-                // UX fluide : Si le filtre global "Tout l'historique" n'est pas activé,
-                // on fait basculer le filtre principal sur le mois que l'utilisateur vient de sélectionner
-                // pour qu'il puisse voir son ajout instantanément !
                 const newMonthStr = dateVal.slice(0, 7);
                 if (currentMonthFilter !== 'all' && currentMonthFilter !== newMonthStr) {
                     currentMonthFilter = newMonthStr;
-                    // On force l'UI du filtre à refléter ce choix
                     document.getElementById('month-filter').value = currentMonthFilter;
                 }
             }
@@ -1767,8 +1697,6 @@
 
         function cancelEdit() {
             editingId = null; 
-            
-            // CORRECTION UX : Même chose que pour l'ajout, on ne reset QUE le texte/montant
             document.getElementById('desc-input').value = '';
             document.getElementById('amount-input').value = '';
             
@@ -2064,7 +1992,6 @@
                     
                     html += `
                         <div class="rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow transition-shadow overflow-hidden">
-                            <!-- En-tête cliquable -->
                             <div onclick="document.getElementById('details-${index}').classList.toggle('hidden'); document.getElementById('chevron-${index}').classList.toggle('rotate-180');" class="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 gap-3 cursor-pointer group">
                                 <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                                     <i data-lucide="chevron-down" id="chevron-${index}" class="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-transform shrink-0"></i>
@@ -2094,7 +2021,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Détails déroulants -->
                             <div id="details-${index}" class="hidden border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30 p-4">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                                     <div>
@@ -2301,7 +2227,6 @@
                     `;
                 });
 
-                // NOUVEAUTÉ : CHAMP LIMITE BUDGET
                 const limitValue = (data.limitCents || 0) / 100;
                 
                 html += `
@@ -2396,6 +2321,15 @@
             }
         }
 
+        function toggleForceMonthSelect() {
+            const isForce = document.querySelector('input[name="import-date-handling"][value="force"]').checked;
+            const selectEl = document.getElementById('force-month-select');
+            selectEl.disabled = !isForce;
+            if(isForce) {
+                selectEl.focus();
+            }
+        }
+
         function importJSON(event) {
             const file = event.target.files[0]; if (!file) return;
             const reader = new FileReader();
@@ -2412,10 +2346,9 @@
                     document.getElementById('import-confirm-replace').classList.add('hidden');
                     document.getElementById('import-confirm-replace').classList.remove('flex');
 
-                    const warningDiv = document.getElementById('import-warning');
-                    const warningText = document.getElementById('import-warning-text');
-                    const warningList = document.getElementById('import-warning-list');
-                    warningDiv.classList.add('hidden'); 
+                    const multiMonthWarning = document.getElementById('multi-month-warning');
+                    const detectedMonthsList = document.getElementById('detected-months-list');
+                    const forceMonthSelect = document.getElementById('force-month-select');
 
                     if (importedExpenses.length > 0) {
                         const monthCounts = {};
@@ -2426,32 +2359,30 @@
                             }
                         });
                         
-                        let maxMonth = null;
-                        let maxCount = 0;
-                        
-                        for (const m in monthCounts) {
-                            if (monthCounts[m] > maxCount) {
-                                maxCount = monthCounts[m];
-                                maxMonth = m;
-                            }
-                        }
+                        const uniqueMonths = Object.keys(monthCounts).sort().reverse();
 
-                        const outliers = importedExpenses.filter(exp => exp.date && exp.date.slice(0, 7) !== maxMonth);
+                        if (uniqueMonths.length > 1) {
+                            detectedMonthsList.innerHTML = uniqueMonths.map(m => {
+                                const dateObj = new Date(m + '-01');
+                                const monthStr = dateObj.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
+                                const capitalizedMonth = monthStr.charAt(0).toUpperCase() + monthStr.slice(1);
+                                return `<span class="bg-amber-100 dark:bg-amber-800/50 text-amber-800 dark:text-amber-200 text-[10px] sm:text-xs font-bold px-2 py-1 rounded-md border border-amber-200 dark:border-amber-700 shadow-sm">${capitalizedMonth} (${monthCounts[m]} op.)</span>`;
+                            }).join('');
 
-                        if (outliers.length > 0) {
-                            const formattedMain = new Date(maxMonth + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-                            
-                            warningText.innerHTML = `La majorité des opérations concerne <b>${formattedMain}</b>. Cependant, nous avons trouvé <b>${outliers.length}</b> opération(s) à d'autres dates. Est-ce normal ?`;
-                            
-                            let listHtml = '';
-                            outliers.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(out => {
-                                const outDate = new Date(out.date).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
-                                listHtml += `<div class="flex justify-between border-b border-amber-200/30 dark:border-amber-800/30 last:border-0 py-1.5"><span>[${outDate}] ${escapeHtml(out.desc)}</span><span class="font-bold">${formatCurrency(out.amountCents/100)}</span></div>`;
-                            });
-                            warningList.innerHTML = listHtml;
-                            
-                            warningDiv.classList.remove('hidden'); 
+                            forceMonthSelect.innerHTML = uniqueMonths.map(m => {
+                                const dateObj = new Date(m + '-01');
+                                const monthStr = dateObj.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+                                return `<option value="${m}">${monthStr.charAt(0).toUpperCase() + monthStr.slice(1)}</option>`;
+                            }).join('');
+
+                            multiMonthWarning.classList.remove('hidden');
+                            document.querySelector('input[name="import-date-handling"][value="keep"]').checked = true;
+                            forceMonthSelect.disabled = true;
+                        } else {
+                            multiMonthWarning.classList.add('hidden');
                         }
+                    } else {
+                        multiMonthWarning.classList.add('hidden');
                     }
 
                     const mergeBtn = document.getElementById('merge-import-btn');
@@ -2465,7 +2396,7 @@
                     lucide.createIcons();
                     
                 } catch (err) { 
-                    showToast("Fichier corrompu ou illisible. Veuillez contacter l'administrateur de l'application pour régler ce bug.", "error");
+                    showToast("Fichier corrompu ou illisible.", "error");
                 }
             };
             reader.readAsText(file); 
@@ -2492,8 +2423,20 @@
         function executeImport(mode) {
             if (!pendingImportData) return;
 
-            // On capture les données avant de fermer la modale (ce qui va réinitialiser pendingImportData)
             const dataToImport = pendingImportData;
+            
+            // Capture du choix de l'utilisateur pour la gestion des dates multiples
+            let dateHandling = 'keep';
+            let targetForceMonth = '';
+            const multiMonthWarning = document.getElementById('multi-month-warning');
+            
+            if (!multiMonthWarning.classList.contains('hidden')) {
+                const forceRadio = document.querySelector('input[name="import-date-handling"][value="force"]');
+                if (forceRadio && forceRadio.checked) {
+                    dateHandling = 'force';
+                    targetForceMonth = document.getElementById('force-month-select').value;
+                }
+            }
 
             closeImportModal();
             showLoader("Importation...", "Traitement et fusion de vos données");
@@ -2501,25 +2444,6 @@
             setTimeout(() => {
                 try {
                     let importedExpenses = Array.isArray(dataToImport) ? dataToImport : (dataToImport.expenses || []);
-                    
-                    let maxMonth = null;
-                    if (importedExpenses.length > 0) {
-                        const monthCounts = {};
-                        importedExpenses.forEach(exp => {
-                            if (exp.date) {
-                                const m = exp.date.slice(0, 7);
-                                monthCounts[m] = (monthCounts[m] || 0) + 1;
-                            }
-                        });
-                        let maxCount = 0;
-                        for (const m in monthCounts) {
-                            if (monthCounts[m] > maxCount) {
-                                maxCount = monthCounts[m];
-                                maxMonth = m;
-                            }
-                        }
-                    }
-
                     const existingIds = new Set(expenses.map(exp => exp.id));
                     
                     const processExpense = (exp) => {
@@ -2529,14 +2453,13 @@
                         existingIds.add(exp.id);
 
                         delete exp.isRecurring; delete exp.recurringParentId;
+                        delete exp.isOutlier; delete exp.targetMonth; // Assainissement
                         
-                        if (maxMonth && exp.date && exp.date.slice(0, 7) !== maxMonth) {
-                            exp.isOutlier = true;
-                            exp.targetMonth = maxMonth;
-                        } else {
-                            delete exp.isOutlier;
-                            delete exp.targetMonth;
+                        // Application du "Forcer le mois" si demandé
+                        if (dateHandling === 'force' && targetForceMonth) {
+                            exp.date = targetForceMonth + '-01';
                         }
+                        
                         return exp;
                     };
 
@@ -2555,7 +2478,6 @@
                             for (const cat in dataToImport.categories) {
                                 if (!appCategories[cat]) appCategories[cat] = dataToImport.categories[cat];
                                 else {
-                                    // S'assurer de conserver limitCents s'il existe dans l'import
                                     if(dataToImport.categories[cat].limitCents !== undefined && appCategories[cat].limitCents === undefined) {
                                         appCategories[cat].limitCents = dataToImport.categories[cat].limitCents;
                                     }
@@ -2574,7 +2496,7 @@
                     
                 } catch (err) {
                     hideLoader();
-                    showToast("Erreur lors de l'intégration. Veuillez contacter l'administrateur de l'application pour régler ce bug.", "error");
+                    showToast("Erreur lors de l'intégration.", "error");
                 }
             }, 800);
         }
@@ -2593,7 +2515,6 @@
                 const downloadAnchorNode = document.createElement('a');
                 downloadAnchorNode.setAttribute("href", dataStr);
                 
-                // Détermination du nom de fichier intelligent
                 let fileName = "";
                 const todayFormatted = new Date().toISOString().slice(0, 10);
                 if (expenses.length === 0) {
