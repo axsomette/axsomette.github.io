@@ -1,0 +1,23 @@
+MonBudget - Finance Manager
+===========================
+
+Copyright (c) 2024-2026 Lucas Jimenez Boulot. All Rights Reserved.
+
+This application is the original work of Lucas Jimenez Boulot.
+
+THIRD-PARTY LIBRARIES
+---------------------
+This application uses the following open-source libraries under their respective licenses:
+
+- Tailwind CSS        — MIT License  — https://tailwindcss.com
+- Chart.js            — MIT License  — https://www.chartjs.org
+- Lucide Icons        — ISC License  — https://lucide.dev
+
+All third-party libraries are used via CDN and remain the property of their
+respective owners. Their inclusion does not grant any rights over this application.
+
+NOTICE
+------
+The name "MonBudget", the application design, logic, and all original source code
+in this repository are protected under copyright law. Any unauthorized use may
+result in legal action.
