@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "css": {
+      "source": "mindrally/skills",
+      "sourceType": "github",
+      "skillPath": "css/SKILL.md",
+      "computedHash": "80c477418be4bdd2d102ba5a71760125a9c1925292f5b3c208ee56ab9e6e3cc2"
+    },
+    "html": {
+      "source": "mindrally/skills",
+      "sourceType": "github",
+      "skillPath": "html/SKILL.md",
+      "computedHash": "3cdff568d692ae5dd1adebfbbcae39f07eaf27e6a578be5de9a4549ac295a804"
+    },
+    "ui-design": {
+      "source": "mindrally/skills",
+      "sourceType": "github",
+      "skillPath": "ui-design/SKILL.md",
+      "computedHash": "d2b331ca97c47dc5d3e02557436b496469c3693327fad9a5f68c2b31e13349d1"
+    },
+    "ux-design": {
+      "source": "mindrally/skills",
+      "sourceType": "github",
+      "skillPath": "ux-design/SKILL.md",
+      "computedHash": "281fdd51b3ee348c678d5a8f416ff63a9ede9ea6200687ec006dc48cbf216522"
+    }
+  }
+}
