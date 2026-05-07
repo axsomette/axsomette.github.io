@@ -840,7 +840,7 @@
                                 <span class="text-slate-400 dark:text-slate-500">/ ${formatCurrency(limitCents / 100)}</span>
                             </div>
                             <div class="w-full bg-slate-100 dark:bg-slate-700/50 rounded-full h-1.5 overflow-hidden mb-2.5">
-                                <div class="${barColor} h-1.5 rounded-full transition-all duration-500" style="width: ${limitPct}%"></div>
+                                <div class="${barColor} h-1.5 rounded-full progress-bar-anim" style="width: ${limitPct}%"></div>
                             </div>`;
                     }
 
@@ -880,7 +880,7 @@
                             <div class="flex gap-1.5 flex-wrap">${globalTag}${monthTag}</div>
                         </div>`;
                 } else if (monthlyConsistency && allMonthsSorted.length > 0) {
-                    // Vue globale : pastilles de consistance sur les 6 derniers mois
+                    // Vue globale : mini-barres mensuelles lisibles sur les 6 derniers mois
                     const recentMonths = allMonthsSorted.slice(-6);
                     const hasAnyLimit = recentMonths.some(m => getLimitForMonth(largeCat, m) > 0);
                     if (hasAnyLimit) {
@@ -889,31 +889,52 @@
                             const lim = getLimitForMonth(largeCat, m);
                             return ((monthlyConsistency[m] || {})[largeCat] || 0) <= lim;
                         }).length;
-                        const dots = recentMonths.map(m => {
+                        const scoreRatio = monthsWithLimit.length > 0 ? monthsOk / monthsWithLimit.length : 0;
+                        const scoreClass = scoreRatio === 1 ? 'text-emerald-500 dark:text-emerald-400' : scoreRatio >= 0.6 ? 'text-amber-500 dark:text-amber-400' : 'text-rose-500 dark:text-rose-400';
+                        const scoreBg   = scoreRatio === 1 ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700/40' : scoreRatio >= 0.6 ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700/40' : 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-700/40';
+                        const scoreLabel = scoreRatio === 1 ? 'Toujours respectée' : `${monthsOk}/${monthsWithLimit.length} mois respectés`;
+
+                        // Mini-barres : hauteur proportionnelle au % de limite utilisé (max 24px)
+                        const bars = recentMonths.map(m => {
                             const lim = getLimitForMonth(largeCat, m);
-                            if (lim === 0) return `<span class="inline-block w-2 h-2 rounded-full bg-slate-200 dark:bg-slate-700" title="${m}"></span>`;
-                            const spent = (monthlyConsistency[m] || {})[largeCat] || 0;
-                            const p = (spent / lim) * 100;
-                            let dc = 'bg-emerald-400';
-                            if (p > 90) dc = 'bg-rose-400';
-                            else if (p > 75) dc = 'bg-amber-400';
                             const shortM = new Date(m + '-01').toLocaleDateString('fr-FR', { month: 'short' });
-                            return `<span class="inline-block w-2 h-2 rounded-full ${dc}" title="${shortM} : ${formatCurrency(spent / 100)} / ${formatCurrency(lim / 100)}"></span>`;
-                        }).join('');
-                        const scoreClass = monthsOk === monthsWithLimit.length ? 'text-emerald-500' : monthsOk >= Math.ceil(monthsWithLimit.length * 0.6) ? 'text-amber-500' : 'text-rose-500';
-                        progressHtml = `
-                            <div class="mt-2">
-                                <div class="flex items-center justify-between mb-1.5">
-                                    <p class="text-xs text-slate-500 dark:text-slate-400">${pct} des dépenses</p>
-                                    <span class="text-[10px] font-bold ${scoreClass}">${monthsOk}/${monthsWithLimit.length} ✓</span>
+                            if (lim === 0) {
+                                return `<div class="flex flex-col items-center gap-0.5 flex-1">
+                                    <div class="w-full rounded-sm bg-slate-100 dark:bg-slate-700/40" style="height:24px" title="${shortM} : pas de limite"></div>
+                                    <span class="text-[8px] text-slate-300 dark:text-slate-600 capitalize leading-none">${shortM}</span>
+                                </div>`;
+                            }
+                            const spent = (monthlyConsistency[m] || {})[largeCat] || 0;
+                            const p = Math.min((spent / lim) * 100, 150); // cap à 150% visuellement
+                            const barH = Math.max(3, Math.round((Math.min(p, 100) / 100) * 24));
+                            let barColor, labelColor;
+                            if (p > 100)      { barColor = 'bg-rose-400 dark:bg-rose-500';   labelColor = 'text-rose-500 dark:text-rose-400'; }
+                            else if (p > 80)  { barColor = 'bg-amber-400 dark:bg-amber-500'; labelColor = 'text-amber-500 dark:text-amber-400'; }
+                            else              { barColor = 'bg-emerald-400 dark:bg-emerald-500'; labelColor = 'text-emerald-600 dark:text-emerald-400'; }
+                            const tooltip = `${shortM} : ${formatCurrency(spent/100)} / ${formatCurrency(lim/100)} (${Math.round(p)}%)`;
+                            return `<div class="flex flex-col items-center gap-0.5 flex-1" title="${tooltip}">
+                                <div class="w-full rounded-t-sm bg-slate-100 dark:bg-slate-700/40 flex items-end" style="height:24px">
+                                    <div class="${barColor} w-full rounded-t-sm bar-anim" style="height:${barH}px"></div>
                                 </div>
-                                <div class="flex items-center gap-1">${dots}</div>
+                                <span class="text-[8px] ${labelColor} capitalize leading-none font-medium">${shortM}</span>
                             </div>`;
+                        }).join('');
+
+                        progressHtml = `
+                            <div class="mt-2.5">
+                                <p class="text-xs text-slate-400 dark:text-slate-500 mb-2">${pct} des dépenses</p>
+                                <div class="flex items-end gap-1 mb-2">${bars}</div>
+                                <div class="flex justify-center">
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${scoreBg} ${scoreClass}">${scoreLabel}</span>
+                                </div>
+                            </div>`;
+                    } else {
+                        progressHtml = `<p class="text-xs text-slate-400 dark:text-slate-500 mt-2">${pct} des dépenses</p>`;
                     }
                 }
 
                 htmlCards += `
-                    <div class="snap-start shrink-0 w-[80vw] sm:w-[220px] max-w-[280px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col transition-colors">
+                    <div class="category-card-anim card-hover snap-start shrink-0 w-[80vw] sm:w-[220px] max-w-[280px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col transition-colors">
                         <div class="flex items-center gap-2 mb-2 ${pal.text}">
                             <i data-lucide="${pal.icon}" class="w-5 h-5"></i>
                             <h2 class="font-semibold truncate">${largeCat}</h2>
@@ -1433,11 +1454,12 @@
                 return 0;
             });
 
-            filteredData.forEach(item => {
+            filteredData.forEach((item, idx) => {
                 const li = document.createElement('li');
-                
+                const delay = Math.min(idx * 30, 300); // max 300ms stagger
                 const borderClass = "border-slate-100 dark:border-slate-700/50";
-                li.className = `flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 sm:p-4 bg-white dark:bg-slate-800 border ${borderClass} rounded-xl hover:shadow-md dark:hover:shadow-[0_4px_20px_-10px_rgba(0,0,0,0.5)] transition-shadow group gap-3 sm:gap-0 mt-3`;
+                li.className = `list-item-anim flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 sm:p-4 bg-white dark:bg-slate-800 border ${borderClass} rounded-xl hover:shadow-md dark:hover:shadow-[0_4px_20px_-10px_rgba(0,0,0,0.5)] transition-shadow group gap-3 sm:gap-0 mt-3`;
+                li.style.animationDelay = `${delay}ms`;
                 
                 const amountFormatted = formatCurrency(item.amountCents / 100);
                 const dateObj = new Date(item.date);
