@@ -91,9 +91,11 @@
             { id: "amber", icon: "shopping-bag", text: "text-amber-500 dark:text-amber-400", bgLight: "bg-amber-100 dark:bg-amber-500/10", textDark: "text-amber-700 dark:text-amber-400", border: "border-amber-200 dark:border-amber-800/50", bar: "bg-amber-500", hex: "#f59e0b" }
         ];
 
-        let expenses = []; 
-        let appCategories = {}; 
+        let expenses = [];
+        let appCategories = {};
+        let appGoals = [];
         let editingId = null;
+        let editingGoalId = null;
         let currentMonthFilter = 'all'; 
         let currentSort = 'date-desc';
         let currentSearchQuery = ''; 
@@ -168,7 +170,8 @@
 
             const baselineExpenses = expenses.filter(e => e.date.startsWith(baselineMonth) && e.type === 'expense');
             const fixedExpenses = baselineExpenses.filter(e => e.isFixed);
-            const variableExpenses = baselineExpenses.filter(e => !e.isFixed);
+            // Exclure les contributions épargne (goalId) des dépenses variables — non réductibles par le simulateur
+            const variableExpenses = baselineExpenses.filter(e => !e.isFixed && !e.goalId);
 
             let baselineTotal = 0;
             baselineExpenses.forEach(e => { baselineTotal += e.amountCents; });
@@ -370,10 +373,33 @@
                     });
                 } catch(e) { expenses = []; }
             }
+            loadGoals();
+            ensureSavingsCategory();
         }
 
         function saveData() { localStorage.setItem('budgetData', JSON.stringify(expenses)); }
         function saveCategories() { localStorage.setItem('budgetCategories', JSON.stringify(appCategories)); }
+        function saveGoals() { localStorage.setItem('budgetGoals', JSON.stringify(appGoals)); }
+
+        function loadGoals() {
+            const saved = localStorage.getItem('budgetGoals');
+            if (saved) { try { appGoals = JSON.parse(saved); } catch(e) { appGoals = []; } }
+        }
+
+        // --- CATÉGORIE ÉPARGNE (auto-créée, rétrocompat) ---
+        // Appelée à chaque loadData() et avant toute contribution.
+        // Si la catégorie existe déjà (import ancien ou recréation), on ne touche à rien.
+        function ensureSavingsCategory() {
+            if (!appCategories['Épargne']) {
+                appCategories['Épargne'] = {
+                    palette: availablePalettes[5], // teal
+                    subCats: ['Épargne objectif'],
+                    limitCents: 0,
+                    isSavings: true   // flag optionnel pour usage futur
+                };
+                saveCategories();
+            }
+        }
 
         // --- LIMITES MENSUELLES PAR CATÉGORIE ---
         // Retourne la limite pour une catégorie et un mois donnés.
@@ -434,8 +460,9 @@
             select.innerHTML = `<option value="all">Toutes les catégories</option>`;
             
             for (const mainCat in appCategories) {
+                if (appCategories[mainCat].isSavings) continue;
                 const option = document.createElement('option');
-                option.value = 'cat_' + mainCat; 
+                option.value = 'cat_' + mainCat;
                 option.textContent = mainCat;
                 select.appendChild(option);
             }
@@ -541,6 +568,7 @@
             renderInsights();
             renderRecurringSuggestion();
             renderList();
+            renderGoalsWidget();
         }
 
         // ─── DÉTECTION DÉPENSES RÉCURRENTES ──────────────────────────────────
@@ -761,6 +789,613 @@
         }
 
         // ─────────────────────────────────────────────────────────────────────
+        // ═══════════════════════════════════════════════════════════════════
+        // OBJECTIFS D'ÉPARGNE
+        // ═══════════════════════════════════════════════════════════════════
+
+        const GOAL_COLORS = [
+            { id:'indigo', bg:'bg-indigo-500', light:'bg-indigo-50 dark:bg-indigo-900/30', border:'border-indigo-200 dark:border-indigo-700/50', text:'text-indigo-600 dark:text-indigo-400', bar:'bg-indigo-500' },
+            { id:'emerald', bg:'bg-emerald-500', light:'bg-emerald-50 dark:bg-emerald-900/30', border:'border-emerald-200 dark:border-emerald-700/50', text:'text-emerald-600 dark:text-emerald-400', bar:'bg-emerald-500' },
+            { id:'amber', bg:'bg-amber-500', light:'bg-amber-50 dark:bg-amber-900/30', border:'border-amber-200 dark:border-amber-700/50', text:'text-amber-600 dark:text-amber-400', bar:'bg-amber-500' },
+            { id:'rose', bg:'bg-rose-500', light:'bg-rose-50 dark:bg-rose-900/30', border:'border-rose-200 dark:border-rose-700/50', text:'text-rose-600 dark:text-rose-400', bar:'bg-rose-500' },
+            { id:'purple', bg:'bg-purple-500', light:'bg-purple-50 dark:bg-purple-900/30', border:'border-purple-200 dark:border-purple-700/50', text:'text-purple-600 dark:text-purple-400', bar:'bg-purple-500' },
+            { id:'sky', bg:'bg-sky-500', light:'bg-sky-50 dark:bg-sky-900/30', border:'border-sky-200 dark:border-sky-700/50', text:'text-sky-600 dark:text-sky-400', bar:'bg-sky-500' },
+        ];
+
+        function getGoalColor(colorId) {
+            return GOAL_COLORS.find(c => c.id === colorId) || GOAL_COLORS[0];
+        }
+
+        function openGoalsModal() {
+            document.getElementById('goals-modal').classList.remove('hidden');
+            renderGoalsModal();
+        }
+        function closeGoalsModal() {
+            document.getElementById('goals-modal').classList.add('hidden');
+            closeGoalForm();
+        }
+
+        function renderGoalsModal() {
+            const container = document.getElementById('goals-list-container');
+            if (appGoals.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 text-slate-400 dark:text-slate-500">
+                        <i data-lucide="target" class="w-10 h-10 mx-auto mb-3 opacity-30"></i>
+                        <p class="text-sm font-medium">Aucun objectif pour l'instant.</p>
+                        <p class="text-xs mt-1">Créez votre premier objectif ci-dessous.</p>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            let html = '<div class="space-y-3">';
+            appGoals.forEach(goal => {
+                const col = getGoalColor(goal.colorId);
+                const pct = goal.targetCents > 0 ? Math.min(100, Math.round((goal.savedCents / goal.targetCents) * 100)) : 0;
+                const remaining = Math.max(0, goal.targetCents - goal.savedCents);
+                const isComplete = goal.savedCents >= goal.targetCents;
+                const deadlineStr = goal.deadline
+                    ? new Date(goal.deadline + '-01').toLocaleDateString('fr-FR', {month:'long', year:'numeric'})
+                    : null;
+
+                html += `
+                    <div class="category-card-anim ${col.light} border ${col.border} rounded-2xl p-4">
+                        <div class="flex items-start justify-between gap-3 mb-3">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <span class="text-2xl leading-none shrink-0">${goal.emoji || '🎯'}</span>
+                                <div class="min-w-0">
+                                    <p class="font-bold text-slate-800 dark:text-slate-100 truncate">${escapeHtml(goal.name)}</p>
+                                    ${deadlineStr ? `<p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Objectif : ${deadlineStr}</p>` : ''}
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1 shrink-0">
+                                ${isComplete ? `<span class="text-[10px] font-bold text-white bg-emerald-500 px-2 py-0.5 rounded-full">✓ Atteint !</span>` : ''}
+                                <button onclick="openGoalForm('${goal.id}')" class="p-1.5 rounded-lg hover:bg-white/50 dark:hover:bg-slate-700/50 transition-colors ${col.text}" title="Modifier">
+                                    <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button onclick="deleteGoal('${goal.id}')" class="p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/20 text-slate-400 hover:text-rose-500 transition-colors" title="Supprimer">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-end text-sm mb-1.5">
+                            <span class="font-black text-xl ${col.text}">${formatCurrency(goal.savedCents / 100)}</span>
+                            <span class="text-xs text-slate-400 dark:text-slate-500">/ ${formatCurrency(goal.targetCents / 100)}</span>
+                        </div>
+                        <div class="w-full bg-white/60 dark:bg-slate-700/40 rounded-full h-2 mb-2 overflow-hidden">
+                            <div class="${col.bar} h-2 rounded-full progress-bar-anim transition-all" style="width:${pct}%"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold ${col.text}">${pct}%</span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500">${isComplete ? 'Objectif atteint 🎉' : `Il reste ${formatCurrency(remaining / 100)}`}</span>
+                        </div>
+
+                        ${!isComplete ? `
+                        <div class="mt-3 pt-3 border-t border-white/40 dark:border-slate-700/50 flex gap-2">
+                            <input type="number" id="contrib-${goal.id}" placeholder="Montant à ajouter…" min="0" step="0.01"
+                                   class="flex-1 bg-white/70 dark:bg-slate-800/70 border border-white dark:border-slate-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-${goal.colorId || 'indigo'}-400 dark:text-white placeholder-slate-300 dark:placeholder-slate-600"
+                                   onkeydown="if(event.key==='Enter'){addGoalContribution('${goal.id}');}">
+                            <button onclick="addGoalContribution('${goal.id}')"
+                                    class="shrink-0 ${col.bg} hover:opacity-90 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-opacity shadow-sm">
+                                + Ajouter
+                            </button>
+                        </div>` : ''}
+                    </div>`;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function addGoalContribution(goalId) {
+            const input = document.getElementById('contrib-' + goalId);
+            if (!input) { showToast("Champ de saisie introuvable — réouvrez le modal.", "error"); return; }
+            const val = parseFloat(input.value);
+            if (isNaN(val) || val <= 0) { showToast("Montant invalide.", "error"); return; }
+            const goal = appGoals.find(g => g.id === goalId);
+            if (!goal) { showToast("Objectif introuvable — rechargez la page.", "error"); return; }
+
+            const amountCents = Math.round(val * 100);
+            goal.savedCents += amountCents;
+            saveGoals();
+
+            // Créer la ligne de dépense tracée liée à cet objectif.
+            // La date est calée sur le mois affiché : si tu es sur avril, la contribution
+            // est enregistrée en avril (dernier jour du mois pour trier après les autres).
+            // En vue "tout l'historique", on utilise la date du jour.
+            ensureSavingsCategory();
+            let contribDate;
+            if (currentMonthFilter && currentMonthFilter !== 'all') {
+                // Dernier jour du mois filtré (évite les problèmes de tri en fin de mois)
+                const [y, m] = currentMonthFilter.split('-');
+                const lastDay = new Date(parseInt(y), parseInt(m), 0).getDate();
+                contribDate = `${y}-${m}-${String(lastDay).padStart(2, '0')}`;
+            } else {
+                contribDate = new Date().toISOString().slice(0, 10);
+            }
+            expenses.push({
+                id: 'sav_' + Date.now().toString(),
+                type: 'expense',
+                desc: 'Épargne — ' + goal.name,
+                amountCents: amountCents,
+                largeCat: 'Épargne',
+                smallCat: 'Épargne objectif',
+                date: contribDate,
+                isFixed: false,
+                goalId: goalId   // lien vers l'objectif (rétrocompat : champ optionnel)
+            });
+            saveData();
+
+            render();           // met à jour totaux, reste à vivre, historique
+            renderGoalsModal(); // rafraîchit la progression dans le modal
+            // renderGoalsWidget() déjà appelé par render() ci-dessus
+            input.value = '';   // vide le champ après succès
+            showToast(`+${formatCurrency(val)} épargnés pour "${goal.name}" — ligne enregistrée dans vos dépenses.`);
+        }
+
+        function deleteGoal(goalId) {
+            appGoals = appGoals.filter(g => g.id !== goalId);
+            saveGoals();
+            // Supprimer aussi les dépenses-épargne liées à cet objectif
+            const linked = expenses.filter(e => e.goalId === goalId);
+            if (linked.length > 0) {
+                expenses = expenses.filter(e => e.goalId !== goalId);
+                saveData();
+            }
+            render(); // met à jour liste + totaux si des expenses ont été supprimées
+            renderGoalsModal();
+            renderGoalsWidget();
+            showToast("Objectif supprimé.");
+        }
+
+        function openGoalForm(editId = null) {
+            editingGoalId = editId;
+            const form = document.getElementById('goal-form-container');
+            const existing = editId ? appGoals.find(g => g.id === editId) : null;
+
+            const colorPicker = GOAL_COLORS.map(c =>
+                `<label class="cursor-pointer">
+                    <input type="radio" name="goal-color" value="${c.id}" class="sr-only" ${(!existing && c.id === 'indigo') || (existing && existing.colorId === c.id) ? 'checked' : ''}>
+                    <span class="block w-6 h-6 rounded-full ${c.bg} ring-2 ring-transparent ring-offset-2 peer-checked:ring-current goal-color-opt transition-all"></span>
+                </label>`
+            ).join('');
+
+            form.innerHTML = `
+                <div class="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-4 mt-2">
+                    <h4 class="font-bold text-slate-700 dark:text-slate-200 mb-4 text-sm flex items-center gap-2">
+                        <span class="w-5 h-5 bg-indigo-100 dark:bg-indigo-500/20 rounded-md flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-xs">✦</span>
+                        ${editId ? 'Modifier l\'objectif' : 'Nouvel objectif'}
+                    </h4>
+                    <div class="space-y-3">
+                        <div class="flex gap-2 items-center">
+                            <input type="text" id="goal-emoji" value="${existing?.emoji || '🎯'}" maxlength="2"
+                                   class="w-12 h-10 text-center text-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 shrink-0">
+                            <input type="text" id="goal-name" placeholder="Nom de l'objectif (ex: Vacances…)" value="${escapeHtml(existing?.name || '')}"
+                                   class="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:text-white dark:placeholder-slate-500">
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs font-medium text-slate-500 dark:text-slate-400 pl-1">Objectif (€)</label>
+                            <input type="number" id="goal-target" placeholder="0" min="0" step="0.01" value="${existing ? (existing.targetCents / 100).toFixed(2) : ''}"
+                                   class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-right">
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <label class="text-xs font-medium text-slate-500 dark:text-slate-400">Couleur</label>
+                            <div class="flex gap-2">${colorPicker}</div>
+                        </div>
+                        <div class="flex gap-2 pt-1">
+                            <button onclick="saveGoalForm()"
+                                    class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors shadow-sm">
+                                ${editId ? 'Enregistrer' : 'Créer l\'objectif'}
+                            </button>
+                            <button onclick="closeGoalForm()" class="px-5 py-2.5 rounded-xl text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                                Annuler
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            form.classList.remove('hidden');
+            // Masquer le bouton "+ Nouvel objectif" pendant la saisie
+            const addBtn = document.getElementById('goals-add-btn');
+            if (addBtn) addBtn.classList.add('hidden');
+
+            // Highlight selected color radio
+            form.querySelectorAll('input[name="goal-color"]').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    form.querySelectorAll('.goal-color-opt').forEach(s => s.style.boxShadow = '');
+                    const sel = form.querySelector('input[name="goal-color"]:checked');
+                    if (sel) {
+                        const span = sel.nextElementSibling;
+                        span.style.boxShadow = '0 0 0 3px white, 0 0 0 5px currentColor';
+                    }
+                });
+            });
+        }
+
+        function closeGoalForm() {
+            editingGoalId = null;
+            const form = document.getElementById('goal-form-container');
+            if (form) { form.innerHTML = ''; form.classList.add('hidden'); }
+            // Réafficher le bouton "+ Nouvel objectif"
+            const addBtn = document.getElementById('goals-add-btn');
+            if (addBtn) addBtn.classList.remove('hidden');
+        }
+
+        function saveGoalForm() {
+            const name = document.getElementById('goal-name')?.value.trim();
+            const targetVal = parseFloat(document.getElementById('goal-target')?.value);
+            const emoji = document.getElementById('goal-emoji')?.value.trim() || '🎯';
+            const colorId = document.querySelector('input[name="goal-color"]:checked')?.value || 'indigo';
+
+            if (!name) { showToast("Donnez un nom à votre objectif.", "error"); return; }
+            if (isNaN(targetVal) || targetVal <= 0) { showToast("Montant cible invalide.", "error"); return; }
+
+            if (editingGoalId) {
+                const goal = appGoals.find(g => g.id === editingGoalId);
+                if (goal) {
+                    // savedCents et deadline non modifiables via le formulaire (gérés par contributions)
+                    goal.name = name; goal.targetCents = Math.round(targetVal * 100);
+                    goal.emoji = emoji; goal.colorId = colorId;
+                }
+            } else {
+                appGoals.push({
+                    id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                    name, targetCents: Math.round(targetVal * 100),
+                    savedCents: 0,  // toujours 0 à la création — alimenté via contributions
+                    emoji, deadline: '', colorId, createdAt: new Date().toISOString()
+                });
+            }
+            saveGoals();
+            closeGoalForm();
+            renderGoalsModal();
+            renderGoalsWidget();
+            showToast(editingGoalId ? 'Objectif mis à jour !' : 'Objectif créé !');
+        }
+
+        function renderGoalsWidget() {
+            const widget = document.getElementById('goals-widget');
+            if (!widget) return;
+            if (appGoals.length === 0) {
+                widget.innerHTML = `
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                            <i data-lucide="target" class="w-4 h-4 text-indigo-500"></i> Objectifs d'épargne
+                        </h3>
+                        <button onclick="openGoalsModal()" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">+ Créer</button>
+                    </div>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 italic text-center py-2">Aucun objectif — <button onclick="openGoalsModal()" class="text-indigo-500 hover:underline">créer le premier</button></p>`;
+                lucide.createIcons();
+                return;
+            }
+            const totalGoals = appGoals.length;
+            const completed = appGoals.filter(g => g.savedCents >= g.targetCents).length;
+            let html = `
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                        <i data-lucide="target" class="w-4 h-4 text-indigo-500"></i> Objectifs d'épargne
+                        <span class="text-[10px] font-medium text-slate-400 dark:text-slate-500">${completed}/${totalGoals} atteint${completed > 1 ? 's' : ''}</span>
+                    </h3>
+                    <button onclick="openGoalsModal()" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">Tout voir</button>
+                </div>
+                <div class="space-y-2">`;
+            appGoals.slice(0, 3).forEach(goal => {
+                const col = getGoalColor(goal.colorId);
+                const pct = goal.targetCents > 0 ? Math.min(100, Math.round((goal.savedCents / goal.targetCents) * 100)) : 0;
+                html += `
+                    <div class="flex items-center gap-3 cursor-pointer" onclick="openGoalsModal()">
+                        <span class="text-lg leading-none shrink-0">${goal.emoji || '🎯'}</span>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-center mb-0.5">
+                                <span class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">${escapeHtml(goal.name)}</span>
+                                <span class="text-[10px] font-bold ${col.text} shrink-0 ml-1">${pct}%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 dark:bg-slate-700/50 rounded-full h-1.5 overflow-hidden">
+                                <div class="${col.bar} h-1.5 rounded-full progress-bar-anim" style="width:${pct}%"></div>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+            if (appGoals.length > 3) {
+                html += `<p class="text-[10px] text-slate-400 dark:text-slate-500 text-center pt-1">+${appGoals.length - 3} autre${appGoals.length - 3 > 1 ? 's' : ''} objectif${appGoals.length - 3 > 1 ? 's' : ''}</p>`;
+            }
+            html += '</div>';
+            widget.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        // ─── ABONNEMENTS & CHARGES FIXES ─────────────────────────────────────
+
+        function openFixedChargesModal() {
+            const modal = document.getElementById('fixed-charges-modal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            renderFixedChargesModal();
+        }
+
+        function closeFixedChargesModal() {
+            const modal = document.getElementById('fixed-charges-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function renderFixedChargesModal() {
+            const container = document.getElementById('fixed-charges-content');
+            if (!container) return;
+
+            const allFixed = expenses.filter(e => e.type === 'expense' && e.isFixed);
+
+            if (allFixed.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12">
+                        <div class="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <i data-lucide="pin" class="w-8 h-8 text-orange-400"></i>
+                        </div>
+                        <p class="font-bold text-slate-700 dark:text-slate-200 mb-1">Aucune charge fixe</p>
+                        <p class="text-sm text-slate-400 dark:text-slate-500">Marquez vos loyers, abonnements et charges invariables<br>comme <span class="font-bold text-orange-500">Fixe</span> lors de la saisie.</p>
+                    </div>`;
+                lucide.createIcons({root: container});
+                return;
+            }
+
+            // Déduplication : groupe par (desc normalisé + largeCat)
+            const map = {};
+            allFixed.forEach(e => {
+                const key = e.desc.toLowerCase().trim() + '__' + (e.largeCat || '');
+                if (!map[key]) {
+                    map[key] = { desc: e.desc, largeCat: e.largeCat, smallCat: e.smallCat, amounts: [], months: new Set() };
+                }
+                map[key].amounts.push(e.amountCents);
+                if (e.date) map[key].months.add(e.date.slice(0, 7));
+            });
+
+            const entries = Object.values(map);
+            // Montant représentatif = médiane des occurrences (résistant aux variations ponctuelles)
+            entries.forEach(entry => {
+                const sorted = [...entry.amounts].sort((a, b) => a - b);
+                entry.typicalCents = sorted[Math.floor(sorted.length / 2)];
+                entry.monthCount = entry.months.size;
+            });
+            entries.sort((a, b) => b.typicalCents - a.typicalCents);
+
+            const totalMonthlyCents = entries.reduce((s, e) => s + e.typicalCents, 0);
+            const totalYearlyCents = totalMonthlyCents * 12;
+
+            // Rendu
+            const summaryHtml = `
+                <div class="grid grid-cols-3 gap-3 mb-6">
+                    <div class="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700/40 rounded-xl p-4 text-center">
+                        <p class="text-2xl font-black text-orange-600 dark:text-orange-400">${entries.length}</p>
+                        <p class="text-xs text-orange-500 dark:text-orange-400 font-semibold mt-0.5">Charges</p>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 text-center">
+                        <p class="text-xl font-black text-slate-800 dark:text-slate-100">${formatCurrency(totalMonthlyCents / 100)}</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">/ mois</p>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 text-center">
+                        <p class="text-xl font-black text-slate-800 dark:text-slate-100">${formatCurrency(totalYearlyCents / 100)}</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Projection annuelle</p>
+                    </div>
+                </div>`;
+
+            let listHtml = '<div class="space-y-2">';
+            entries.forEach(entry => {
+                const pal = appCategories[entry.largeCat] ? appCategories[entry.largeCat].palette : null;
+                const colorClass = pal ? `${pal.bgLight} ${pal.textDark} ${pal.border}` : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600";
+                const yearlyAmount = entry.typicalCents * 12;
+                listHtml += `
+                    <div class="list-item-anim flex items-center justify-between p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:shadow-sm transition-shadow gap-3">
+                        <div class="flex items-center gap-3 min-w-0 flex-1">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-orange-100 dark:bg-orange-900/30">
+                                <i data-lucide="pin" class="w-4 h-4 text-orange-500"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="font-semibold text-sm text-slate-800 dark:text-slate-100 truncate">${escapeHtml(entry.desc)}</p>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold border ${colorClass}">${escapeHtml(entry.smallCat || entry.largeCat)}</span>
+                                    <span class="text-[10px] text-slate-400 dark:text-slate-500">${entry.monthCount} mois enregistré${entry.monthCount > 1 ? 's' : ''}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <p class="font-bold text-sm text-slate-800 dark:text-slate-100">${formatCurrency(entry.typicalCents / 100)}<span class="text-xs text-slate-400 font-normal">/mois</span></p>
+                            <p class="text-[10px] text-slate-400 dark:text-slate-500">${formatCurrency(yearlyAmount / 100)}/an</p>
+                        </div>
+                    </div>`;
+            });
+            listHtml += '</div>';
+
+            container.innerHTML = summaryHtml + listHtml;
+            lucide.createIcons({root: container});
+        }
+
+        // ─── CONSEIL MENSUEL ─────────────────────────────────────────────────
+
+        function openAdviceModal() {
+            if (currentMonthFilter === 'all') {
+                showToast('Sélectionnez un mois spécifique pour obtenir un conseil personnalisé.', 'error');
+                return;
+            }
+            const modal = document.getElementById('advice-modal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            renderAdviceModal(currentMonthFilter);
+        }
+
+        function closeAdviceModal() {
+            const modal = document.getElementById('advice-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function getPreviousMonth(month) {
+            const [y, m] = month.split('-').map(Number);
+            if (m === 1) return `${y - 1}-12`;
+            return `${y}-${String(m - 1).padStart(2, '0')}`;
+        }
+
+        function monthLabel(month) {
+            const [y, mo] = month.split('-');
+            const d = new Date(+y, +mo - 1);
+            const s = d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+            return s.charAt(0).toUpperCase() + s.slice(1);
+        }
+
+        function renderAdviceModal(month) {
+            const container = document.getElementById('advice-content');
+            if (!container) return;
+
+            const currData = expenses.filter(e => e.date && e.date.startsWith(month));
+            const prevMonth = getPreviousMonth(month);
+            const prevData = expenses.filter(e => e.date && e.date.startsWith(prevMonth));
+            const hasPrev = prevData.length > 0;
+
+            const sumCents = (arr, type) => arr.filter(e => e.type === type).reduce((s, e) => s + e.amountCents, 0);
+            const currRev = sumCents(currData, 'income');
+            const currExp = sumCents(currData, 'expense');
+            const prevRev = sumCents(prevData, 'income');
+            const prevExp = sumCents(prevData, 'expense');
+            const currReste = currRev - currExp;
+            const prevReste = prevRev - prevExp;
+            const savingsRate = currRev > 0 ? ((currRev - currExp) / currRev * 100) : null;
+
+            // Totaux par catégorie
+            const catTotals = (data) => {
+                const t = {};
+                data.filter(e => e.type === 'expense').forEach(e => {
+                    t[e.largeCat] = (t[e.largeCat] || 0) + e.amountCents;
+                });
+                return t;
+            };
+            const currCats = catTotals(currData);
+            const prevCats = catTotals(prevData);
+
+            // Catégories avec le plus grand écart
+            const allCats = new Set([...Object.keys(currCats), ...Object.keys(prevCats)]);
+            const diffs = [];
+            allCats.forEach(cat => {
+                const curr = currCats[cat] || 0;
+                const prev = prevCats[cat] || 0;
+                if (curr > 0) diffs.push({ cat, curr, prev, delta: curr - prev });
+            });
+            diffs.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+            const topIncrease = diffs.filter(d => d.delta > 0).slice(0, 3);
+            const topDecrease = diffs.filter(d => d.delta < 0).slice(0, 2);
+
+            // Dépassements de budget
+            const overBudget = Object.entries(currCats).filter(([cat, amt]) => {
+                const lim = getLimitForMonth(cat, month);
+                return lim > 0 && amt > lim;
+            }).map(([cat, amt]) => {
+                const lim = getLimitForMonth(cat, month);
+                return { cat, amt, lim, over: amt - lim };
+            }).sort((a, b) => b.over - a.over);
+
+            // Génération du texte
+            let sections = [];
+
+            // — Bilan global —
+            let bilanColor = 'emerald';
+            let bilanIcon = '✅';
+            let bilanText = '';
+            if (currRev === 0) {
+                bilanText = `Aucun revenu enregistré pour ${monthLabel(month)}. Pensez à saisir vos entrées d'argent pour obtenir un bilan complet.`;
+                bilanColor = 'slate'; bilanIcon = 'ℹ️';
+            } else if (currReste < 0) {
+                bilanText = `Mois difficile — vos dépenses (${formatCurrency(currExp/100)}) ont dépassé vos revenus (${formatCurrency(currRev/100)}), avec un solde de <strong class="text-rose-400">−${formatCurrency(Math.abs(currReste)/100)}</strong>.`;
+                bilanColor = 'rose'; bilanIcon = '⚠️';
+            } else if (savingsRate !== null && savingsRate >= 20) {
+                bilanText = `Excellent mois ! Vous avez mis de côté <strong class="text-emerald-400">${Math.round(savingsRate)} %</strong> de vos revenus, soit ${formatCurrency(currReste/100)} — bien au-dessus de l'objectif recommandé de 20 %.`;
+                bilanColor = 'emerald'; bilanIcon = '🌟';
+            } else if (savingsRate !== null && savingsRate >= 0) {
+                bilanText = `Bilan équilibré. Taux d'épargne de <strong>${Math.round(savingsRate)} %</strong> (${formatCurrency(currReste/100)} de reste à vivre). Viser 20 % ou plus renforcerait votre sécurité financière.`;
+                bilanColor = 'blue'; bilanIcon = '📊';
+            }
+
+            if (hasPrev) {
+                const expDiff = currExp - prevExp;
+                const sign = expDiff >= 0 ? '+' : '−';
+                const expColor = expDiff > 0 ? 'rose' : 'emerald';
+                bilanText += ` <span class="text-${expColor}-400 font-semibold">vs ${monthLabel(prevMonth)} : ${sign}${formatCurrency(Math.abs(expDiff)/100)}</span> de dépenses.`;
+            }
+
+            sections.push({ title: `Bilan — ${monthLabel(month)}`, color: bilanColor, icon: bilanIcon, text: bilanText });
+
+            // — Hausses notables —
+            if (topIncrease.length > 0 && hasPrev) {
+                const lines = topIncrease.map(d => {
+                    const pct = d.prev > 0 ? Math.round((d.delta / d.prev) * 100) : null;
+                    const pctText = pct !== null ? ` (+${pct} % vs mois précédent)` : ' (nouveau poste ce mois)';
+                    return `<li><strong>${escapeHtml(d.cat)}</strong> : ${formatCurrency(d.curr/100)}${pctText}</li>`;
+                }).join('');
+                sections.push({ title: 'Hausses notables', color: 'amber', icon: '📈', html: `<ul class="list-none space-y-1">${lines}</ul>` });
+            }
+
+            // — Économies réalisées —
+            if (topDecrease.length > 0 && hasPrev) {
+                const lines = topDecrease.map(d => {
+                    const pct = d.prev > 0 ? Math.round((Math.abs(d.delta) / d.prev) * 100) : 0;
+                    return `<li><strong>${escapeHtml(d.cat)}</strong> : ${formatCurrency(d.curr/100)} (−${pct} % vs mois précédent)</li>`;
+                }).join('');
+                sections.push({ title: 'Économies réalisées', color: 'emerald', icon: '💚', html: `<ul class="list-none space-y-1">${lines}</ul>` });
+            }
+
+            // — Dépassements de budget —
+            if (overBudget.length > 0) {
+                const lines = overBudget.map(d =>
+                    `<li><strong>${escapeHtml(d.cat)}</strong> : ${formatCurrency(d.amt/100)} dépensés sur ${formatCurrency(d.lim/100)} prévus — <span class="text-rose-400 font-bold">+${formatCurrency(d.over/100)} de trop</span></li>`
+                ).join('');
+                sections.push({ title: 'Dépassements de budget', color: 'rose', icon: '🚨', html: `<ul class="list-none space-y-1">${lines}</ul>` });
+            }
+
+            // — Recommandations —
+            const reco = [];
+            if (savingsRate !== null && savingsRate < 10) reco.push('Identifiez 1 ou 2 postes à réduire pour ramener votre taux d\'épargne au-dessus de 10 %.');
+            if (overBudget.length > 0) reco.push(`Révisez votre budget <strong>${escapeHtml(overBudget[0].cat)}</strong> ou envisagez de reclasser certaines dépenses exceptionnelles.`);
+            if (topIncrease.length > 0 && topIncrease[0].delta > 5000) reco.push(`La hausse sur <strong>${escapeHtml(topIncrease[0].cat)}</strong> mérite un regard : dépense ponctuelle ou tendance à surveiller ?`);
+            const noLimitCats = Object.keys(currCats).filter(c => appCategories[c] && !getLimitForMonth(c, month));
+            if (noLimitCats.length > 0) reco.push(`Pensez à définir une limite pour <strong>${escapeHtml(noLimitCats[0])}</strong> (et ${noLimitCats.length - 1} autre${noLimitCats.length > 2 ? 's' : ''} catégorie${noLimitCats.length > 2 ? 's' : ''}) pour mieux piloter vos dépenses.`);
+            const activeGoals = appGoals.filter(g => g.savedCents > 0 && g.savedCents < g.targetCents);
+            if (activeGoals.length > 0 && currReste > 0) {
+                const pct = Math.round((activeGoals[0].savedCents / activeGoals[0].targetCents) * 100);
+                reco.push(`Votre objectif "<strong>${escapeHtml(activeGoals[0].name)}</strong>" est à ${pct} %. Ce mois-ci vous avez ${formatCurrency(currReste/100)} de reste à vivre — une contribution est possible !`);
+            }
+
+            if (reco.length > 0) {
+                const lines = reco.slice(0, 3).map(r => `<li>${r}</li>`).join('');
+                sections.push({ title: 'Recommandations', color: 'indigo', icon: '💡', html: `<ul class="list-none space-y-2">${lines}</ul>` });
+            }
+
+            // — Rendu HTML —
+            const colorMap = {
+                emerald: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700/40 text-emerald-800 dark:text-emerald-200',
+                rose:    'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-700/40 text-rose-800 dark:text-rose-200',
+                amber:   'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700/40 text-amber-800 dark:text-amber-200',
+                blue:    'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700/40 text-blue-800 dark:text-blue-200',
+                indigo:  'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-700/40 text-indigo-800 dark:text-indigo-200',
+                slate:   'bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+            };
+
+            let html = '<div class="space-y-4">';
+            sections.forEach(sec => {
+                const cls = colorMap[sec.color] || colorMap.slate;
+                const body = sec.html || `<p class="text-sm leading-relaxed">${sec.text}</p>`;
+                html += `
+                    <div class="list-item-anim border rounded-xl p-4 ${cls}">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-base">${sec.icon}</span>
+                            <h3 class="font-bold text-sm">${sec.title}</h3>
+                        </div>
+                        <div class="text-sm leading-relaxed">${body}</div>
+                    </div>`;
+            });
+            html += '</div>';
+
+            if (!hasPrev) {
+                html += `<p class="text-xs text-slate-400 dark:text-slate-500 text-center mt-4 italic">Pas de données pour ${monthLabel(prevMonth)} — la comparaison avec le mois précédent n'est pas disponible.</p>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
 
         function getFilteredData(monthFilter = currentMonthFilter) {
             if (monthFilter === 'all') return expenses;
@@ -811,7 +1446,10 @@
             let htmlCards = '';
             for (const [largeCat, data] of Object.entries(appCategories)) {
                 const amount = totalsLarge[largeCat];
-                if (amount === 0 && currentMonthFilter !== 'all') continue;
+                // Catégorie épargne : visible uniquement quand elle contient des contributions
+                if (data.isSavings && amount === 0) continue;
+                // Autres catégories : masquées seulement sur vue mensuelle à 0
+                if (!data.isSavings && amount === 0 && currentMonthFilter !== 'all') continue;
 
                 const pct = calcPercent(amount, totalDepensesCents);
                 const pal = data.palette;
@@ -947,7 +1585,123 @@
             document.getElementById('summary-cards').innerHTML = htmlCards || '<p class="text-slate-400 py-6 px-4 italic">Aucune dépense catégorisée pour cette période.</p>';
 
             renderDetailedBreakdownAndChart(totalsLarge, totalsSmall, totalDepensesCents);
+            renderHealthScore(totalRevenusCents, totalDepensesCents, filteredData, totalsLarge);
             lucide.createIcons();
+        }
+
+        // ─── SCORE DE SANTÉ FINANCIÈRE ────────────────────────────────────────
+
+        function computeHealthScore(totalRevenusCents, totalDepensesCents, filteredData, totalsLarge) {
+            let score = 0;
+            const details = [];
+
+            // 1 — Taux d'épargne (35 pts)
+            // Les contributions objectives (goalId) sont des dépenses-épargne : on les exclut
+            // des "dépenses courantes" pour que le taux d'épargne les compte comme épargne réelle.
+            const savingsContribCents = filteredData
+                .filter(e => e.type === 'expense' && e.goalId)
+                .reduce((s, e) => s + e.amountCents, 0);
+            const adjustedExpenses = totalDepensesCents - savingsContribCents;
+
+            if (totalRevenusCents > 0) {
+                const savingsRate = (totalRevenusCents - adjustedExpenses) / totalRevenusCents;
+                let pts;
+                if (savingsRate >= 0.20)      { pts = 35; details.push({ label: 'Épargne ≥ 20 %', pts, max: 35, ok: true }); }
+                else if (savingsRate >= 0.10) { pts = 25; details.push({ label: `Épargne ${Math.round(savingsRate*100)} %`, pts, max: 35, ok: true }); }
+                else if (savingsRate >= 0)    { pts = 12; details.push({ label: `Épargne ${Math.round(savingsRate*100)} %`, pts, max: 35, ok: false }); }
+                else                          { pts = 0;  details.push({ label: 'Dépenses > revenus', pts, max: 35, ok: false }); }
+                score += pts;
+            } else {
+                score += 10; // pas de revenu enregistré, score neutre
+                details.push({ label: 'Pas de revenu enregistré', pts: 10, max: 35, ok: false });
+            }
+
+            // 2 — Respect des budgets (30 pts)
+            const catsWithLimit = Object.entries(appCategories).filter(([, d]) => {
+                if (currentMonthFilter !== 'all' && d.monthlyLimits && d.monthlyLimits[currentMonthFilter]) return true;
+                return (d.limitCents || 0) > 0;
+            });
+            if (catsWithLimit.length > 0) {
+                let respected = 0;
+                catsWithLimit.forEach(([cat, d]) => {
+                    const limit = getLimitForMonth(cat, currentMonthFilter);
+                    if ((totalsLarge[cat] || 0) <= limit) respected++;
+                });
+                const ratio = respected / catsWithLimit.length;
+                const pts = Math.round(ratio * 30);
+                score += pts;
+                details.push({ label: `${respected}/${catsWithLimit.length} budgets respectés`, pts, max: 30, ok: ratio >= 0.8 });
+            } else {
+                score += 15; // pas de limite fixée, score neutre
+                details.push({ label: 'Aucun budget fixé', pts: 15, max: 30, ok: false });
+            }
+
+            // 3 — Ratio charges fixes (20 pts)
+            const fixedCents = filteredData.filter(e => e.type === 'expense' && e.isFixed).reduce((s, e) => s + e.amountCents, 0);
+            if (totalDepensesCents > 0) {
+                const fixedRatio = fixedCents / totalDepensesCents;
+                let pts;
+                if (fixedRatio <= 0.30)      { pts = 20; details.push({ label: 'Charges fixes < 30 %', pts, max: 20, ok: true }); }
+                else if (fixedRatio <= 0.50) { pts = 14; details.push({ label: `Charges fixes ${Math.round(fixedRatio*100)} %`, pts, max: 20, ok: true }); }
+                else if (fixedRatio <= 0.70) { pts = 7;  details.push({ label: `Charges fixes ${Math.round(fixedRatio*100)} %`, pts, max: 20, ok: false }); }
+                else                          { pts = 2;  details.push({ label: `Charges fixes ${Math.round(fixedRatio*100)} %`, pts, max: 20, ok: false }); }
+                score += pts;
+            } else {
+                score += 10;
+                details.push({ label: 'Aucune dépense', pts: 10, max: 20, ok: false });
+            }
+
+            // 4 — Objectifs actifs (15 pts)
+            const activeGoals = appGoals.filter(g => g.savedCents > 0);
+            let goalPts;
+            if (activeGoals.length >= 2)        { goalPts = 15; details.push({ label: `${activeGoals.length} objectifs en cours`, pts: 15, max: 15, ok: true }); }
+            else if (activeGoals.length === 1)   { goalPts = 10; details.push({ label: '1 objectif en cours', pts: 10, max: 15, ok: true }); }
+            else if (appGoals.length > 0)        { goalPts = 5;  details.push({ label: 'Objectifs sans contribution', pts: 5, max: 15, ok: false }); }
+            else                                 { goalPts = 0;  details.push({ label: 'Aucun objectif', pts: 0, max: 15, ok: false }); }
+            score += goalPts;
+
+            return { score: Math.min(100, Math.max(0, score)), details };
+        }
+
+        function renderHealthScore(totalRevenusCents, totalDepensesCents, filteredData, totalsLarge) {
+            const el = document.getElementById('health-score-display');
+            if (!el) return;
+
+            const { score, details } = computeHealthScore(totalRevenusCents, totalDepensesCents, filteredData, totalsLarge);
+
+            let label, colorRing, colorText, colorBg, colorBar, emoji;
+            if (score >= 80)      { label = 'Excellent';    colorRing = 'border-emerald-400'; colorText = 'text-emerald-300'; colorBg = 'bg-emerald-500/20'; colorBar = 'bg-emerald-400'; emoji = '🌟'; }
+            else if (score >= 60) { label = 'Bon';          colorRing = 'border-blue-400';    colorText = 'text-blue-300';    colorBg = 'bg-blue-500/20';    colorBar = 'bg-blue-400';    emoji = '👍'; }
+            else if (score >= 40) { label = 'Moyen';        colorRing = 'border-amber-400';   colorText = 'text-amber-300';   colorBg = 'bg-amber-500/20';   colorBar = 'bg-amber-400';   emoji = '📊'; }
+            else if (score >= 20) { label = 'À améliorer';  colorRing = 'border-orange-400';  colorText = 'text-orange-300';  colorBg = 'bg-orange-500/20';  colorBar = 'bg-orange-400';  emoji = '⚠️'; }
+            else                  { label = 'Critique';     colorRing = 'border-rose-500';    colorText = 'text-rose-300';    colorBg = 'bg-rose-500/20';    colorBar = 'bg-rose-400';    emoji = '🔴'; }
+
+            const detailsHtml = details.map(d => `
+                <div class="flex items-center justify-between text-[10px]">
+                    <span class="text-indigo-200 truncate">${d.ok ? '✓' : '·'} ${d.label}</span>
+                    <span class="${d.ok ? 'text-emerald-300' : 'text-slate-400'} font-bold shrink-0 ml-1">${d.pts}/${d.max}</span>
+                </div>`).join('');
+
+            el.innerHTML = `
+                <div class="border-t border-indigo-700/50 pt-3 mt-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-indigo-200 text-xs font-bold uppercase tracking-wider">Score santé</span>
+                        <span class="${colorText} font-black text-lg leading-none">${score}<span class="text-xs font-bold">/100</span></span>
+                    </div>
+                    <div class="w-full bg-indigo-800/50 rounded-full h-1.5 overflow-hidden mb-2">
+                        <div class="${colorBar} h-1.5 rounded-full progress-bar-anim" style="width:${score}%"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] ${colorText} font-bold">${emoji} ${label}</span>
+                        <button onclick="toggleHealthDetails()" class="text-[10px] text-indigo-300 hover:text-white transition-colors underline" title="Détails">Détails</button>
+                    </div>
+                    <div id="health-details" class="hidden mt-2 space-y-1">${detailsHtml}</div>
+                </div>`;
+        }
+
+        function toggleHealthDetails() {
+            const el = document.getElementById('health-details');
+            if (el) el.classList.toggle('hidden');
         }
 
         // --- ÉDITION INLINE DE LA LIMITE MENSUELLE ---
@@ -1337,6 +2091,7 @@
 
             const chartLabels = []; const chartData = []; const chartColors = [];
             for (const [largeCat, amount] of Object.entries(totalsLarge)) {
+                if (appCategories[largeCat]?.isSavings) continue; // exclure catégorie épargne interne
                 if (amount > 0) {
                     chartLabels.push(largeCat); chartData.push(amount / 100);
                     let hex = '#94a3b8'; 
@@ -1492,15 +2247,23 @@
                         </div>
                     `;
                 } else {
+                    const isSavingsItem = !!item.goalId;
+                    const linkedGoal = isSavingsItem ? appGoals.find(g => g.id === item.goalId) : null;
                     const pal = appCategories[item.largeCat] ? appCategories[item.largeCat].palette : null;
                     const colorClass = pal ? `${pal.bgLight} ${pal.textDark} ${pal.border}` : "bg-slate-100 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600";
-                    
+
+                    const badgeHtml = isSavingsItem
+                        ? `<span class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] sm:text-xs font-bold border bg-teal-100 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-200 dark:border-teal-800/50 whitespace-nowrap shrink-0">
+                               <i data-lucide="piggy-bank" class="w-3 h-3"></i> Épargne
+                           </span>`
+                        : `<span class="inline-block px-2 py-1 rounded-md text-[10px] sm:text-xs font-medium border ${colorClass} truncate max-w-[80px] sm:max-w-none">
+                               ${escapeHtml(item.smallCat)}
+                           </span>`;
+
                     li.innerHTML = `
                         <div class="flex items-start gap-3 w-full sm:w-auto overflow-visible">
                             <div class="flex-shrink-0 mt-0.5">
-                                <span class="inline-block px-2 py-1 rounded-md text-[10px] sm:text-xs font-medium border ${colorClass} truncate max-w-[80px] sm:max-w-none">
-                                    ${escapeHtml(item.smallCat)}
-                                </span>
+                                ${badgeHtml}
                             </div>
                             <div class="min-w-0 flex-1">
                                 <div class="flex items-center gap-1.5">
@@ -1508,7 +2271,7 @@
                                     ${item.isFixed ? '<span class="shrink-0 inline-flex items-center gap-0.5 text-[9px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700/40 px-1 py-0.5 rounded-full"><i data-lucide="pin" class="w-2.5 h-2.5"></i>Fixe</span>' : ''}
                                 </div>
                                 <div class="flex items-center">
-                                    <p class="text-xs text-slate-400 truncate">${dateFormatted} • ${escapeHtml(item.largeCat)}</p>
+                                    <p class="text-xs text-slate-400 truncate">${dateFormatted}${isSavingsItem ? '' : ' • ' + escapeHtml(item.largeCat)}</p>
                                 </div>
                             </div>
                         </div>
@@ -1572,7 +2335,13 @@
         function editItem(id) {
             const item = expenses.find(e => e.id === id);
             if (!item) return;
-            
+
+            // Bloquer l'édition des contributions épargne (elles sont liées à un objectif)
+            if (item.goalId) {
+                showToast("Les contributions d'épargne ne sont pas modifiables directement. Supprimez cette ligne pour recréer la contribution depuis l'objectif.", "error");
+                return;
+            }
+
             editingId = id; setFormType(item.type || 'expense');
             
             const [year, month] = item.date.split('-');
@@ -1634,10 +2403,25 @@
 
         function executeDelete() {
             if (!itemToDeleteId) return;
+            const item = expenses.find(e => e.id === itemToDeleteId);
+
+            // Si c'est une contribution épargne : reverser le montant dans le goal lié
+            if (item && item.goalId) {
+                const goal = appGoals.find(g => g.id === item.goalId);
+                if (goal) {
+                    goal.savedCents = Math.max(0, goal.savedCents - item.amountCents);
+                    saveGoals();
+                }
+            }
+
             expenses = expenses.filter(e => e.id !== itemToDeleteId);
             saveData(); updateMonthDropdown(); render(); updateCompareSelects();
+            // render() appelle déjà renderGoalsWidget() — rafraîchir aussi le modal objectifs
+            if (item && item.goalId) renderGoalsModal();
             closeDeleteModal();
-            showToast("Opération supprimée.");
+            showToast(item && item.goalId
+                ? "Contribution supprimée — objectif mis à jour."
+                : "Opération supprimée.");
         }
 
         function promptResetData() {
@@ -1652,7 +2436,7 @@
             closeResetModal();
             showLoader("Suppression...", "Effacement de vos données");
             setTimeout(() => {
-                expenses = []; appCategories = {}; localStorage.removeItem('budgetData'); localStorage.removeItem('budgetCategories');
+                expenses = []; appCategories = {}; appGoals = []; localStorage.removeItem('budgetData'); localStorage.removeItem('budgetCategories'); localStorage.removeItem('budgetGoals');
                 loadData(); populateCategoryDropdown(); updateHistoryCategoryFilter(); updateMonthDropdown(); render(); updateCompareSelects();
                 hideLoader();
                 showToast("Toutes vos données ont été effacées.", "success");
@@ -2070,6 +2854,7 @@
         function updateModalSelect() {
             const select = document.getElementById('parent-main-cat-select'); select.innerHTML = '';
             for (const mainCat in appCategories) {
+                if (appCategories[mainCat].isSavings) continue;
                 const option = document.createElement('option'); option.value = mainCat; option.textContent = mainCat; select.appendChild(option);
             }
         }
@@ -2101,6 +2886,7 @@
 
             mainCatsArray.forEach((mainCat, mainIndex) => {
                 const data = appCategories[mainCat];
+                if (data.isSavings) return; // catégorie interne, non éditable
                 let moveOptions = '';
                 mainCatsArray.forEach((mCat, mIdx) => {
                     const selected = mCat === mainCat ? 'selected' : '';
@@ -2233,6 +3019,7 @@
             const selectCat = document.getElementById('category-input');
             selectCat.innerHTML = '<option value="" disabled selected>Choisir une catégorie...</option>';
             for (const [largeCat, data] of Object.entries(appCategories)) {
+                if (data.isSavings) continue; // gérée via le modal Objectifs uniquement
                 const optgroup = document.createElement('optgroup');
                 optgroup.label = `--- ${largeCat.toUpperCase()} ---`;
                 data.subCats.forEach(smallCat => {
@@ -2413,6 +3200,18 @@
                         }
                     }
 
+                    // Import des objectifs d'épargne (rétrocompatible — absent dans les anciens exports)
+                    if (Array.isArray(dataToImport.goals)) {
+                        if (mode === 'overwrite') {
+                            appGoals = dataToImport.goals;
+                        } else {
+                            // Fusion : on ajoute les goals qui n'existent pas encore (par id)
+                            const existingIds = new Set(appGoals.map(g => g.id));
+                            dataToImport.goals.forEach(g => { if (!existingIds.has(g.id)) appGoals.push(g); });
+                        }
+                        saveGoals();
+                    }
+
                     saveData(); populateCategoryDropdown(); updateHistoryCategoryFilter(); updateMonthDropdown(); render(); updateCompareSelects();
                     hideLoader();
                     showToast("Les données ont été intégrées avec succès !");
@@ -2431,6 +3230,7 @@
                 const dataToExport = {
                     expenses: expenses,
                     categories: appCategories,
+                    goals: appGoals,
                     exportDate: new Date().toISOString()
                 };
                 
