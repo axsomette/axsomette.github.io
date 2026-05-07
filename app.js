@@ -1667,6 +1667,20 @@
             const el = document.getElementById('health-score-display');
             if (!el) return;
 
+            // État vide : aucune donnée enregistrée → pas de score à afficher
+            const hasData = totalRevenusCents > 0 || totalDepensesCents > 0 || appGoals.length > 0;
+            if (!hasData) {
+                el.innerHTML = `
+                    <div class="border-t border-indigo-700/50 pt-3 mt-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-indigo-200 text-xs font-bold uppercase tracking-wider">Score santé</span>
+                            <span class="text-indigo-400 text-xs">—</span>
+                        </div>
+                        <p class="text-[10px] text-indigo-300/70 italic">Ajoutez vos revenus et dépenses pour calculer votre score.</p>
+                    </div>`;
+                return;
+            }
+
             const { score, details } = computeHealthScore(totalRevenusCents, totalDepensesCents, filteredData, totalsLarge);
 
             let label, colorRing, colorText, colorBg, colorBar, emoji;
