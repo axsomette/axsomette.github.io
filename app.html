@@ -64,10 +64,6 @@
                         <p class="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-1">Finance Manager</p>
                     </div>
                 </a>
-                <a href="./index.html" class="hidden sm:flex items-center gap-1 text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors ml-1" title="Retour à l'accueil">
-                    <i data-lucide="arrow-left" class="w-3 h-3"></i>
-                    Accueil
-                </a>
             </div>
             
             <div class="flex flex-col lg:flex-row gap-2 lg:gap-4 items-stretch lg:items-center bg-white dark:bg-slate-800 p-2 sm:p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 w-full xl:w-auto transition-all">
@@ -105,6 +101,12 @@
 
                     <button onclick="openHelpModal()" class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 flex justify-center items-center gap-1.5 px-3 lg:px-2 py-2 lg:py-1 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" title="Comment ça marche ?">
                         <i data-lucide="help-circle" class="w-4 h-4"></i> Aide
+                    </button>
+
+                    <div class="hidden lg:block w-px h-4 bg-slate-200 dark:bg-slate-700"></div>
+
+                    <button onclick="openPatchNotesModal()" class="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 flex justify-center items-center gap-1.5 px-3 lg:px-2 py-2 lg:py-1 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors" title="Nouveautés">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i> Nouveautés
                     </button>
 
                     <div class="hidden lg:block w-px h-4 bg-slate-200 dark:bg-slate-700"></div>
@@ -242,6 +244,15 @@
                             </select>
                         </div>
 
+                        <div id="fixed-expense-wrapper" style="display:none">
+                            <button type="button" id="is-fixed-toggle" onclick="toggleFixedExpense()"
+                                    class="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-500 dark:text-slate-400 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-500 dark:hover:text-orange-400 transition-all">
+                                <i data-lucide="pin" class="w-4 h-4 shrink-0"></i>
+                                <span class="flex-1 text-left text-xs">Dépense fixe (loyer, abonnement invariable…)</span>
+                                <span id="fixed-badge" class="hidden text-[10px] font-bold text-white bg-orange-500 px-1.5 py-0.5 rounded-full">Fixe</span>
+                            </button>
+                        </div>
+
                         <div class="flex flex-col sm:flex-row gap-2 pt-2">
                             <button type="submit" id="submit-btn"
                                 class="flex-1 w-full bg-indigo-600 text-white font-medium py-2.5 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 dark:focus:ring-indigo-900 transition-all flex justify-center items-center gap-2 shadow-sm">
@@ -316,6 +327,9 @@
                     <!-- ENCART SMART INSIGHTS / BILAN GLOBAL -->
                     <div id="smart-insights-container" class="mb-5 hidden"></div>
 
+                    <!-- SUGGESTIONS DÉPENSES RÉCURRENTES -->
+                    <div id="recurring-suggestion-container" class="mb-4 hidden"></div>
+
                     <div class="flex-1 relative min-h-[400px] lg:min-h-0">
                         <div class="absolute inset-0 overflow-y-auto pr-2">
                             <ul id="expense-list" class="space-y-3">
@@ -329,8 +343,8 @@
         </div>
         
         <footer class="mt-auto pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-500 pb-2">
-            <div>&copy; <span id="current-year"></span> Lucas Jimenez Boulot alias Axsom. Tous droits réservés.</div>
-            <div class="font-medium bg-slate-200/60 dark:bg-slate-800 px-2.5 py-1 rounded-md tracking-wider">Version 2.01</div>
+            <div>&copy; <span id="current-year"></span> <a href="https://axsomette.github.io/lucas-jimenez-boulot/" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors font-medium">Lucas Jimenez Boulot</a> alias Axsom. Tous droits réservés.</div>
+            <button onclick="openPatchNotesModal()" class="font-medium bg-slate-200/60 dark:bg-slate-800 hover:bg-amber-100 dark:hover:bg-amber-900/20 hover:text-amber-600 dark:hover:text-amber-400 px-2.5 py-1 rounded-md tracking-wider transition-colors">Version 2.1</button>
         </footer>
     </div>
 
@@ -462,6 +476,105 @@
         </div>
     </div>
 
+    <!-- MODAL PATCH NOTES -->
+    <div id="patch-notes-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 sm:p-6 md:p-8 shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-y-auto flex flex-col border border-transparent dark:border-slate-700">
+            <div class="flex justify-between items-center mb-6 sticky top-0 bg-white dark:bg-slate-800 z-10 pb-4 border-b border-slate-100 dark:border-slate-700">
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-5 h-5 sm:w-6 sm:h-6 text-amber-500"></i>
+                    Nouveautés
+                </h2>
+                <button onclick="closePatchNotesModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-2 bg-slate-100 dark:bg-slate-700 rounded-full transition-colors shrink-0 ml-2">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-5 text-slate-600 dark:text-slate-300">
+
+                <!-- v2.1 -->
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-xs font-bold text-white bg-amber-500 px-2.5 py-1 rounded-full">v2.1</span>
+                        <span class="text-xs text-slate-400 dark:text-slate-500">Mai 2026</span>
+                        <span class="text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 px-2 py-0.5 rounded-full">Dernière version</span>
+                    </div>
+                    <div class="space-y-2.5 pl-1">
+                        <div class="flex items-start gap-3">
+                            <div class="w-7 h-7 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center shrink-0 mt-0.5">
+                                <i data-lucide="pin" class="w-3.5 h-3.5 text-orange-500"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-800 dark:text-slate-100">Dépenses fixes</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Marquez loyers, abonnements et charges invariables comme "Fixes". Le simulateur les exclut automatiquement de l'optimisation.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center shrink-0 mt-0.5">
+                                <i data-lucide="repeat-2" class="w-3.5 h-3.5 text-indigo-500"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-800 dark:text-slate-100">Import intelligent des récurrentes</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Sur un mois sans données, un panneau propose automatiquement d'importer vos charges fixes des autres mois en un clic.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0 mt-0.5">
+                                <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-emerald-500"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-800 dark:text-slate-100">Limites de budget par mois</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Définissez une limite globale et/ou une limite spécifique par mois sur chaque catégorie, directement depuis les cartes.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center shrink-0 mt-0.5">
+                                <i data-lucide="lightbulb" class="w-3.5 h-3.5 text-rose-500"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-800 dark:text-slate-100">Analyses plus claires</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Les messages d'insights réécrit en langage naturel : "Alimentation a dépassé sa limite — 1 772 € dépensés sur 600 € prévus, soit +1 172 € de trop."</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-100 dark:border-slate-700/50 pt-4">
+                    <!-- v2.0 -->
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-xs font-bold text-white bg-indigo-500 px-2.5 py-1 rounded-full">v2.0</span>
+                        <span class="text-xs text-slate-400 dark:text-slate-500">2025</span>
+                    </div>
+                    <div class="space-y-2 pl-1 text-xs text-slate-500 dark:text-slate-400">
+                        <p class="flex items-center gap-2"><i data-lucide="target" class="w-3.5 h-3.5 text-purple-500 shrink-0"></i> Simulateur de budget intelligent par catégorie</p>
+                        <p class="flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-indigo-500 shrink-0"></i> Comparaison de mois côte à côte</p>
+                        <p class="flex items-center gap-2"><i data-lucide="moon" class="w-3.5 h-3.5 text-slate-500 shrink-0"></i> Mode sombre premium</p>
+                        <p class="flex items-center gap-2"><i data-lucide="folder-tree" class="w-3.5 h-3.5 text-indigo-500 shrink-0"></i> Catégories hiérarchiques (dossiers + sous-catégories)</p>
+                        <p class="flex items-center gap-2"><i data-lucide="hard-drive" class="w-3.5 h-3.5 text-emerald-500 shrink-0"></i> Export / import JSON avec fusion ou écrasement</p>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-100 dark:border-slate-700/50 pt-4">
+                    <!-- v1.0 -->
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-xs font-bold text-white bg-slate-400 px-2.5 py-1 rounded-full">v1.0</span>
+                        <span class="text-xs text-slate-400 dark:text-slate-500">2024</span>
+                    </div>
+                    <div class="space-y-2 pl-1 text-xs text-slate-500 dark:text-slate-400">
+                        <p class="flex items-center gap-2"><i data-lucide="plus-circle" class="w-3.5 h-3.5 text-indigo-500 shrink-0"></i> Suivi dépenses & revenus par mois</p>
+                        <p class="flex items-center gap-2"><i data-lucide="pie-chart" class="w-3.5 h-3.5 text-indigo-500 shrink-0"></i> Graphiques récapitulatifs</p>
+                        <p class="flex items-center gap-2"><i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-500 shrink-0"></i> 100% local — aucune donnée envoyée sur internet</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <button onclick="closePatchNotesModal()" class="w-full bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white font-bold py-3.5 rounded-xl transition-colors shadow-lg mt-6">
+                Fermer
+            </button>
+        </div>
+    </div>
+
+
     <!-- MODAL AIDE -->
     <div id="help-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 sm:p-6 md:p-8 shadow-2xl w-full max-w-3xl max-h-[95vh] overflow-y-auto flex flex-col border border-transparent dark:border-slate-700">
@@ -484,25 +597,31 @@
                     <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base sm:text-lg mb-2 flex items-center gap-2">
                         <i data-lucide="plus-circle" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500"></i> 1. Ajouter une opération
                     </h3>
-                    <p class="text-sm">Utilisez le formulaire pour ajouter une <b>dépense</b> ou un <b>revenu</b>. Saisissez le nom, le montant, puis sélectionnez le <b>Mois et l'Année</b> correspondants via les menus déroulants.</p>
+                    <p class="text-sm">Utilisez le formulaire pour ajouter une <b>dépense</b> ou un <b>revenu</b>. Saisissez le nom, le montant, puis sélectionnez le mois et l'année.<br><br>Pour les charges qui ne changent jamais (loyer, abonnements…), activez le bouton <b>🖈 Dépense fixe</b> avant de valider. Ces dépenses seront automatiquement proposées à l'import sur les prochains mois.</p>
                 </div>
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm">
                     <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base sm:text-lg mb-2 flex items-center gap-2">
-                        <i data-lucide="folder-tree" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500"></i> 2. Gérer les Catégories & Objectifs
+                        <i data-lucide="repeat-2" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500"></i> 2. Charges récurrentes
                     </h3>
-                    <p class="text-sm">Cliquez sur <b>"Catégories"</b> en haut. Vous pouvez créer des grands "Dossiers" (ex: Maison) et des sous-catégories à l'intérieur. <br><br><b>💡 Budget Max :</b> Vous pouvez définir un <b>Budget Max</b> pour chaque grand dossier. Une barre de progression interactive s'affichera alors pour vous aider à respecter cet objectif !</p>
+                    <p class="text-sm">Quand vous consultez un mois sans données (ou incomplet), un <b>panneau bleu</b> apparaît automatiquement en haut de la liste, proposant d'importer vos charges fixes depuis les autres mois. Ajoutez-les une par une ou toutes d'un coup avec <b>"Tout ajouter"</b>.</p>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm">
+                    <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base sm:text-lg mb-2 flex items-center gap-2">
+                        <i data-lucide="folder-tree" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500"></i> 3. Catégories & Limites de budget
+                    </h3>
+                    <p class="text-sm">Cliquez sur <b>"Catégories"</b> pour créer des dossiers et sous-catégories.<br><br>Sur chaque carte de catégorie, deux étiquettes sont toujours visibles : <span class="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700 px-1.5 py-0.5 rounded-full text-[10px] font-semibold"><i data-lucide="repeat-2" class="w-2.5 h-2.5 inline"></i> Global</span> pour la limite qui s'applique tous les mois, et <span class="inline-flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700 px-1.5 py-0.5 rounded-full text-[10px] font-semibold"><i data-lucide="calendar" class="w-2.5 h-2.5 inline"></i> Mois</span> pour une limite spécifique au mois affiché. Cliquez sur l'une ou l'autre pour la définir ou la modifier.</p>
                 </div>
                 <div class="bg-purple-50 dark:bg-purple-900/10 p-4 sm:p-5 rounded-xl border border-purple-200 dark:border-purple-800/30 shadow-sm">
                     <h3 class="font-bold text-purple-800 dark:text-purple-300 text-base sm:text-lg mb-2 flex items-center gap-2">
-                        <i data-lucide="target" class="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 dark:text-purple-400"></i> 3. Simulateur de Budget
+                        <i data-lucide="target" class="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 dark:text-purple-400"></i> 4. Simulateur de Budget
                     </h3>
-                    <p class="text-sm text-purple-900/80 dark:text-purple-200/80">Le bouton <b>"Simulateur"</b> dans le menu du haut est votre nouvel assistant prévisionnel. Cliquez dessus, <b>choisissez le mois de référence</b> sur lequel vous souhaitez vous baser, indiquez le budget maximal souhaité pour le mois prochain, et l'algorithme calculera automatiquement les catégories exactes où vous devez faire des efforts pour atteindre cet objectif !</p>
+                    <p class="text-sm text-purple-900/80 dark:text-purple-200/80">Le <b>Simulateur</b> analyse un mois de référence et calcule exactement où réduire pour atteindre votre objectif. Les dépenses marquées <b>Fixes</b> sont automatiquement exclues — seules les dépenses variables sont ciblées pour l'optimisation.</p>
                 </div>
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm">
                     <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base sm:text-lg mb-2 flex items-center gap-2">
-                        <i data-lucide="sparkles" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500"></i> 4. Analyses Intelligentes & Thème
+                        <i data-lucide="sparkles" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500"></i> 5. Analyses & Thème
                     </h3>
-                    <p class="text-sm"><b>Bilan & Analyses :</b> Sélectionnez un mois précis pour voir des conseils générés automatiquement. Si vous sélectionnez <b>"Tout l'historique"</b>, vous accédez désormais à un <b>Bilan Global</b> de vos finances depuis toujours.<br><br><b>Mode Sombre :</b> Cliquez sur la petite icône <i data-lucide="moon" class="w-4 h-4 inline-block text-indigo-500 mx-0.5"></i> pour basculer sur le thème Premium sombre.</p>
+                    <p class="text-sm"><b>Bilan mensuel :</b> Sélectionnez un mois pour voir les alertes de dépassement et les conseils générés automatiquement.<br><br><b>Tout l'historique :</b> Vue globale de vos finances avec récapitulatif sur tous vos mois suivis.<br><br><b>Mode Sombre :</b> Cliquez sur l'icône <i data-lucide="moon" class="w-4 h-4 inline-block text-indigo-500 mx-0.5"></i> pour basculer en thème sombre.</p>
                 </div>
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm">
                     <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base sm:text-lg mb-2 flex items-center gap-2">

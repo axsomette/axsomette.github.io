@@ -98,7 +98,8 @@
         let currentSort = 'date-desc';
         let currentSearchQuery = ''; 
         let currentCategoryFilter = 'all'; 
-        let formType = 'expense'; 
+        let formType = 'expense';
+        let isFixedExpense = false;
         let chartInstance = null; 
         let compareChartInstance = null;
         let currentCompareChartType = 'bar'; 
@@ -166,9 +167,13 @@
             }
 
             const baselineExpenses = expenses.filter(e => e.date.startsWith(baselineMonth) && e.type === 'expense');
-            
+            const fixedExpenses = baselineExpenses.filter(e => e.isFixed);
+            const variableExpenses = baselineExpenses.filter(e => !e.isFixed);
+
             let baselineTotal = 0;
             baselineExpenses.forEach(e => { baselineTotal += e.amountCents; });
+            const fixedTotal = fixedExpenses.reduce((s, e) => s + e.amountCents, 0);
+            const variableTotal = variableExpenses.reduce((s, e) => s + e.amountCents, 0);
 
             if (baselineTotal === 0) {
                 return showToast("Ce mois de référence ne contient aucune dépense.", "error");
@@ -176,22 +181,48 @@
 
             const resultsContainer = document.getElementById('simulator-results');
             const emptyState = document.getElementById('simulator-empty');
-            
+
             emptyState.classList.add('hidden');
             resultsContainer.classList.remove('hidden');
 
-            const diffCents = baselineTotal - targetCents;
+            // L'effort s'applique uniquement sur les dépenses variables
+            const variableTarget = targetCents - fixedTotal;
+            const diffCents = variableTotal - variableTarget;
             const dateObj = new Date(baselineMonth + '-01');
             const monthName = dateObj.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
+            // Bloc charges fixes (affiché si présentes)
+            const fixedBlock = fixedTotal > 0 ? `
+                <div class="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700/40 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 text-sm text-orange-700 dark:text-orange-300">
+                        <i data-lucide="pin" class="w-4 h-4 shrink-0"></i>
+                        <span><b>${fixedExpenses.length} charge${fixedExpenses.length > 1 ? 's' : ''} fixe${fixedExpenses.length > 1 ? 's' : ''}</b> non optimisables (loyer, abonnements…)</span>
+                    </div>
+                    <span class="font-bold text-orange-600 dark:text-orange-400 shrink-0">${formatCurrency(fixedTotal/100)}</span>
+                </div>` : '';
+
+            if (variableTarget <= 0) {
+                resultsContainer.innerHTML = fixedBlock + `
+                    <div class="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/50 rounded-xl p-6 text-center mt-3">
+                        <div class="w-16 h-16 bg-rose-100 dark:bg-rose-800/50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i data-lucide="alert-octagon" class="w-8 h-8"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-rose-700 dark:text-rose-400 mb-2">Objectif impossible</h3>
+                        <p class="text-rose-600 dark:text-rose-300">Vos charges fixes seules s'élèvent à <b>${formatCurrency(fixedTotal/100)}</b>, ce qui dépasse déjà votre objectif de <b>${formatCurrency(targetCents/100)}</b>. Relevez votre budget cible.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
             if (diffCents <= 0) {
-                resultsContainer.innerHTML = `
-                    <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 rounded-xl p-6 text-center">
+                resultsContainer.innerHTML = fixedBlock + `
+                    <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 rounded-xl p-6 text-center mt-3">
                         <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-800/50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
                             <i data-lucide="check-circle" class="w-8 h-8"></i>
                         </div>
                         <h3 class="text-xl font-bold text-emerald-800 dark:text-emerald-400 mb-2">Objectif atteint d'avance !</h3>
-                        <p class="text-emerald-600 dark:text-emerald-300">Votre mois de référence (${monthName}) affichait <b>${formatCurrency(baselineTotal/100)}</b> de dépenses. C'est déjà inférieur à votre objectif de <b>${formatCurrency(targetCents/100)}</b>.</p>
+                        <p class="text-emerald-600 dark:text-emerald-300">Vos dépenses variables de ${monthName} (<b>${formatCurrency(variableTotal/100)}</b>) sont déjà sous votre objectif variable de <b>${formatCurrency(variableTarget/100)}</b>.</p>
                     </div>
                 `;
                 lucide.createIcons();
@@ -199,7 +230,7 @@
             }
 
             const catTotals = {};
-            baselineExpenses.forEach(e => {
+            variableExpenses.forEach(e => {
                 const key = e.largeCat + '__||__' + e.smallCat;
                 catTotals[key] = (catTotals[key] || 0) + e.amountCents;
             });
@@ -287,7 +318,7 @@
             }
 
             html += `</div></div>`;
-            resultsContainer.innerHTML = html;
+            resultsContainer.innerHTML = fixedBlock + html;
             lucide.createIcons();
         }
 
@@ -343,6 +374,40 @@
 
         function saveData() { localStorage.setItem('budgetData', JSON.stringify(expenses)); }
         function saveCategories() { localStorage.setItem('budgetCategories', JSON.stringify(appCategories)); }
+
+        // --- LIMITES MENSUELLES PAR CATÉGORIE ---
+        // Retourne la limite pour une catégorie et un mois donnés.
+        // Priorité : override mensuel (monthlyLimits) > limite par défaut (limitCents).
+        // Rétrocompatible : si monthlyLimits est absent, retourne limitCents.
+        function getLimitForMonth(cat, month) {
+            const data = appCategories[cat];
+            if (!data) return 0;
+            if (month && month !== 'all' && data.monthlyLimits && data.monthlyLimits[month]) {
+                return data.monthlyLimits[month];
+            }
+            return data.limitCents || 0;
+        }
+
+        function setMonthlyLimit(cat, month, cents) {
+            if (!appCategories[cat]) return;
+            if (!appCategories[cat].monthlyLimits) appCategories[cat].monthlyLimits = {};
+            if (cents > 0) {
+                appCategories[cat].monthlyLimits[month] = cents;
+            } else {
+                delete appCategories[cat].monthlyLimits[month];
+                if (Object.keys(appCategories[cat].monthlyLimits).length === 0) {
+                    delete appCategories[cat].monthlyLimits;
+                }
+            }
+            saveCategories();
+        }
+
+        function deleteMonthlyLimit(cat, month) {
+            setMonthlyLimit(cat, month, 0);
+            renderEditCategories();
+            render();
+            showToast('Limite mensuelle supprimée.');
+        }
 
         function handleSearchDebounce() {
             clearTimeout(searchTimeout);
@@ -428,25 +493,274 @@
             const btnExp = document.getElementById('btn-type-expense');
             const btnInc = document.getElementById('btn-type-income');
             const catWrapper = document.getElementById('category-wrapper');
+            const fixedWrapper = document.getElementById('fixed-expense-wrapper');
 
             if (type === 'expense') {
                 btnExp.className = "flex-1 py-1.5 rounded-md text-sm font-medium transition-all tab-active";
                 btnInc.className = "flex-1 py-1.5 rounded-md text-sm font-medium transition-all tab-inactive";
                 catWrapper.style.display = 'block';
+                if (fixedWrapper) fixedWrapper.style.display = 'block';
                 document.getElementById('category-input').required = true;
             } else {
                 btnInc.className = "flex-1 py-1.5 rounded-md text-sm font-medium transition-all tab-active";
                 btnExp.className = "flex-1 py-1.5 rounded-md text-sm font-medium transition-all tab-inactive";
                 catWrapper.style.display = 'none';
+                if (fixedWrapper) fixedWrapper.style.display = 'none';
                 document.getElementById('category-input').required = false;
             }
         }
 
-        function render() { 
-            updateTotalsAndCards(); 
-            renderInsights();
-            renderList(); 
+        function toggleFixedExpense() {
+            isFixedExpense = !isFixedExpense;
+            const btn = document.getElementById('is-fixed-toggle');
+            const badge = document.getElementById('fixed-badge');
+            if (isFixedExpense) {
+                btn.classList.add('border-orange-400', 'dark:border-orange-600', 'bg-orange-50', 'dark:bg-orange-900/20', 'text-orange-600', 'dark:text-orange-400');
+                btn.classList.remove('border-slate-200', 'dark:border-slate-700', 'text-slate-500', 'dark:text-slate-400');
+                if (badge) badge.classList.remove('hidden');
+            } else {
+                btn.classList.remove('border-orange-400', 'dark:border-orange-600', 'bg-orange-50', 'dark:bg-orange-900/20', 'text-orange-600', 'dark:text-orange-400');
+                btn.classList.add('border-slate-200', 'dark:border-slate-700', 'text-slate-500', 'dark:text-slate-400');
+                if (badge) badge.classList.add('hidden');
+            }
         }
+
+        function resetFixedToggle() {
+            isFixedExpense = false;
+            const btn = document.getElementById('is-fixed-toggle');
+            const badge = document.getElementById('fixed-badge');
+            if (btn) {
+                btn.classList.remove('border-orange-400', 'dark:border-orange-600', 'bg-orange-50', 'dark:bg-orange-900/20', 'text-orange-600', 'dark:text-orange-400');
+                btn.classList.add('border-slate-200', 'dark:border-slate-700', 'text-slate-500', 'dark:text-slate-400');
+            }
+            if (badge) badge.classList.add('hidden');
+        }
+
+        function render() {
+            updateTotalsAndCards();
+            renderInsights();
+            renderRecurringSuggestion();
+            renderList();
+        }
+
+        // ─── DÉTECTION DÉPENSES RÉCURRENTES ──────────────────────────────────
+
+        // Clés des mois pour lesquels l'utilisateur a fermé le panneau
+        let dismissedRecurring = new Set(JSON.parse(localStorage.getItem('dismissedRecurring') || '[]'));
+
+        function saveDismissedRecurring() {
+            localStorage.setItem('dismissedRecurring', JSON.stringify([...dismissedRecurring]));
+        }
+
+        function normalizeDesc(s) {
+            return (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
+        }
+
+        /** Retourne les dépenses candidates à importer dans targetMonth.
+         *  Un candidat = une dépense marquée isFixed dans n'importe quel autre mois,
+         *  dédupliquée par desc normalisé + largeCat, absente du mois cible. */
+        function detectRecurringExpenses(targetMonth) {
+            const otherFixed = expenses.filter(e =>
+                e.type === 'expense' && e.isFixed && e.date && !e.date.startsWith(targetMonth)
+            );
+            const targetExpenses = expenses.filter(e =>
+                e.type === 'expense' && e.date && e.date.startsWith(targetMonth)
+            );
+
+            // Déduplique par clé, garde la version la plus récente
+            const byKey = {};
+            otherFixed.forEach(e => {
+                const key = normalizeDesc(e.desc) + '|||' + (e.largeCat || '');
+                if (!byKey[key] || e.date > byKey[key].date) byKey[key] = e;
+            });
+
+            // Clés déjà présentes dans le mois cible
+            const alreadyIn = new Set(
+                targetExpenses.map(e => normalizeDesc(e.desc) + '|||' + (e.largeCat || ''))
+            );
+
+            const candidates = [];
+            for (const [key, e] of Object.entries(byKey)) {
+                if (!alreadyIn.has(key)) {
+                    candidates.push({
+                        key,
+                        desc: e.desc,
+                        largeCat: e.largeCat || '',
+                        smallCat: e.smallCat || '',
+                        amountCents: e.amountCents,
+                        isFixed: true
+                    });
+                }
+            }
+
+            // Tri alphabétique par description
+            candidates.sort((a, b) => a.desc.localeCompare(b.desc, 'fr'));
+
+            return candidates;
+        }
+
+        function renderRecurringSuggestion() {
+            const container = document.getElementById('recurring-suggestion-container');
+            if (!container) return;
+
+            if (currentMonthFilter === 'all') {
+                container.classList.add('hidden');
+                container.innerHTML = '';
+                return;
+            }
+
+            if (dismissedRecurring.has(currentMonthFilter)) {
+                container.classList.add('hidden');
+                container.innerHTML = '';
+                return;
+            }
+
+            const candidates = detectRecurringExpenses(currentMonthFilter);
+            if (candidates.length === 0) {
+                container.classList.add('hidden');
+                container.innerHTML = '';
+                return;
+            }
+
+            const shortMonth = new Date(currentMonthFilter + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+            const shortMonthCap = shortMonth.charAt(0).toUpperCase() + shortMonth.slice(1);
+
+            // Build rows (max 5 visible, rest hidden behind "voir plus")
+            const MAX_VISIBLE = 5;
+            let rowsHtml = '';
+            candidates.forEach((c, i) => {
+                const isHidden = i >= MAX_VISIBLE;
+                const encodedKey = encodeURIComponent(JSON.stringify({
+                    desc: c.desc, largeCat: c.largeCat, smallCat: c.smallCat,
+                    amountCents: c.amountCents, isFixed: c.isFixed
+                }));
+                rowsHtml += `
+                    <div class="recurring-row flex items-center gap-3 py-2 border-b border-slate-100 dark:border-slate-700/50 last:border-0 ${isHidden ? 'hidden recurring-extra' : ''}">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">${escapeHtml(c.desc)}</span>
+                            </div>
+                            <div class="text-xs text-slate-400 dark:text-slate-500 truncate">${escapeHtml(c.largeCat)}${c.smallCat ? ' · ' + escapeHtml(c.smallCat) : ''}</div>
+                        </div>
+                        <span class="text-sm font-semibold text-slate-700 dark:text-slate-200 shrink-0">${formatCurrency(c.amountCents / 100)}</span>
+                        <button onclick="importRecurringExpense('${encodedKey}', '${currentMonthFilter}')"
+                                class="shrink-0 flex items-center gap-1 text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-700/50 px-2 py-1 rounded-lg transition-all">
+                            <i data-lucide="plus" class="w-3 h-3"></i>Ajouter
+                        </button>
+                    </div>`;
+            });
+
+            const moreCount = candidates.length - MAX_VISIBLE;
+            const moreBtn = moreCount > 0
+                ? `<button onclick="toggleRecurringExtra(this)" class="mt-1 text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                       + ${moreCount} autre${moreCount > 1 ? 's' : ''} <i data-lucide="chevron-down" class="w-3 h-3 inline-block"></i>
+                   </button>`
+                : '';
+
+            // Encode all keys for "Tout ajouter"
+            const allEncoded = encodeURIComponent(JSON.stringify(
+                candidates.map(c => ({ desc: c.desc, largeCat: c.largeCat, smallCat: c.smallCat, amountCents: c.amountCents, isFixed: c.isFixed }))
+            ));
+
+            container.innerHTML = `
+                <div class="bg-white dark:bg-slate-800 border border-indigo-100 dark:border-indigo-800/50 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-3 bg-indigo-50 dark:bg-indigo-900/30 border-b border-indigo-100 dark:border-indigo-800/50">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="repeat-2" class="w-4 h-4 text-indigo-500 dark:text-indigo-400 shrink-0"></i>
+                            <span class="text-sm font-semibold text-indigo-700 dark:text-indigo-300">Charges fixes non encore ajoutées</span>
+                            <span class="text-xs text-indigo-400 dark:text-indigo-500">pour ${shortMonthCap}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="importAllRecurring('${allEncoded}', '${currentMonthFilter}')"
+                                    class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 bg-indigo-100 dark:bg-indigo-800/50 hover:bg-indigo-200 dark:hover:bg-indigo-700/50 px-2.5 py-1 rounded-lg transition-all">
+                                Tout ajouter
+                            </button>
+                            <button onclick="dismissRecurringSuggestion()" class="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="px-4 pb-1">
+                        ${rowsHtml}
+                        ${moreBtn}
+                    </div>
+                </div>`;
+
+            container.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function dismissRecurringSuggestion() {
+            if (currentMonthFilter !== 'all') {
+                dismissedRecurring.add(currentMonthFilter);
+                saveDismissedRecurring();
+            }
+            renderRecurringSuggestion();
+        }
+
+        function toggleRecurringExtra(btn) {
+            const container = btn.closest('.bg-white, .dark\\:bg-slate-800') || btn.parentElement;
+            const extras = container.querySelectorAll('.recurring-extra');
+            const isHidden = extras[0] && extras[0].classList.contains('hidden');
+            extras.forEach(el => el.classList.toggle('hidden', !isHidden));
+            btn.innerHTML = isHidden
+                ? `- Voir moins <i data-lucide="chevron-up" class="w-3 h-3 inline-block"></i>`
+                : `+ ${extras.length} autre${extras.length > 1 ? 's' : ''} <i data-lucide="chevron-down" class="w-3 h-3 inline-block"></i>`;
+            lucide.createIcons();
+        }
+
+        function importRecurringExpense(encodedData, targetMonth) {
+            let data;
+            try { data = JSON.parse(decodeURIComponent(encodedData)); } catch(e) { return; }
+
+            // Find the first day of the month as default date
+            const dateVal = targetMonth + '-01';
+            const newItem = {
+                id: Date.now() + Math.random(),
+                type: 'expense',
+                desc: data.desc,
+                amountCents: data.amountCents,
+                date: dateVal,
+                largeCat: data.largeCat,
+                smallCat: data.smallCat,
+                isFixed: !!data.isFixed
+            };
+            expenses.push(newItem);
+            saveData();
+            updateMonthDropdown();
+            render();
+            updateCompareSelects();
+            showToast(`"${data.desc}" ajouté à ${targetMonth}.`, 'success');
+        }
+
+        function importAllRecurring(encodedAll, targetMonth) {
+            let items;
+            try { items = JSON.parse(decodeURIComponent(encodedAll)); } catch(e) { return; }
+
+            const dateVal = targetMonth + '-01';
+            items.forEach(data => {
+                expenses.push({
+                    id: Date.now() + Math.random(),
+                    type: 'expense',
+                    desc: data.desc,
+                    amountCents: data.amountCents,
+                    date: dateVal,
+                    largeCat: data.largeCat,
+                    smallCat: data.smallCat,
+                    isFixed: !!data.isFixed
+                });
+            });
+            saveData();
+            // Dismiss suggestion since all imported
+            dismissedRecurring.add(targetMonth);
+            saveDismissedRecurring();
+            updateMonthDropdown();
+            render();
+            updateCompareSelects();
+            showToast(`${items.length} charge${items.length > 1 ? 's' : ''} récurrente${items.length > 1 ? 's' : ''} importée${items.length > 1 ? 's' : ''}.`, 'success');
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
 
         function getFilteredData(monthFilter = currentMonthFilter) {
             if (monthFilter === 'all') return expenses;
@@ -456,7 +770,7 @@
         function updateTotalsAndCards() {
             const filteredData = getFilteredData();
             let totalDepensesCents = 0; let totalRevenusCents = 0;
-            const totalsLarge = {}; const totalsSmall = {}; 
+            const totalsLarge = {}; const totalsSmall = {};
 
             for (const key in appCategories) { totalsLarge[key] = 0; }
 
@@ -478,32 +792,124 @@
             resteEl.textContent = formatCurrency(resteCents / 100);
             resteEl.className = `text-3xl font-extrabold ${resteCents >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
 
+            // Pré-calcul par mois pour la vue consistance (tout l'historique)
+            let allMonthsSorted = [];
+            let monthlyConsistency = null;
+            if (currentMonthFilter === 'all') {
+                const monthSet = new Set(expenses.filter(e => e.date).map(e => e.date.slice(0, 7)));
+                allMonthsSorted = [...monthSet].sort();
+                monthlyConsistency = {};
+                allMonthsSorted.forEach(m => { monthlyConsistency[m] = {}; });
+                expenses.filter(e => e.type === 'expense' && e.date).forEach(e => {
+                    const m = e.date.slice(0, 7);
+                    if (monthlyConsistency[m]) {
+                        monthlyConsistency[m][e.largeCat] = (monthlyConsistency[m][e.largeCat] || 0) + e.amountCents;
+                    }
+                });
+            }
+
             let htmlCards = '';
             for (const [largeCat, data] of Object.entries(appCategories)) {
                 const amount = totalsLarge[largeCat];
-                if (amount === 0 && currentMonthFilter !== 'all') continue; 
-                
+                if (amount === 0 && currentMonthFilter !== 'all') continue;
+
                 const pct = calcPercent(amount, totalDepensesCents);
                 const pal = data.palette;
+                const safeCat = largeCat.replace(/[^a-zA-Z0-9]/g, '_');
+                const limitCents = currentMonthFilter !== 'all' ? getLimitForMonth(largeCat, currentMonthFilter) : 0;
+                const escapedCat = largeCat.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
                 let progressHtml = `<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">${pct} des dépenses</p>`;
-                if (data.limitCents > 0 && currentMonthFilter !== 'all') {
-                    const limitPct = Math.min(100, (amount / data.limitCents) * 100);
-                    let barColor = "bg-emerald-500";
-                    if (limitPct > 75) barColor = "bg-amber-500";
-                    if (limitPct > 90) barColor = "bg-rose-500";
-                    
-                    progressHtml = `
-                        <div class="mt-3">
-                            <div class="flex justify-between text-[10px] font-bold mb-1">
-                                <span class="${limitPct > 90 ? 'text-rose-500 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}">${formatCurrency(amount/100)}</span>
-                                <span class="text-slate-400 dark:text-slate-500">/ ${formatCurrency(data.limitCents/100)}</span>
+
+                if (currentMonthFilter !== 'all') {
+                    const isMonthOverride = !!(data.monthlyLimits && data.monthlyLimits[currentMonthFilter]);
+                    const globalLimitCents = data.limitCents || 0;
+                    const monthLimitCents = isMonthOverride ? data.monthlyLimits[currentMonthFilter] : 0;
+                    const shortMonth = new Date(currentMonthFilter + '-01').toLocaleDateString('fr-FR', { month: 'short' });
+
+                    // Barre de progression (si une limite effective existe)
+                    let barHtml = `<p class="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-2.5">${pct} des dépenses</p>`;
+                    if (limitCents > 0) {
+                        const limitPct = Math.min(100, (amount / limitCents) * 100);
+                        let barColor = 'bg-emerald-500';
+                        if (limitPct > 75) barColor = 'bg-amber-500';
+                        if (limitPct > 90) barColor = 'bg-rose-500';
+                        barHtml = `
+                            <div class="flex justify-between items-center text-[10px] font-bold mt-2 mb-1">
+                                <span class="${limitPct > 90 ? 'text-rose-500 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}">${formatCurrency(amount / 100)}</span>
+                                <span class="text-slate-400 dark:text-slate-500">/ ${formatCurrency(limitCents / 100)}</span>
                             </div>
-                            <div class="w-full bg-slate-100 dark:bg-slate-700/50 rounded-full h-1.5 overflow-hidden">
+                            <div class="w-full bg-slate-100 dark:bg-slate-700/50 rounded-full h-1.5 overflow-hidden mb-2.5">
                                 <div class="${barColor} h-1.5 rounded-full transition-all duration-500" style="width: ${limitPct}%"></div>
-                            </div>
-                        </div>
-                    `;
+                            </div>`;
+                    }
+
+                    // Étiquette globale
+                    const globalTag = globalLimitCents > 0
+                        ? `<button onclick="startEditGlobalLimit('${escapedCat}')"
+                                   class="flex items-center gap-1 pl-1.5 pr-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/40 rounded-full text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors" title="Limite globale · modifier">
+                               <i data-lucide="repeat-2" class="w-3 h-3 shrink-0"></i>
+                               <span>${formatCurrency(globalLimitCents / 100)}</span>
+                               <i data-lucide="pencil" class="w-2.5 h-2.5 opacity-40"></i>
+                           </button>`
+                        : `<button onclick="startEditGlobalLimit('${escapedCat}')"
+                                   class="flex items-center gap-1 pl-1.5 pr-2 py-1 bg-white dark:bg-slate-800/80 border border-dashed border-slate-200 dark:border-slate-700/60 rounded-full text-[10px] font-medium text-slate-400 dark:text-slate-500 hover:border-emerald-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors" title="Ajouter une limite globale">
+                               <i data-lucide="repeat-2" class="w-3 h-3 shrink-0"></i>
+                               <span>Global</span>
+                               <i data-lucide="plus" class="w-2.5 h-2.5"></i>
+                           </button>`;
+
+                    // Étiquette mensuelle
+                    const monthTag = isMonthOverride
+                        ? `<button onclick="startEditMonthLimit('${escapedCat}')"
+                                   class="flex items-center gap-1 pl-1.5 pr-2 py-1 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700/40 rounded-full text-[10px] font-semibold text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors" title="${shortMonth} · modifier">
+                               <i data-lucide="calendar" class="w-3 h-3 shrink-0"></i>
+                               <span>${shortMonth} · ${formatCurrency(monthLimitCents / 100)}</span>
+                               <i data-lucide="pencil" class="w-2.5 h-2.5 opacity-40"></i>
+                           </button>`
+                        : `<button onclick="startEditMonthLimit('${escapedCat}')"
+                                   class="flex items-center gap-1 pl-1.5 pr-2 py-1 bg-white dark:bg-slate-800/80 border border-dashed border-slate-200 dark:border-slate-700/60 rounded-full text-[10px] font-medium text-slate-400 dark:text-slate-500 hover:border-indigo-300 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors" title="Ajouter une limite pour ${shortMonth}">
+                               <i data-lucide="calendar" class="w-3 h-3 shrink-0"></i>
+                               <span>${shortMonth}</span>
+                               <i data-lucide="plus" class="w-2.5 h-2.5"></i>
+                           </button>`;
+
+                    progressHtml = `
+                        <div id="cat-limit-area-${safeCat}">
+                            ${barHtml}
+                            <div class="flex gap-1.5 flex-wrap">${globalTag}${monthTag}</div>
+                        </div>`;
+                } else if (monthlyConsistency && allMonthsSorted.length > 0) {
+                    // Vue globale : pastilles de consistance sur les 6 derniers mois
+                    const recentMonths = allMonthsSorted.slice(-6);
+                    const hasAnyLimit = recentMonths.some(m => getLimitForMonth(largeCat, m) > 0);
+                    if (hasAnyLimit) {
+                        const monthsWithLimit = recentMonths.filter(m => getLimitForMonth(largeCat, m) > 0);
+                        const monthsOk = monthsWithLimit.filter(m => {
+                            const lim = getLimitForMonth(largeCat, m);
+                            return ((monthlyConsistency[m] || {})[largeCat] || 0) <= lim;
+                        }).length;
+                        const dots = recentMonths.map(m => {
+                            const lim = getLimitForMonth(largeCat, m);
+                            if (lim === 0) return `<span class="inline-block w-2 h-2 rounded-full bg-slate-200 dark:bg-slate-700" title="${m}"></span>`;
+                            const spent = (monthlyConsistency[m] || {})[largeCat] || 0;
+                            const p = (spent / lim) * 100;
+                            let dc = 'bg-emerald-400';
+                            if (p > 90) dc = 'bg-rose-400';
+                            else if (p > 75) dc = 'bg-amber-400';
+                            const shortM = new Date(m + '-01').toLocaleDateString('fr-FR', { month: 'short' });
+                            return `<span class="inline-block w-2 h-2 rounded-full ${dc}" title="${shortM} : ${formatCurrency(spent / 100)} / ${formatCurrency(lim / 100)}"></span>`;
+                        }).join('');
+                        const scoreClass = monthsOk === monthsWithLimit.length ? 'text-emerald-500' : monthsOk >= Math.ceil(monthsWithLimit.length * 0.6) ? 'text-amber-500' : 'text-rose-500';
+                        progressHtml = `
+                            <div class="mt-2">
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">${pct} des dépenses</p>
+                                    <span class="text-[10px] font-bold ${scoreClass}">${monthsOk}/${monthsWithLimit.length} ✓</span>
+                                </div>
+                                <div class="flex items-center gap-1">${dots}</div>
+                            </div>`;
+                    }
                 }
 
                 htmlCards += `
@@ -512,15 +918,196 @@
                             <i data-lucide="${pal.icon}" class="w-5 h-5"></i>
                             <h2 class="font-semibold truncate">${largeCat}</h2>
                         </div>
-                        <div class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-auto ${data.limitCents > 0 && currentMonthFilter !== 'all' ? 'mb-1' : ''}">${formatCurrency(amount / 100)}</div>
+                        <div class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-auto ${limitCents > 0 && currentMonthFilter !== 'all' ? 'mb-1' : ''}">${formatCurrency(amount / 100)}</div>
                         ${progressHtml}
                     </div>
                 `;
             }
             document.getElementById('summary-cards').innerHTML = htmlCards || '<p class="text-slate-400 py-6 px-4 italic">Aucune dépense catégorisée pour cette période.</p>';
-            
+
             renderDetailedBreakdownAndChart(totalsLarge, totalsSmall, totalDepensesCents);
-            lucide.createIcons(); 
+            lucide.createIcons();
+        }
+
+        // --- ÉDITION INLINE DE LA LIMITE MENSUELLE ---
+        function startEditMonthLimit(cat) {
+            const safeCat = cat.replace(/[^a-zA-Z0-9]/g, '_');
+            const area = document.getElementById('cat-limit-area-' + safeCat);
+            if (!area) return;
+            const currentLimitCents = getLimitForMonth(cat, currentMonthFilter);
+            const currentVal = currentLimitCents > 0 ? (currentLimitCents / 100).toFixed(2) : '';
+            const escapedCat = cat.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            area.innerHTML = `
+                <div class="mt-3 flex items-center gap-1.5">
+                    <div class="flex items-center gap-1 flex-1 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700/50 rounded-lg px-2 py-1.5">
+                        <input type="number" id="inline-limit-${safeCat}"
+                               value="${currentVal}" placeholder="ex: 200" min="0" step="0.01"
+                               class="w-full bg-transparent text-sm font-bold text-indigo-600 dark:text-indigo-400 focus:outline-none text-right placeholder-slate-300 dark:placeholder-slate-600"
+                               onkeydown="if(event.key==='Enter'){event.preventDefault();saveInlineLimit('${escapedCat}');}if(event.key==='Escape')cancelInlineLimit();">
+                        <span class="text-xs text-slate-400 font-bold shrink-0">€</span>
+                    </div>
+                    <button onclick="saveInlineLimit('${escapedCat}')"
+                            class="p-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors shadow-sm" title="Enregistrer">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button onclick="cancelInlineLimit()"
+                            class="p-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 rounded-lg transition-colors" title="Annuler">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>`;
+            lucide.createIcons({ root: area });
+            const input = document.getElementById('inline-limit-' + safeCat);
+            if (input) { input.focus(); input.select(); }
+        }
+
+        function saveInlineLimit(cat) {
+            const safeCat = cat.replace(/[^a-zA-Z0-9]/g, '_');
+            const input = document.getElementById('inline-limit-' + safeCat);
+            if (!input) return;
+            const val = parseFloat(input.value.replace(',', '.')) || 0;
+            setMonthlyLimit(cat, currentMonthFilter, Math.round(val * 100));
+            render();
+            showToast(val > 0 ? `Limite de ${formatCurrency(val)} définie pour ce mois.` : 'Limite mensuelle supprimée pour ce mois.');
+        }
+
+        function cancelInlineLimit() { render(); }
+
+        // --- CHOIX MODE LIMITE (nouveau bouton "Fixer une limite") ---
+        const _limitChoiceMode = {};
+
+        function startEditLimitChoice(cat, defaultMode, initialVal) {
+            defaultMode = defaultMode || 'month';
+            _limitChoiceMode[cat] = defaultMode;
+            const safeCat = cat.replace(/[^a-zA-Z0-9]/g, '_');
+            const area = document.getElementById('cat-limit-area-' + safeCat);
+            if (!area) return;
+            const escapedCat = cat.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            const val = initialVal !== undefined ? initialVal : '';
+            const shortMonth = currentMonthFilter !== 'all'
+                ? new Date(currentMonthFilter + '-01').toLocaleDateString('fr-FR', { month: 'short' })
+                : 'mois';
+            const monthActive = defaultMode === 'month';
+            const monthBtnCls = monthActive
+                ? 'bg-indigo-500 text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700';
+            const globalBtnCls = !monthActive
+                ? 'bg-emerald-500 text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700';
+            const inputCls = monthActive
+                ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-700/50'
+                : 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700/50';
+            const textCls = monthActive
+                ? 'text-indigo-600 dark:text-indigo-400'
+                : 'text-emerald-600 dark:text-emerald-400';
+            const saveCls = monthActive
+                ? 'bg-indigo-500 hover:bg-indigo-600'
+                : 'bg-emerald-500 hover:bg-emerald-600';
+            area.innerHTML = `
+                <div class="mt-3 flex flex-col gap-2">
+                    <div class="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-0.5 gap-0.5">
+                        <button id="lchoice-month-${safeCat}" onclick="switchLimitMode('${escapedCat}', 'month')"
+                                class="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold py-1.5 rounded-[10px] ${monthBtnCls} transition-all">
+                            <i data-lucide="calendar" class="w-3 h-3"></i> ${shortMonth}
+                        </button>
+                        <button id="lchoice-global-${safeCat}" onclick="switchLimitMode('${escapedCat}', 'global')"
+                                class="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold py-1.5 rounded-[10px] ${globalBtnCls} transition-all">
+                            <i data-lucide="calendar-range" class="w-3 h-3"></i> Tous
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <div class="flex items-center gap-1 flex-1 ${inputCls} border rounded-lg px-2 py-1.5">
+                            <input type="number" id="limit-choice-input-${safeCat}"
+                                   value="${val}" placeholder="ex: 300" min="0" step="0.01"
+                                   class="w-full bg-transparent text-sm font-bold ${textCls} focus:outline-none text-right placeholder-slate-300 dark:placeholder-slate-600"
+                                   onkeydown="if(event.key==='Enter'){event.preventDefault();saveLimitChoice('${escapedCat}');}if(event.key==='Escape')cancelInlineLimit();">
+                            <span class="text-xs text-slate-400 font-bold shrink-0">€</span>
+                        </div>
+                        <button onclick="saveLimitChoice('${escapedCat}')"
+                                class="p-1.5 ${saveCls} text-white rounded-lg transition-colors shadow-sm" title="Enregistrer">
+                            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <button onclick="cancelInlineLimit()"
+                                class="p-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 rounded-lg transition-colors" title="Annuler">
+                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </div>`;
+            lucide.createIcons({ root: area });
+            const input = document.getElementById('limit-choice-input-' + safeCat);
+            if (input) { input.focus(); if (val) input.select(); }
+        }
+
+        function switchLimitMode(cat, mode) {
+            const safeCat = cat.replace(/[^a-zA-Z0-9]/g, '_');
+            const input = document.getElementById('limit-choice-input-' + safeCat);
+            const currentVal = input ? input.value : '';
+            startEditLimitChoice(cat, mode, currentVal);
+        }
+
+        function saveLimitChoice(cat) {
+            const safeCat = cat.replace(/[^a-zA-Z0-9]/g, '_');
+            const input = document.getElementById('limit-choice-input-' + safeCat);
+            if (!input) return;
+            const val = parseFloat(input.value.replace(',', '.')) || 0;
+            const mode = _limitChoiceMode[cat] || 'month';
+            if (mode === 'global') {
+                if (!appCategories[cat]) return;
+                appCategories[cat].limitCents = Math.round(val * 100);
+                saveCategories();
+                render();
+                showToast(val > 0 ? `Limite globale de ${formatCurrency(val)} définie pour ${cat}.` : `Limite globale supprimée.`);
+            } else {
+                setMonthlyLimit(cat, currentMonthFilter, Math.round(val * 100));
+                render();
+                showToast(val > 0 ? `Limite de ${formatCurrency(val)} définie pour ce mois.` : 'Limite mensuelle supprimée.');
+            }
+        }
+
+        // --- ÉDITION INLINE DE LA LIMITE GLOBALE ---
+        function startEditGlobalLimit(cat) {
+            const safeCat = cat.replace(/[^a-zA-Z0-9]/g, '_');
+            const area = document.getElementById('cat-limit-area-' + safeCat);
+            if (!area) return;
+            const currentVal = appCategories[cat] ? (appCategories[cat].limitCents || 0) / 100 : 0;
+            const escapedCat = cat.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            area.innerHTML = `
+                <div class="mt-3 flex flex-col gap-1.5">
+                    <p class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <i data-lucide="calendar-range" class="w-3 h-3"></i>
+                        Limite pour tous les mois
+                    </p>
+                    <div class="flex items-center gap-1.5">
+                        <div class="flex items-center gap-1 flex-1 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/50 rounded-lg px-2 py-1.5">
+                            <input type="number" id="global-limit-${safeCat}"
+                                   value="${currentVal > 0 ? currentVal.toFixed(2) : ''}" placeholder="ex: 500" min="0" step="0.01"
+                                   class="w-full bg-transparent text-sm font-bold text-emerald-600 dark:text-emerald-400 focus:outline-none text-right placeholder-slate-300 dark:placeholder-slate-600"
+                                   onkeydown="if(event.key==='Enter'){event.preventDefault();saveGlobalLimit('${escapedCat}');}if(event.key==='Escape')cancelInlineLimit();">
+                            <span class="text-xs text-slate-400 font-bold shrink-0">€</span>
+                        </div>
+                        <button onclick="saveGlobalLimit('${escapedCat}')"
+                                class="p-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors shadow-sm" title="Enregistrer">
+                            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <button onclick="cancelInlineLimit()"
+                                class="p-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 rounded-lg transition-colors" title="Annuler">
+                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </div>`;
+            lucide.createIcons({ root: area });
+            const input = document.getElementById('global-limit-' + safeCat);
+            if (input) { input.focus(); input.select(); }
+        }
+
+        function saveGlobalLimit(cat) {
+            const safeCat = cat.replace(/[^a-zA-Z0-9]/g, '_');
+            const input = document.getElementById('global-limit-' + safeCat);
+            if (!input || !appCategories[cat]) return;
+            const val = parseFloat(input.value.replace(',', '.')) || 0;
+            appCategories[cat].limitCents = Math.round(val * 100);
+            saveCategories();
+            render();
+            showToast(val > 0 ? `Limite globale de ${formatCurrency(val)} définie pour ${cat}.` : `Limite globale supprimée pour ${cat}.`);
         }
 
         function renderInsights() {
@@ -584,13 +1171,34 @@
                     hasInsight = true;
                 }
 
-                for (const [cat, data] of Object.entries(appCategories)) {
-                    if (data.limitCents > 0) {
-                        const avgCat = (catTotals[cat] || 0) / numMonths;
-                        if (avgCat > data.limitCents) {
-                            html += `<li class="flex items-start gap-2.5"><i data-lucide="alert-triangle" class="w-4 h-4 text-rose-500 mt-0.5 shrink-0"></i> <span>En moyenne, vous dépassez le budget ciblé pour <b>${cat}</b> de <b class="text-rose-600 dark:text-rose-400">${formatCurrency((avgCat - data.limitCents)/100)}</b> (${formatCurrency(avgCat/100)}/mois pour une limite de ${formatCurrency(data.limitCents/100)}).</span></li>`;
-                            hasInsight = true;
-                        }
+                // Per-month limit insights
+                const allHistMonths = [...monthsSet].sort();
+                const monthlyCatTotals = {};
+                expenses.forEach(e => {
+                    if (e.type !== 'income' && e.date) {
+                        const mo = e.date.slice(0,7);
+                        if (!monthlyCatTotals[mo]) monthlyCatTotals[mo] = {};
+                        monthlyCatTotals[mo][e.largeCat] = (monthlyCatTotals[mo][e.largeCat] || 0) + e.amountCents;
+                    }
+                });
+
+                for (const [cat] of Object.entries(appCategories)) {
+                    const monthsWithLimit = allHistMonths.filter(m => getLimitForMonth(cat, m) > 0);
+                    if (monthsWithLimit.length === 0) continue;
+                    const monthsExceeded = monthsWithLimit.filter(m => {
+                        const lim = getLimitForMonth(cat, m);
+                        const spent = (monthlyCatTotals[m] || {})[cat] || 0;
+                        return spent > lim;
+                    });
+                    if (monthsExceeded.length > 0) {
+                        const totalExcess = monthsExceeded.reduce((sum, m) => {
+                            const lim = getLimitForMonth(cat, m);
+                            const spent = (monthlyCatTotals[m] || {})[cat] || 0;
+                            return sum + (spent - lim);
+                        }, 0);
+                        const avgExcess = totalExcess / monthsExceeded.length;
+                        html += `<li class="flex items-start gap-2.5"><i data-lucide="alert-triangle" class="w-4 h-4 text-rose-500 mt-0.5 shrink-0"></i> <div><span class="font-bold text-slate-700 dark:text-slate-200">${cat}</span> <span class="text-slate-500 dark:text-slate-400">: limite dépassée</span> <span class="text-rose-600 dark:text-rose-400 font-bold">${monthsExceeded.length} fois sur ${monthsWithLimit.length}</span> <span class="text-slate-400">mois suivis — dépassement moyen de</span> <span class="text-rose-600 dark:text-rose-400 font-bold">${formatCurrency(avgExcess/100)}</span><span class="text-slate-400">.</span></div></li>`;
+                        hasInsight = true;
                     }
                 }
 
@@ -669,12 +1277,12 @@
             }
 
             for (const [cat, amt] of Object.entries(currCatTotals)) {
-                const limit = appCategories[cat] ? appCategories[cat].limitCents : 0;
+                const limit = getLimitForMonth(cat, currentMonthFilter);
                 if (limit > 0 && amt > limit) {
-                    html += `<li class="flex items-start gap-2"><i data-lucide="alert-circle" class="w-4 h-4 text-rose-500 mt-0.5 shrink-0"></i> <span>Attention : le budget max pour <b>${cat}</b> est dépassé de <b class="text-rose-600 dark:text-rose-400">${formatCurrency((amt - limit)/100)}</b> (${formatCurrency(amt/100)} / ${formatCurrency(limit/100)}).</span></li>`;
+                    html += `<li class="flex items-start gap-2"><i data-lucide="alert-circle" class="w-4 h-4 text-rose-500 mt-0.5 shrink-0"></i> <div><span class="font-bold text-slate-700 dark:text-slate-200">${cat}</span> <span class="text-slate-500 dark:text-slate-400">a dépassé sa limite ce mois-ci.</span> <span class="text-rose-600 dark:text-rose-400 font-bold">${formatCurrency(amt/100)} dépensés</span> <span class="text-slate-400">sur</span> <span class="font-semibold">${formatCurrency(limit/100)} prévus</span> <span class="text-slate-400">— soit</span> <span class="text-rose-600 dark:text-rose-400 font-bold">+${formatCurrency((amt - limit)/100)}</span> <span class="text-slate-400">de trop.</span></div></li>`;
                     hasInsight = true;
                 } else if (limit > 0 && amt >= limit * 0.85) {
-                    html += `<li class="flex items-start gap-2"><i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500 mt-0.5 shrink-0"></i> <span>Vous approchez de la limite pour <b>${cat}</b>. Il ne vous reste que <b class="text-amber-600 dark:text-amber-400">${formatCurrency((limit - amt)/100)}</b> (${formatCurrency(amt/100)} / ${formatCurrency(limit/100)}).</span></li>`;
+                    html += `<li class="flex items-start gap-2"><i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500 mt-0.5 shrink-0"></i> <div><span class="font-bold text-slate-700 dark:text-slate-200">${cat}</span> <span class="text-slate-500 dark:text-slate-400">approche de sa limite :</span> <span class="font-semibold">${formatCurrency(amt/100)}</span> <span class="text-slate-400">dépensés sur</span> <span class="font-semibold">${formatCurrency(limit/100)}</span> — <span class="text-amber-600 dark:text-amber-400 font-bold">il ne reste que ${formatCurrency((limit - amt)/100)}.</span></div></li>`;
                     hasInsight = true;
                 }
             }
@@ -873,7 +1481,10 @@
                                 </span>
                             </div>
                             <div class="min-w-0 flex-1">
-                                <p class="font-semibold text-sm sm:text-base text-slate-800 dark:text-slate-200 truncate">${escapeHtml(item.desc)}</p>
+                                <div class="flex items-center gap-1.5">
+                                    <p class="font-semibold text-sm sm:text-base text-slate-800 dark:text-slate-200 truncate">${escapeHtml(item.desc)}</p>
+                                    ${item.isFixed ? '<span class="shrink-0 inline-flex items-center gap-0.5 text-[9px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700/40 px-1 py-0.5 rounded-full"><i data-lucide="pin" class="w-2.5 h-2.5"></i>Fixe</span>' : ''}
+                                </div>
                                 <div class="flex items-center">
                                     <p class="text-xs text-slate-400 truncate">${dateFormatted} • ${escapeHtml(item.largeCat)}</p>
                                 </div>
@@ -915,14 +1526,15 @@
             }
 
             const newItem = { id: editingId ? editingId : Date.now().toString(), type: formType, desc: desc, amountCents: amountCents, date: dateVal };
-            if (formType === 'expense') { newItem.smallCat = smallCat; newItem.largeCat = largeCat; }
+            if (formType === 'expense') { newItem.smallCat = smallCat; newItem.largeCat = largeCat; newItem.isFixed = isFixedExpense; }
 
             if (editingId) {
                 const index = expenses.findIndex(e => e.id === editingId);
                 if (index !== -1) expenses[index] = newItem;
                 cancelEdit(); 
             } else {
-                expenses.push(newItem); 
+                expenses.push(newItem);
+                resetFixedToggle();
                 document.getElementById('desc-input').value = '';
                 document.getElementById('amount-input').value = '';
                 
@@ -948,6 +1560,8 @@
             document.getElementById('desc-input').value = item.desc;
             document.getElementById('amount-input').value = (item.amountCents / 100).toFixed(2);
             if (item.type !== 'income') document.getElementById('category-input').value = item.smallCat;
+            resetFixedToggle();
+            if (item.isFixed) toggleFixedExpense();
             
             document.getElementById('form-title').innerHTML = '<i data-lucide="edit-2" class="w-5 h-5 text-amber-500"></i> Modifier la ligne';
             document.getElementById('submit-text').textContent = "Mettre à jour";
@@ -964,10 +1578,11 @@
         }
 
         function cancelEdit() {
-            editingId = null; 
+            editingId = null;
+            resetFixedToggle();
             document.getElementById('desc-input').value = '';
             document.getElementById('amount-input').value = '';
-            
+
             setFormType('expense');
             
             document.getElementById('form-title').innerHTML = '<i data-lucide="plus-circle" class="w-5 h-5 text-indigo-500"></i> Ajouter une ligne';
@@ -1024,8 +1639,10 @@
 
         function openCategoryModal() { document.getElementById('category-modal').classList.remove('hidden'); updateModalSelect(); renderEditCategories(); }
         function closeCategoryModal() { document.getElementById('category-modal').classList.add('hidden'); }
-        function openHelpModal() { document.getElementById('help-modal').classList.remove('hidden'); }
+        function openHelpModal() { document.getElementById('help-modal').classList.remove('hidden'); lucide.createIcons(); }
         function closeHelpModal() { document.getElementById('help-modal').classList.add('hidden'); }
+        function openPatchNotesModal() { document.getElementById('patch-notes-modal').classList.remove('hidden'); lucide.createIcons(); }
+        function closePatchNotesModal() { document.getElementById('patch-notes-modal').classList.add('hidden'); }
         
         function openCompareModal() {
             document.getElementById('compare-modal').classList.remove('hidden');
@@ -1170,7 +1787,7 @@
                     colorClass = isPositive ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-800/50" : "text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-800/50";
                 }
                 
-                return `<span class="${colorClass} font-bold text-xs sm:text-sm px-2 py-1 rounded-md shadow-sm border inline-flex items-center gap-1 whitespace-nowrap"><i data-lucide="${icon}" class="w-3.5 h-3.5"></i> ${sign}${absDiffFormated} <span class="text-[10px] uppercase tracking-wider font-bold opacity-70 ml-0.5">(${wording})</span></span>`;
+                return `<span class="${colorClass} font-bold text-xs px-2 py-1 rounded-md shadow-sm border inline-flex items-center gap-1 flex-wrap"><i data-lucide="${icon}" class="w-3.5 h-3.5 shrink-0"></i><span class="shrink-0">${sign}${absDiffFormated}</span><span class="text-[10px] uppercase tracking-wider font-bold opacity-70">(${wording})</span></span>`;
             };
 
             const chartLabels = [];
@@ -1202,22 +1819,22 @@
                         <h4 class="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-3">Revenus (Simulés)</h4>
                         <div class="flex justify-between items-center text-sm mb-1"><span class="text-slate-500 dark:text-slate-400">${nameA}:</span> <span class="font-semibold dark:text-slate-200">${formatCurrency(totals.A.rev/100)}</span></div>
                         <div class="flex justify-between items-center text-sm border-b border-emerald-200/50 dark:border-emerald-800/30 pb-2 mb-2"><span class="text-slate-500 dark:text-slate-400">${nameB}:</span> <span class="font-semibold dark:text-slate-200">${formatCurrency(totals.B.rev/100)}</span></div>
-                        <div class="flex justify-between items-center mt-auto"><span class="text-xs text-emerald-600 dark:text-emerald-500 font-bold">ÉVOLUTION :</span> ${renderDiff(totals.A.rev, totals.B.rev, 'income')}</div>
+                        <div class="flex flex-col items-start gap-1 mt-auto pt-1 border-t border-emerald-200/50 dark:border-emerald-800/30"><span class="text-[10px] text-emerald-600 dark:text-emerald-500 font-bold uppercase tracking-wider">Évolution</span>${renderDiff(totals.A.rev, totals.B.rev, 'income')}</div>
                     </div>
-                    
-                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 rounded-xl p-4 shadow-sm text-center flex flex-col justify-center">
+
+                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 rounded-xl p-4 shadow-sm flex flex-col justify-center">
                         <h4 class="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-3">Dépenses Totales</h4>
                         <div class="flex justify-between items-center text-sm mb-1"><span class="text-slate-500 dark:text-slate-400">${nameA}:</span> <span class="font-semibold dark:text-slate-200">${formatCurrency(totals.A.dep/100)}</span></div>
                         <div class="flex justify-between items-center text-sm border-b border-blue-200/50 dark:border-blue-800/30 pb-2 mb-2"><span class="text-slate-500 dark:text-slate-400">${nameB}:</span> <span class="font-semibold dark:text-slate-200">${formatCurrency(totals.B.dep/100)}</span></div>
-                        <div class="flex justify-between items-center mt-auto"><span class="text-xs text-blue-600 dark:text-blue-500 font-bold">ÉVOLUTION :</span> ${renderDiff(totals.A.dep, totals.B.dep, 'expense')}</div>
+                        <div class="flex flex-col items-start gap-1 mt-auto pt-1 border-t border-blue-200/50 dark:border-blue-800/30"><span class="text-[10px] text-blue-600 dark:text-blue-500 font-bold uppercase tracking-wider">Évolution</span>${renderDiff(totals.A.dep, totals.B.dep, 'expense')}</div>
                     </div>
-                    
-                    <div class="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/30 rounded-xl p-4 shadow-sm text-center flex flex-col justify-center relative overflow-hidden">
+
+                    <div class="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/30 rounded-xl p-4 shadow-sm flex flex-col justify-center relative overflow-hidden">
                         <div class="absolute -right-4 -bottom-4 opacity-5"><i data-lucide="piggy-bank" class="w-24 h-24"></i></div>
                         <h4 class="text-xs font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider mb-3 relative z-10">Reste à vivre</h4>
                         <div class="flex justify-between items-center text-sm mb-1 relative z-10"><span class="text-slate-500 dark:text-slate-400">${nameA}:</span> <span class="font-semibold ${resteA >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${formatCurrency(resteA/100)}</span></div>
                         <div class="flex justify-between items-center text-sm border-b border-indigo-200/50 dark:border-indigo-800/30 pb-2 mb-2 relative z-10"><span class="text-slate-500 dark:text-slate-400">${nameB}:</span> <span class="font-semibold ${resteB >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${formatCurrency(resteB/100)}</span></div>
-                        <div class="flex justify-between items-center mt-auto relative z-10"><span class="text-xs text-indigo-600 dark:text-indigo-500 font-bold">ÉVOLUTION :</span> ${renderDiff(resteA, resteB, 'remaining')}</div>
+                        <div class="flex flex-col items-start gap-1 mt-auto pt-1 border-t border-indigo-200/50 dark:border-indigo-800/30 relative z-10"><span class="text-[10px] text-indigo-600 dark:text-indigo-500 font-bold uppercase tracking-wider">Évolution</span>${renderDiff(resteA, resteB, 'remaining')}</div>
                     </div>
                 </div>
             `;
@@ -1495,8 +2112,32 @@
                     `;
                 });
 
-                const limitValue = (data.limitCents || 0) / 100;
-                
+                const escapedMainCat = mainCat.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                const globalLimitDisplay = data.limitCents > 0
+                    ? '<div class="flex items-center justify-between px-3 py-2 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/30 rounded-lg">' +
+                      '<span class="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5"><i data-lucide="calendar-range" class="w-3 h-3"></i> Limite globale</span>' +
+                      '<span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">' + (data.limitCents / 100).toFixed(2) + ' €</span>' +
+                      '</div>'
+                    : '';
+                let monthlyOverridesHtml = '';
+                if (data.monthlyLimits && Object.keys(data.monthlyLimits).length > 0) {
+                    const overrideEntries = Object.entries(data.monthlyLimits).sort(([a], [b]) => b.localeCompare(a));
+                    monthlyOverridesHtml = '<div class="space-y-1">' +
+                        '<p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">Limites mensuelles</p>' +
+                        overrideEntries.map(([month, cents]) => {
+                            const shortMonth = new Date(month + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+                            return '<div class="flex items-center justify-between gap-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/30 px-2.5 py-1.5 rounded-lg">' +
+                                '<span class="text-xs text-indigo-700 dark:text-indigo-300 font-medium capitalize">' + shortMonth + '</span>' +
+                                '<div class="flex items-center gap-1.5">' +
+                                '<span class="text-xs font-bold text-indigo-600 dark:text-indigo-400">' + (cents / 100).toFixed(2) + ' €</span>' +
+                                '<button onclick="deleteMonthlyLimit(\'' + escapedMainCat + '\', \'' + month + '\')" class="text-rose-400 hover:text-rose-600 transition-colors" title="Supprimer cette limite mensuelle"><i data-lucide="x" class="w-3 h-3"></i></button>' +
+                                '</div></div>';
+                        }).join('') + '</div>';
+                }
+                const limitsSectionHtml = (globalLimitDisplay || monthlyOverridesHtml)
+                    ? '<div class="bg-slate-50 dark:bg-slate-900 px-3 py-2.5 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">' + globalLimitDisplay + monthlyOverridesHtml + '</div>'
+                    : '';
+
                 html += `
                     <div class="flex flex-col bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl overflow-hidden h-full">
                         <div class="bg-white dark:bg-slate-800 p-3 sm:p-4 border-b border-slate-200 dark:border-slate-700 flex flex-col gap-3">
@@ -1506,13 +2147,7 @@
                                     class="font-bold text-base sm:text-lg text-slate-800 dark:text-slate-100 w-full bg-transparent border-b-2 border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-indigo-500 focus:outline-none px-1 py-0.5 truncate">
                             </div>
                             
-                            <div class="flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-900 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-700">
-                                <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Budget Max :</span>
-                                <div class="flex items-center gap-1">
-                                    <input type="number" id="limit_main_${mainIndex}" value="${limitValue > 0 ? limitValue : ''}" placeholder="Illimité" class="w-20 bg-transparent border-b border-slate-300 dark:border-slate-600 text-sm font-bold text-indigo-600 dark:text-indigo-400 text-right focus:outline-none focus:border-indigo-500 px-1 py-0.5">
-                                    <span class="text-xs text-slate-400 font-bold">€</span>
-                                </div>
-                            </div>
+                            ${limitsSectionHtml}
                             
                             <div class="flex flex-col sm:flex-row gap-2 mt-1">
                                 <button onclick="updateMainCategory(${mainIndex})" class="flex-1 flex justify-center items-center gap-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-500/20 hover:bg-indigo-200 dark:hover:bg-indigo-500/30 py-2 rounded-lg transition-colors"><i data-lucide="save" class="w-3.5 h-3.5"></i> Enregistrer</button>
@@ -1531,14 +2166,12 @@
         function updateMainCategory(mainIndex) {
             const oldName = Object.keys(appCategories)[mainIndex];
             const newName = document.getElementById(`input_main_${mainIndex}`).value.trim();
-            const limitVal = parseFloat(document.getElementById(`limit_main_${mainIndex}`).value) || 0;
-            
+
             if (!newName) return showToast("Veuillez entrer un nom.", "error");
             if (newName !== oldName && appCategories[newName]) return showToast("Cette catégorie existe déjà.", "error");
-            
-            appCategories[newName] = appCategories[oldName]; 
-            appCategories[newName].limitCents = Math.round(limitVal * 100);
-            
+
+            appCategories[newName] = appCategories[oldName];
+
             if(newName !== oldName) {
                 delete appCategories[oldName];
                 expenses.forEach(exp => { if (exp.largeCat === oldName) exp.largeCat = newName; });
