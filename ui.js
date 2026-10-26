@@ -22,6 +22,8 @@
         const months = Array.from(select.options).map(o => o.value).filter(v => v !== 'all').sort();
 
         rail.innerHTML = '';
+        // Sans aucun mois enregistré, un rail réduit à « Tout l'historique » ne sert à rien : on le masque.
+        rail.hidden = months.length === 0;
         rail.appendChild(makeButton('all', "Tout l'historique", selected === 'all', 'all'));
 
         months.forEach((key, i) => {

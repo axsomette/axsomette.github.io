@@ -91,6 +91,7 @@
   overflow-x: auto; scrollbar-width: none; padding-bottom: 2px;
 }
 .mb-rail::-webkit-scrollbar { display: none; }
+.mb-rail[hidden] { display: none; }
 .mb-rail-select { display: none; }
 .mb-rail__month {
   flex: 1 0 64px; min-height: 44px;
@@ -149,6 +150,15 @@
 }
 /* Répartition sur deux rangées : quand le bloc passe sous l'historique, formulaire et objectifs s'empilent à côté. */
 .mb-aside > section { grid-row: span 2; }
+
+/* Répartition vide : pas de grand cadre blanc, juste le message d'app.js. */
+.mb-chart-card:has(#detailed-breakdown > p.italic:only-child) .mb-chart-wrap,
+.mb-chart-card:has(#detailed-breakdown > p.italic:only-child) .mb-chart-expand { display: none; }
+.mb-chart-card:has(#detailed-breakdown > p.italic:only-child) #detailed-breakdown { border-top: 0; padding-top: 0; }
+
+/* Historique vide : la carte se réduit au message au lieu de garder 420 px de blanc. */
+.mb-history:has(#empty-state) .mb-history__wrap { min-height: 0; }
+.mb-history:has(#empty-state) .mb-history__scroll { position: static; }
 
 /* Encart « Charges fixes non encore ajoutées » (injecté par app.js) : l'en-tête passe à la ligne au lieu de s'écraser. */
 #recurring-suggestion-container > div > div:first-child { flex-wrap: wrap; gap: 8px 12px; }
@@ -337,7 +347,7 @@
 .hp-h3 { margin: 0; font-family: var(--mb-display); font-weight: 600; font-size: clamp(28px, 3vw, 36px); line-height: 1.1; letter-spacing: -0.02em; color: var(--mb-ink); }
 .hp-feat { display: flex; flex-wrap: wrap; align-items: center; gap: 40px 64px; padding: 64px 0; border-top: 1px solid var(--mb-line); }
 .hp-feat--rev { flex-direction: row-reverse; }
-.hp-feat__text { flex: 1 1 340px; max-width: 460px; display: flex; flex-direction: column; gap: 16px; }
+.hp-feat__text { flex: 1 1 340px; min-width: 0; max-width: 460px; display: flex; flex-direction: column; gap: 16px; }
 .hp-feat__text p { margin: 0; font-size: 17px; line-height: 1.6; color: var(--mb-ink2); }
 .hp-feat__vis { flex: 1 1 420px; min-width: 0; }
 .hp-display, .hp-h2, .hp-h3 { text-wrap: balance; }
@@ -373,10 +383,11 @@
 .hp-dark { margin-top: 40px; background: #0f172a; color: #f1f5f9; }
 .dark .hp-dark { background: #0b1120; border-block: 1px solid #1f2a44; }
 .hp-dark__inner { display: flex; flex-wrap: wrap; align-items: center; gap: 56px; padding-top: 96px; padding-bottom: 96px; }
-.hp-dark__text { flex: 1 1 420px; max-width: 540px; display: flex; flex-direction: column; gap: 20px; }
+.hp-dark__text { flex: 1 1 420px; min-width: 0; max-width: 540px; display: flex; flex-direction: column; gap: 20px; }
+.hp-file > .min-w-0 { min-width: 0; }
 .hp-dark__demo { flex: 1 1 380px; min-width: 0; }
 .hp-facts { display: flex; flex-wrap: wrap; gap: 32px; margin: 4px 0 0; }
-.hp-facts div { display: flex; flex-direction: column-reverse; gap: 4px; }
+.hp-facts div { display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: 4px; }
 .hp-facts dd { margin: 0; font-family: var(--mb-display); font-size: 36px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .hp-facts dt { font-size: 14px; color: #94a3b8; }
 .hp-file { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: 16px; background: #111a2e; border: 1px solid #1f2a44; }
@@ -405,6 +416,13 @@
   .hp-preview__card { padding: 18px; }
   .hp-mockup { grid-template-columns: minmax(0, 1fr); }
   .hp-feat { padding: 44px 0; }
+  /* Épargne & santé : la jauge se centre sous les objectifs au lieu de rester collée à gauche */
+  .hp-feat__vis.flex-wrap { justify-content: center; }
+  .hp-feat__vis.flex-wrap > .flex-1 { flex-basis: 100%; }
+  /* Chiffres clés : trois colonnes compactes au lieu d'un « 100 % » renvoyé seul à la ligne */
+  .hp-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .hp-facts dd { font-size: 28px; }
+  .hp-facts dt { font-size: 13px; }
   .hp-dark__inner { padding-top: 64px; padding-bottom: 64px; gap: 40px; }
   .hp-maker__card { flex-direction: column; padding: 28px 22px; gap: 22px; }
   .hp-cta { padding-top: 72px; padding-bottom: 72px; }
@@ -419,6 +437,18 @@
 }
 @media (max-width: 1023px) {
   .mb-rail { order: 3; flex-basis: 100%; }
+  /* Sous 1024 px l'historique n'a plus de voisin à égaler en hauteur : liste à sa taille, plafonnée */
+  .mb-history__wrap { min-height: 0; }
+  .mb-history__scroll { position: static; max-height: 70vh; }
+  .mb-footer { flex-direction: column; text-align: center; justify-content: center; }
+}
+@media (max-width: 420px) {
+  .mb-topbar__inner { column-gap: 10px; }
+  .mb-brand { gap: 8px; }
+  .mb-brand__tile { width: 36px; height: 36px; }
+  .mb-brand__word { height: 18px; }
+  .mb-topbar__actions { gap: 6px; }
+  .mb-topbar__actions .mb-btn--icon, .mb-topbar__actions .mb-btn--primary { width: 42px; min-height: 42px; padding: 0; }
 }
 @media (max-width: 767px) {
   .mb-topbar__inner { padding: 10px 16px; }

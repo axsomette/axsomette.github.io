@@ -43,7 +43,7 @@
     </script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="./style.css?v=20261026-104311">
+    <link rel="stylesheet" href="./style.css?v=20261026-104811">
 </head>
 <body class="mb-body text-slate-800 dark:text-slate-200 font-sans min-h-screen relative overflow-x-hidden transition-colors duration-300">
 
@@ -231,8 +231,8 @@
                         <!-- SUGGESTIONS DÉPENSES RÉCURRENTES -->
                         <div id="recurring-suggestion-container" class="hidden"></div>
 
-                        <div class="flex-1 relative min-h-[420px]">
-                            <div class="absolute inset-0 overflow-y-auto pr-1">
+                        <div class="mb-history__wrap flex-1 relative min-h-[420px]">
+                            <div class="mb-history__scroll absolute inset-0 overflow-y-auto pr-1">
                                 <ul id="expense-list" class="space-y-2.5">
                                     <!-- JS Injecte les éléments ici -->
                                 </ul>
@@ -317,14 +317,14 @@
                         </div>
 
                         <!-- ── RÉPARTITION ── -->
-                        <section class="mb-card mb-rise" aria-labelledby="mb-rep-title">
+                        <section class="mb-card mb-chart-card mb-rise" aria-labelledby="mb-rep-title">
                             <div class="flex justify-between items-center mb-4">
                                 <h3 id="mb-rep-title" class="mb-h2">Répartition</h3>
-                                <button onclick="openExpandChartModal()" class="mb-btn mb-btn--ghost mb-btn--icon mb-btn--sm border-0" title="Agrandir le graphique" aria-label="Agrandir le graphique">
+                                <button onclick="openExpandChartModal()" class="mb-chart-expand mb-btn mb-btn--ghost mb-btn--icon mb-btn--sm border-0" title="Agrandir le graphique" aria-label="Agrandir le graphique">
                                     <i data-lucide="maximize-2" class="w-4 h-4"></i>
                                 </button>
                             </div>
-                            <div class="mb-6 relative h-48 w-full flex justify-center">
+                            <div class="mb-chart-wrap mb-6 relative h-48 w-full flex justify-center">
                                 <canvas id="budgetChart"></canvas>
                             </div>
                             <div id="detailed-breakdown" class="space-y-4 max-h-[300px] overflow-y-auto pr-2 border-t border-slate-100 dark:border-slate-700 pt-4"></div>
@@ -1065,7 +1065,7 @@
         </div>
     </div>
 
-    <script src="./app.js?v=20261026-104311"></script>
-    <script src="./ui.js?v=20261026-104311"></script>
+    <script src="./app.js?v=20261026-104811"></script>
+    <script src="./ui.js?v=20261026-104811"></script>
 </body>
 </html>
