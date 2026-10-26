@@ -1,0 +1,36 @@
+{
+  "brand": "MonBudget",
+  "tagline": "Votre argent, visible mois par mois",
+  "brief": "Application de budget personnel, 100 % locale : suivi mois par mois, limites, simulateur, objectifs d'épargne. Elle doit inspirer clarté, maîtrise et confiance, loin des flèches qui montent et des tirelires.",
+  "adjectives": ["clair", "maîtrisé", "rassurant", "personnel"],
+  "criteria": "Lisible à 16 px, fonctionne en une couleur, se distingue des codes fintech (flèches, boucliers, pièces), s'anime naturellement pour le loader.",
+  "industry": "finance",
+  "nav": ["Fonctionnalités", "Confidentialité", "Ouvrir l'app"],
+  "brand_color": "#4f46e5",
+  "greyscale": false,
+  "designer": "MonBudget",
+  "round": 2,
+  "concepts": [
+    {
+      "name": "Deux mois",
+      "symbol": "../final/monbudget-symbol.svg",
+      "lockup": "../final/monbudget-horizontal.svg",
+      "symbol_on_tile": "../final/monbudget-symbol-reversed.svg",
+      "lockup_on_dark": "../final/monbudget-horizontal-reversed.svg",
+      "tile_color": "#4f46e5",
+      "idea": "Le m de Mon : un mois bouclé, un mois en cours, et le point vert là où vous en êtes.",
+      "rationale": [
+        "Lisible en favicon : une lettre, un point, aucun détail fragile",
+        "Garde le point vert et l'indigo déjà associés à l'app",
+        "Raconte le suivi mois par mois sans dessiner de graphique",
+        "S'anime tout seul : le trait se trace, le point se pose"
+      ]
+    }
+  ],
+  "recommendation": "Direction retenue : Deux mois, en indigo #4f46e5 et vert #10b981 (#34d399 sur fond sombre).",
+  "next_steps": [
+    "Reporter le nouveau logo dans l'en-tête de la page d'accueil",
+    "Remplacer les anciennes icônes à la racine du dépôt",
+    "Faire une recherche d'antériorité de marque avant tout dépôt"
+  ]
+}

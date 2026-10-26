@@ -10,8 +10,9 @@
     <meta name="keywords" content="budget, finance, suivi dépenses, simulateur financier, budget tracker">
     <meta name="author" content="Lucas Jimenez Boulot">
     
-    <!-- FAVICON (Généré dynamiquement depuis le logo SVG) -->
-    <link rel="icon" href="data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 20L7 9L12 14L22 4V20H2Z' fill='%234f46e5' fill-opacity='0.2'/%3E%3Cpath d='M2 20L7 9L12 14L22 4' stroke='%234f46e5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='20' cy='20' r='3' fill='%2334d399' stroke='white' stroke-width='1'/%3E%3C/svg%3E" type="image/svg+xml">
+    <!-- FAVICON (logo « Deux mois », kit dans ./logo) -->
+    <link rel="icon" href="./logo/web/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="./logo/web/favicon.ico" sizes="any">
     
     <!-- Open Graph -->
     <meta property="og:title" content="MonBudget - Finance Manager">
@@ -20,16 +21,19 @@
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#4f46e5">
     
-    <link rel="apple-touch-icon" href="./icon-hd-v3.png">
+    <link rel="apple-touch-icon" href="./logo/web/apple-touch-icon.png">
 
     <!-- OPTIMISATION DES PERFORMANCES -->
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
     <link rel="preconnect" href="https://unpkg.com">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Figtree:wght@400;500;600;700&display=swap">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { darkMode: 'class' }
+        tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Figtree', 'system-ui', 'sans-serif'] } } } }
         if (localStorage.theme === 'dark') {
             document.documentElement.classList.add('dark');
         } else {
@@ -41,355 +45,308 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="./style.css">
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-sans min-h-screen relative flex flex-col overflow-x-hidden transition-colors duration-300">
+<body class="mb-body text-slate-800 dark:text-slate-200 font-sans min-h-screen relative overflow-x-hidden transition-colors duration-300">
+
+    <!-- ── LOADER D'ENTRÉE (app uniquement) : le m se trace, le point se pose ── -->
+    <div id="app-loader" class="app-loader" role="status" aria-live="polite">
+        <span class="sr-only">Chargement de MonBudget…</span>
+        <div class="app-loader__stage" aria-hidden="true">
+            <div class="app-loader__halo"></div>
+            <svg class="app-loader__mark" viewBox="34.5 31.5 190 190">
+                <path class="app-loader__arch app-loader__arch--1" pathLength="1" d="M60 186 V100 A34 34 0 0 1 128 100 V186"/>
+                <path class="app-loader__arch app-loader__arch--2" pathLength="1" d="M128 100 A34 34 0 0 1 196 100 V128"/>
+                <circle class="app-loader__ring" cx="196" cy="184" r="17"/>
+                <circle class="app-loader__dot" cx="196" cy="184" r="17"/>
+            </svg>
+            <svg class="app-loader__wordmark" viewBox="6 76 856 174" fill="none" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+                <path class="app-loader__mon" d="M20 153 V191 M20 153 A24 24 0 0 1 68 153 V191 M68 153 A24 24 0 0 1 116 153 V191 M216 160 A31 31 0 1 1 154 160 A31 31 0 1 1 216 160 M252 129 V191 M252 160 A31 31 0 0 1 314 160 V191"/>
+                <path class="app-loader__budget" d="M352 89 V191 M414 160 A31 31 0 1 1 352 160 A31 31 0 1 1 414 160 M441 129 V160 A31 31 0 0 0 503 160 M503 129 V191 M601 160 A31 31 0 1 1 539 160 A31 31 0 1 1 601 160 M601 89 V191 M697 160 A31 31 0 1 1 635 160 A31 31 0 1 1 697 160 M697 129 V196 A31 31 0 0 1 635 196 M731 160 H793 A31 31 0 1 0 783.92 181.92 M829 100 V174 A17 17 0 0 0 846 191 H851 M817 129 H849"/>
+            </svg>
+        </div>
+    </div>
+    <script>
+        // Le loader reste au moins le temps de l'intro (~1,5 s), puis part dès que la page est chargée.
+        (function () {
+            var loader = document.getElementById('app-loader');
+            var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var minMs = reduce ? 300 : 1500;
+            var start = performance.now();
+            var done = false;
+            function leave() {
+                if (done) return;
+                done = true;
+                setTimeout(function () {
+                    loader.classList.add('is-leaving');
+                    setTimeout(function () { loader.remove(); }, reduce ? 50 : 450);
+                }, Math.max(0, minMs - (performance.now() - start)));
+            }
+            if (document.readyState === 'complete') leave();
+            else window.addEventListener('load', leave);
+            setTimeout(leave, 6000); // filet de sécurité si un CDN traîne
+        })();
+    </script>
 
     <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none w-[90%] sm:w-auto max-w-md"></div>
 
-    <div class="w-full px-4 md:px-8 lg:px-12 py-6 flex-1 max-w-full flex flex-col relative">
-        
-        <header class="sticky top-0 z-40 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md pt-5 pb-3 -mt-6 -mx-4 md:-mx-8 lg:-mx-12 px-4 md:px-8 lg:px-12 mb-6 sm:mb-8 border-b border-slate-200/60 dark:border-slate-800 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_-10px_rgba(0,0,0,0.4)] transition-all">
+    <div class="mb-shell">
 
-            <!-- ── LIGNE 1 : même grid que le contenu ── -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6 items-center mb-2 lg:mb-2.5">
+        <!-- ── BARRE DU HAUT : logo · rail des mois · actions ── -->
+        <header class="mb-topbar">
+            <div class="mb-topbar__inner">
+                <a href="./index.html" class="mb-brand" title="Retour à l'accueil">
+                    <svg class="mb-brand__tile" viewBox="0 0 256 256" aria-hidden="true"><rect width="256" height="256" rx="64" fill="#4f46e5"/><g transform="translate(128 126) scale(.92) translate(-129.5 -126.5)"><path fill="#fff" d="M47 186V100A47 47 0 0 1 128 67.55A47 47 0 0 1 209 100V128A13 13 0 0 1 183 128V100A21 21 0 0 0 141 100V186A13 13 0 0 1 115 186V100A21 21 0 0 0 73 100V186A13 13 0 0 1 47 186Z"/><circle cx="196" cy="184" r="16" fill="#34d399"/></g></svg>
+                    <h1 class="m-0 leading-none">
+                        <span class="sr-only">MonBudget</span>
+                        <svg class="mb-brand__word" viewBox="6 76 856 174" aria-hidden="true" fill="none" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+                            <path class="mb-word-mon" d="M20 153 V191 M20 153 A24 24 0 0 1 68 153 V191 M68 153 A24 24 0 0 1 116 153 V191 M216 160 A31 31 0 1 1 154 160 A31 31 0 1 1 216 160 M252 129 V191 M252 160 A31 31 0 0 1 314 160 V191"/>
+                            <path class="mb-word-budget" d="M352 89 V191 M414 160 A31 31 0 1 1 352 160 A31 31 0 1 1 414 160 M441 129 V160 A31 31 0 0 0 503 160 M503 129 V191 M601 160 A31 31 0 1 1 539 160 A31 31 0 1 1 601 160 M601 89 V191 M697 160 A31 31 0 1 1 635 160 A31 31 0 1 1 697 160 M697 129 V196 A31 31 0 0 1 635 196 M731 160 H793 A31 31 0 1 0 783.92 181.92 M829 100 V174 A17 17 0 0 0 846 191 H851 M817 129 H849"/>
+                        </svg>
+                    </h1>
+                </a>
 
-                <!-- Logo → colonne gauche (col-span-1) -->
-                <div class="lg:col-span-1 flex items-center">
-                    <a href="./index.html" class="flex items-center gap-3 sm:gap-4 group" title="Retour à l'accueil">
-                        <div class="relative flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 bg-gradient-to-tr from-indigo-600 to-indigo-500 rounded-xl shadow-lg shadow-indigo-200/80 dark:shadow-indigo-900/40 group-hover:shadow-indigo-300/60 transition-shadow">
-                            <svg class="w-6 h-6 sm:w-7 sm:h-7 text-white absolute" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M2 20L7 9L12 14L22 4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M2 20L7 9L12 14L22 4V20H2Z" fill="currentColor" fill-opacity="0.2"/>
-                            </svg>
-                            <div class="logo-dot-pulse absolute -bottom-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-emerald-400 border-2 border-slate-50 dark:border-slate-900 rounded-full shadow-sm"></div>
-                        </div>
-                        <div class="flex flex-col">
-                            <h1 class="text-xl sm:text-2xl font-black tracking-tight text-slate-800 dark:text-slate-100 leading-none group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                                Mon<span class="text-indigo-600 dark:text-indigo-400">Budget</span>
-                            </h1>
-                            <p class="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-1">Finance Manager</p>
-                        </div>
-                    </a>
-                </div>
+                <!-- Rail des mois : construit par ui.js à partir du filtre ci-dessous -->
+                <nav id="month-rail" class="mb-rail" aria-label="Choisir le mois"></nav>
+                <label class="sr-only" for="month-filter">Période affichée</label>
+                <select id="month-filter" onchange="changeMonthFilter()" class="mb-rail-select">
+                    <option value="all">Tout l'historique</option>
+                </select>
 
-                <!-- Barre utilitaire → colonne droite (col-span-2/3) -->
-                <div class="lg:col-span-2 xl:col-span-3 flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm min-w-0">
-
-                    <!-- Filtre mois (toujours visible) -->
-                    <div class="flex items-center gap-2 shrink-0">
-                        <i data-lucide="calendar" class="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0"></i>
-                        <select id="month-filter" onchange="changeMonthFilter()" class="bg-transparent text-sm font-bold text-indigo-700 dark:text-indigo-400 focus:outline-none cursor-pointer w-auto dark:bg-slate-800">
-                            <option value="all">Tout l'historique</option>
-                        </select>
-                    </div>
-
-                    <!-- Thème + hamburger (toujours visibles) -->
-                    <div class="flex items-center gap-1 ml-auto shrink-0">
-                        <button onclick="toggleTheme()" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="Changer de thème">
-                            <i data-lucide="moon" id="theme-icon" class="w-4 h-4"></i>
-                        </button>
-                        <button onclick="toggleMobileMenu()" class="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="Menu des actions">
-                            <i data-lucide="menu" id="mobile-menu-icon" class="w-5 h-5"></i>
-                        </button>
-                    </div>
-
-                    <!-- Utilitaires desktop (séparés par un pipe) -->
-                    <div class="hidden lg:flex items-center gap-0.5 border-l border-slate-200 dark:border-slate-700 pl-2 ml-1 shrink-0">
-                        <button onclick="openPatchNotesModal()" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 bg-amber-50/60 dark:bg-amber-500/5 hover:bg-amber-100 dark:hover:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 transition-colors whitespace-nowrap" title="Nouveautés v2.3.1">
-                            <i data-lucide="sparkles" class="w-3.5 h-3.5 shrink-0"></i> Nouveautés
-                        </button>
-                        <div class="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                        <button onclick="openCategoryModal()" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors whitespace-nowrap" title="Gérer les catégories">
-                            <i data-lucide="settings" class="w-3.5 h-3.5 shrink-0"></i> Catégories
-                        </button>
-                        <div class="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                        <input type="file" id="import-file" class="hidden" accept=".json" onchange="importJSON(event)">
-                        <button onclick="document.getElementById('import-file').click()" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors whitespace-nowrap" title="Importer des données">
-                            <i data-lucide="upload" class="w-3.5 h-3.5 shrink-0"></i> Importer
-                        </button>
-                        <button onclick="exportJSON()" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors whitespace-nowrap" title="Sauvegarder">
-                            <i data-lucide="download" class="w-3.5 h-3.5 shrink-0"></i> Sauvegarder
-                        </button>
-                        <div class="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                        <button onclick="openHelpModal()" class="p-2 rounded-lg text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors" title="Aide">
-                            <i data-lucide="help-circle" class="w-4 h-4"></i>
-                        </button>
-                        <button onclick="promptResetData()" class="p-2 rounded-lg text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Effacer toutes les données">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-
+                <div class="mb-topbar__actions">
+                    <button onclick="toggleTheme()" class="mb-btn mb-btn--ghost mb-btn--icon" title="Changer de thème" aria-label="Changer de thème">
+                        <i data-lucide="moon" id="theme-icon" class="w-[18px] h-[18px]"></i>
+                    </button>
+                    <button onclick="toggleMobileMenu()" class="mb-btn mb-btn--ghost mb-btn--icon lg:hidden" title="Menu" aria-label="Ouvrir le menu">
+                        <i data-lucide="menu" id="mobile-menu-icon" class="w-[18px] h-[18px]"></i>
+                    </button>
+                    <button onclick="mbFocusForm()" class="mb-btn mb-btn--primary">
+                        <i data-lucide="plus" class="w-[18px] h-[18px]"></i><span class="hidden sm:inline">Ajouter une ligne</span>
+                    </button>
                 </div>
             </div>
-
-            <!-- ── LIGNE 2 : même grid → pills alignées avec colonne droite ── -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-                <div id="action-menu" class="hidden lg:flex lg:col-span-2 xl:col-span-3 lg:col-start-2 xl:col-start-2 items-center flex-wrap gap-1.5 pb-1">
-
-                    <!-- 5 pills fonctionnalités -->
-                    <button onclick="openSimulatorModal()" class="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20 rounded-lg border border-purple-200 dark:border-purple-800/40 transition-colors whitespace-nowrap" title="Simuler le mois prochain">
-                        <i data-lucide="target" class="w-3.5 h-3.5 shrink-0"></i> Simulateur
-                    </button>
-                    <button onclick="openGoalsModal()" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 rounded-lg border border-emerald-200 dark:border-emerald-800/40 transition-colors whitespace-nowrap" title="Objectifs d'épargne">
-                        <i data-lucide="piggy-bank" class="w-3.5 h-3.5 shrink-0"></i> Objectifs
-                    </button>
-                    <button onclick="openFixedChargesModal()" class="text-xs font-semibold text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 dark:bg-orange-500/10 hover:bg-orange-100 dark:hover:bg-orange-500/20 rounded-lg border border-orange-200 dark:border-orange-800/40 transition-colors whitespace-nowrap" title="Abonnements & charges fixes">
-                        <i data-lucide="pin" class="w-3.5 h-3.5 shrink-0"></i> Charges
-                    </button>
-                    <button onclick="openAdviceModal()" class="text-xs font-semibold text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 flex items-center gap-1.5 px-3 py-1.5 bg-violet-50 dark:bg-violet-500/10 hover:bg-violet-100 dark:hover:bg-violet-500/20 rounded-lg border border-violet-200 dark:border-violet-800/40 transition-colors whitespace-nowrap" title="Conseil mensuel personnalisé">
-                        <i data-lucide="message-square-text" class="w-3.5 h-3.5 shrink-0"></i> Conseil
-                    </button>
-                    <button onclick="openCompareModal()" class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 rounded-lg border border-indigo-200 dark:border-indigo-800/40 transition-colors whitespace-nowrap" title="Comparer des périodes">
-                        <i data-lucide="bar-chart-2" class="w-3.5 h-3.5 shrink-0"></i> Comparer
-                    </button>
-
-                    <!-- Mobile : utilitaires dans le même dropdown -->
-                    <div class="lg:hidden flex flex-wrap gap-1.5 w-full border-t border-slate-100 dark:border-slate-700/50 mt-2 pt-2.5">
-                        <button onclick="openPatchNotesModal()" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-800/40 transition-colors whitespace-nowrap">
-                            <i data-lucide="sparkles" class="w-3.5 h-3.5 shrink-0"></i> Nouveautés
-                        </button>
-                        <button onclick="openCategoryModal()" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 transition-colors whitespace-nowrap">
-                            <i data-lucide="settings" class="w-3.5 h-3.5 shrink-0"></i> Catégories
-                        </button>
-                        <button onclick="document.getElementById('import-file').click()" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 transition-colors whitespace-nowrap">
-                            <i data-lucide="upload" class="w-3.5 h-3.5 shrink-0"></i> Importer
-                        </button>
-                        <button onclick="exportJSON()" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 transition-colors whitespace-nowrap">
-                            <i data-lucide="download" class="w-3.5 h-3.5 shrink-0"></i> Sauvegarder
-                        </button>
-                        <button onclick="openHelpModal()" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 transition-colors whitespace-nowrap">
-                            <i data-lucide="help-circle" class="w-3.5 h-3.5 shrink-0"></i> Aide
-                        </button>
-                        <button onclick="promptResetData()" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 transition-colors whitespace-nowrap">
-                            <i data-lucide="trash-2" class="w-3.5 h-3.5 shrink-0"></i> Effacer
-                        </button>
-                    </div>
-
-                </div>
-            </div>
-
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-full mb-8 flex-1">
+        <div class="mb-layout">
 
-            <!-- COLONNE GAUCHE -->
-            <div class="lg:col-span-1 xl:col-span-1 space-y-6 max-w-full">
+            <!-- ── MENU LATÉRAL (repliable sur mobile) ── -->
+            <aside id="action-menu" class="mb-sidebar hidden lg:flex">
+                <nav class="mb-nav" aria-label="Fonctions">
+                    <button class="mb-nav__item is-active" aria-current="page" onclick="window.scrollTo({top: 0, behavior: 'smooth'})"><i data-lucide="layout-dashboard"></i>Tableau de bord</button>
+                    <button class="mb-nav__item" onclick="openSimulatorModal()"><i data-lucide="target"></i>Simulateur</button>
+                    <button class="mb-nav__item" onclick="openGoalsModal()"><i data-lucide="flag"></i>Objectifs d'épargne</button>
+                    <button class="mb-nav__item" onclick="openFixedChargesModal()"><i data-lucide="repeat"></i>Charges fixes</button>
+                    <button class="mb-nav__item" onclick="openAdviceModal()"><i data-lucide="message-square-text"></i>Conseil du mois</button>
+                    <button class="mb-nav__item" onclick="openCompareModal()"><i data-lucide="bar-chart-2"></i>Comparer deux mois</button>
+                </nav>
 
-                <!-- BILAN DE LA PÉRIODE -->
-                <div class="bg-indigo-900 text-white rounded-2xl p-6 shadow-lg shadow-indigo-200 dark:shadow-none flex flex-col justify-center relative overflow-hidden z-20 border border-indigo-800/50">
-                    <div class="absolute top-0 right-0 p-4 opacity-10">
-                        <i data-lucide="trending-up" class="w-24 h-24"></i>
-                    </div>
-                    <h2 class="text-indigo-200 text-sm font-bold uppercase tracking-wider mb-4">Bilan de la période</h2>
-
-                    <div class="flex justify-between items-end border-b border-indigo-700/50 pb-3 mb-3">
-                        <span class="text-indigo-100 flex items-center gap-2"><i data-lucide="arrow-down-circle" class="w-4 h-4 text-emerald-400"></i> Revenus</span>
-                        <span class="text-xl font-bold text-emerald-300" id="total-revenus">0,00 €</span>
-                    </div>
-
-                    <div class="flex justify-between items-end border-b border-indigo-700/50 pb-3 mb-3">
-                        <span class="text-indigo-100 flex items-center gap-2"><i data-lucide="arrow-up-circle" class="w-4 h-4 text-rose-400"></i> Dépenses</span>
-                        <span class="text-xl font-bold text-rose-300" id="total-depenses">0,00 €</span>
-                    </div>
-
-                    <div class="flex justify-between items-end mt-2">
-                        <span class="text-indigo-100 font-medium">Reste à vivre</span>
-                        <span class="text-3xl font-extrabold" id="reste-a-vivre">0,00 €</span>
-                    </div>
-
-                    <!-- SCORE DE SANTÉ FINANCIÈRE -->
-                    <div id="health-score-display"></div>
+                <div class="mb-nav">
+                    <span class="mb-eyebrow px-3 pb-1.5">Données</span>
+                    <button class="mb-nav__item" onclick="openCategoryModal()"><i data-lucide="folder"></i>Catégories</button>
+                    <input type="file" id="import-file" accept=".json" onchange="importJSON(event)" class="hidden">
+                    <button class="mb-nav__item" onclick="document.getElementById('import-file').click()"><i data-lucide="upload"></i>Importer un fichier</button>
                 </div>
-                
-                <div id="form-container" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 sm:p-6 shadow-sm w-full max-w-full overflow-hidden transition-all duration-300">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 id="form-title" class="text-lg font-bold flex items-center gap-2 dark:text-slate-100">
-                            <i data-lucide="plus-circle" class="w-5 h-5 text-indigo-500"></i>
-                            Ajouter une ligne
-                        </h3>
-                    </div>
 
-                    <div class="flex p-1 bg-slate-100 dark:bg-slate-900/50 rounded-lg mb-5 border border-transparent dark:border-slate-700/50">
-                        <button type="button" onclick="setFormType('expense')" id="btn-type-expense" class="flex-1 py-1.5 rounded-md text-sm font-medium transition-all tab-active">
-                            Dépense
-                        </button>
-                        <button type="button" onclick="setFormType('income')" id="btn-type-income" class="flex-1 py-1.5 rounded-md text-sm font-medium transition-all tab-inactive">
-                            Revenu
-                        </button>
+                <div class="mb-save">
+                    <p><i data-lucide="lock"></i>Vos données restent sur cet appareil. Sauvegardez-les régulièrement dans un fichier.</p>
+                    <button onclick="exportJSON()" class="mb-btn mb-btn--ghost w-full"><i data-lucide="download" class="w-[18px] h-[18px]"></i>Sauvegarder</button>
+                </div>
+
+                <div class="mb-nav mb-nav--foot">
+                    <button class="mb-nav__item" onclick="openPatchNotesModal()"><i data-lucide="sparkles"></i>Nouveautés<span class="mb-badge ml-auto">v2.3.1</span></button>
+                    <button class="mb-nav__item" onclick="openHelpModal()"><i data-lucide="help-circle"></i>Aide</button>
+                    <button class="mb-nav__item mb-nav__item--danger" onclick="promptResetData()"><i data-lucide="trash-2"></i>Tout effacer</button>
+                </div>
+            </aside>
+
+            <main class="mb-main">
+
+                <!-- ── BILAN DE LA PÉRIODE + SCORE SANTÉ ── -->
+                <section class="mb-bilan mb-rise">
+                    <div class="mb-bilan__main">
+                        <div class="flex items-center justify-between gap-3 flex-wrap">
+                            <h2 class="mb-bilan__title">Bilan de la période</h2>
+                            <span id="mb-day-chip" class="mb-bilan__chip hidden"></span>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <span class="mb-bilan__label">Reste à vivre</span>
+                            <span id="reste-a-vivre">0,00 €</span>
+                        </div>
+                        <div class="mb-bilan__totals">
+                            <div><span class="mb-bilan__label"><i data-lucide="arrow-down-left" class="w-3.5 h-3.5"></i>Revenus</span><span class="mb-bilan__amount text-emerald-300" id="total-revenus">0,00 €</span></div>
+                            <div><span class="mb-bilan__label"><i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>Dépenses</span><span class="mb-bilan__amount text-rose-200" id="total-depenses">0,00 €</span></div>
+                        </div>
                     </div>
-                    
-                    <form id="expense-form" class="space-y-4 w-full">
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Mois concerné</label>
-                            <div class="flex gap-2 w-full">
-                                <select id="month-select" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow text-slate-800 dark:text-slate-200 cursor-pointer">
-                                    <option value="01">Janvier</option>
-                                    <option value="02">Février</option>
-                                    <option value="03">Mars</option>
-                                    <option value="04">Avril</option>
-                                    <option value="05">Mai</option>
-                                    <option value="06">Juin</option>
-                                    <option value="07">Juillet</option>
-                                    <option value="08">Août</option>
-                                    <option value="09">Septembre</option>
-                                    <option value="10">Octobre</option>
-                                    <option value="11">Novembre</option>
-                                    <option value="12">Décembre</option>
-                                </select>
-                                <select id="year-select" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow text-slate-800 dark:text-slate-200 cursor-pointer">
-                                </select>
+                    <!-- SCORE DE SANTÉ FINANCIÈRE (injecté par renderHealthScore) -->
+                    <div id="health-score-display" class="mb-bilan__score"></div>
+                </section>
+
+                <!-- ── BUDGETS PAR CATÉGORIE (scroll horizontal) ── -->
+                <section class="flex flex-col gap-3 min-w-0" aria-labelledby="mb-cards-title">
+                    <div class="flex items-center justify-between gap-3">
+                        <h2 id="mb-cards-title" class="mb-h2">Budgets par catégorie</h2>
+                        <div class="flex gap-2">
+                            <button onclick="document.getElementById('summary-cards').scrollBy({left: -280, behavior: 'smooth'})" class="mb-btn mb-btn--ghost mb-btn--icon mb-btn--sm" aria-label="Catégories précédentes"><i data-lucide="chevron-left" class="w-[18px] h-[18px]"></i></button>
+                            <button onclick="document.getElementById('summary-cards').scrollBy({left: 280, behavior: 'smooth'})" class="mb-btn mb-btn--ghost mb-btn--icon mb-btn--sm" aria-label="Catégories suivantes"><i data-lucide="chevron-right" class="w-[18px] h-[18px]"></i></button>
+                        </div>
+                    </div>
+                    <div id="summary-cards" class="flex gap-4 overflow-x-auto pb-3 pt-1 snap-x snap-mandatory scroll-smooth no-scrollbar overscroll-x-contain"></div>
+                </section>
+
+                <div class="mb-split">
+
+                    <!-- ── HISTORIQUE ── -->
+                    <section class="mb-card mb-history mb-rise" aria-labelledby="mb-hist-title">
+                        <div class="flex flex-col gap-4 shrink-0">
+                            <h2 id="mb-hist-title" class="mb-h2">Historique</h2>
+                            <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 w-full">
+                                <label class="mb-field mb-field--search">
+                                    <span class="sr-only">Rechercher une opération</span>
+                                    <i data-lucide="search"></i>
+                                    <input type="text" id="search-filter" oninput="handleSearchDebounce()" placeholder="Rechercher par nom">
+                                </label>
+                                <label class="mb-field">
+                                    <span class="sr-only">Filtrer par catégorie</span>
+                                    <i data-lucide="folder"></i>
+                                    <select id="history-category-filter" onchange="changeCategoryFilter()">
+                                        <option value="all">Toutes les catégories</option>
+                                        <!-- Options ajoutées via JS -->
+                                    </select>
+                                </label>
+                                <label class="mb-field">
+                                    <span class="sr-only">Trier</span>
+                                    <i data-lucide="arrow-up-down"></i>
+                                    <select id="sort-select" onchange="changeSort()">
+                                        <option value="date-desc">Plus récent d'abord</option>
+                                        <option value="date-asc">Plus ancien d'abord</option>
+                                        <option value="amount-desc">Plus cher d'abord</option>
+                                        <option value="amount-asc">Moins cher d'abord</option>
+                                        <option value="category">Par catégorie</option>
+                                    </select>
+                                </label>
                             </div>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nom / Description</label>
-                            <input type="text" id="desc-input" required placeholder="Ex: Auchan, Salaire..." 
-                                class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow text-slate-800 dark:text-slate-200 dark:placeholder-slate-500">
+                        <!-- ENCART SMART INSIGHTS / BILAN GLOBAL -->
+                        <div id="smart-insights-container" class="hidden"></div>
+
+                        <!-- SUGGESTIONS DÉPENSES RÉCURRENTES -->
+                        <div id="recurring-suggestion-container" class="hidden"></div>
+
+                        <div class="flex-1 relative min-h-[420px]">
+                            <div class="absolute inset-0 overflow-y-auto pr-1">
+                                <ul id="expense-list" class="space-y-2.5">
+                                    <!-- JS Injecte les éléments ici -->
+                                </ul>
+                            </div>
                         </div>
+                    </section>
 
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Montant (€)</label>
-                            <input type="number" id="amount-input" required min="0.01" step="0.01" placeholder="0.00" 
-                                class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow text-slate-800 dark:text-slate-200 dark:placeholder-slate-500">
-                        </div>
+                    <div class="mb-aside">
 
-                        <div id="category-wrapper">
-                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Catégorie</label>
-                            <select id="category-input" 
-                                class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow text-slate-800 dark:text-slate-200">
-                            </select>
-                        </div>
-
-                        <div id="fixed-expense-wrapper" style="display:none">
-                            <button type="button" id="is-fixed-toggle" onclick="toggleFixedExpense()"
-                                    class="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-500 dark:text-slate-400 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-500 dark:hover:text-orange-400 transition-all">
-                                <i data-lucide="pin" class="w-4 h-4 shrink-0"></i>
-                                <span class="flex-1 text-left text-xs">Dépense fixe (loyer, abonnement invariable…)</span>
-                                <span id="fixed-badge" class="hidden text-[10px] font-bold text-white bg-orange-500 px-1.5 py-0.5 rounded-full">Fixe</span>
-                            </button>
-                        </div>
-
-                        <div class="flex flex-col sm:flex-row gap-2 pt-2">
-                            <button type="submit" id="submit-btn"
-                                class="flex-1 w-full bg-indigo-600 text-white font-medium py-2.5 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 dark:focus:ring-indigo-900 transition-all flex justify-center items-center gap-2 shadow-sm">
-                                <i data-lucide="check" class="w-5 h-5"></i>
-                                <span id="submit-text">Enregistrer</span>
-                            </button>
-                            <button type="button" id="cancel-edit-btn" onclick="cancelEdit()" class="hidden w-full sm:w-auto bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium py-2.5 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 focus:outline-none transition-all flex justify-center items-center" title="Annuler la modification">
-                                <i data-lucide="x" class="w-5 h-5 shrink-0"></i> <span class="sm:hidden ml-2">Annuler</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- WIDGET OBJECTIFS D'ÉPARGNE -->
-                <div id="goals-widget" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 sm:p-5 shadow-sm w-full max-w-full overflow-hidden card-hover">
-                    <!-- contenu injecté par renderGoalsWidget() -->
-                </div>
-
-                <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 sm:p-6 shadow-sm w-full max-w-full overflow-hidden relative">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-bold flex items-center gap-2 dark:text-slate-100">
-                            <i data-lucide="pie-chart" class="w-5 h-5 text-indigo-500"></i>
-                            Répartition
-                        </h3>
-                        <button onclick="openExpandChartModal()" class="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors" title="Agrandir le graphique">
-                            <i data-lucide="maximize-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                    <div class="mb-6 relative h-48 w-full flex justify-center">
-                        <canvas id="budgetChart"></canvas>
-                    </div>
-                    <div id="detailed-breakdown" class="space-y-4 max-h-[300px] overflow-y-auto pr-2 border-t border-slate-100 dark:border-slate-700 pt-4"></div>
-                </div>
-            </div>
-
-            <!-- COLONNE DROITE -->
-            <div class="lg:col-span-2 xl:col-span-3 flex flex-col gap-6 min-w-0">
-
-                <!-- CARTES CATÉGORIES (scroll horizontal) -->
-                <div class="relative flex items-center min-w-0">
-                    <div class="absolute left-0 top-0 bottom-0 w-12 sm:w-16 bg-gradient-to-r from-slate-50 dark:from-slate-900 via-slate-50/80 dark:via-slate-900/80 to-transparent z-10 flex items-center justify-start pointer-events-none transition-colors">
-                        <button onclick="document.getElementById('summary-cards').scrollBy({left: -280, behavior: 'smooth'})" class="pointer-events-auto bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 rounded-full p-1.5 sm:p-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all focus:outline-none relative -left-2 sm:left-0">
-                            <i data-lucide="chevron-left" class="w-5 h-5 sm:w-6 sm:h-6"></i>
-                        </button>
-                    </div>
-                    <div id="summary-cards" class="flex-1 flex gap-4 overflow-x-auto pb-4 pt-2 snap-x snap-mandatory scroll-smooth no-scrollbar px-6 sm:px-10 overscroll-x-contain scroll-px-6 sm:scroll-px-10 after:content-[''] after:w-1 after:shrink-0">
-                    </div>
-                    <div class="absolute right-0 top-0 bottom-0 w-12 sm:w-16 bg-gradient-to-l from-slate-50 dark:from-slate-900 via-slate-50/80 dark:via-slate-900/80 to-transparent z-10 flex items-center justify-end pointer-events-none transition-colors">
-                        <button onclick="document.getElementById('summary-cards').scrollBy({left: 280, behavior: 'smooth'})" class="pointer-events-auto bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 rounded-full p-1.5 sm:p-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-all focus:outline-none relative -right-2 sm:right-0">
-                            <i data-lucide="chevron-right" class="w-5 h-5 sm:w-6 sm:h-6"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- HISTORIQUE -->
-                <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 sm:p-6 shadow-sm flex-1 flex flex-col w-full max-w-full overflow-hidden">
-                    
-                    <div class="flex flex-col gap-4 mb-6 shrink-0">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <h3 class="text-lg font-bold flex items-center gap-2 dark:text-slate-100">
-                                <i data-lucide="list" class="w-5 h-5 text-indigo-500"></i>
-                                Historique
+                        <!-- ── AJOUTER UNE LIGNE ── -->
+                        <div id="form-container" class="mb-card mb-form border border-slate-200 dark:border-slate-700 shadow-sm mb-rise">
+                            <h3 id="form-title" class="mb-h2 flex items-center gap-2">
+                                <i data-lucide="plus-circle" class="w-5 h-5 text-indigo-500"></i>
+                                Ajouter une ligne
                             </h3>
+
+                            <div class="mb-segment" role="group" aria-label="Type de ligne">
+                                <button type="button" onclick="setFormType('expense')" id="btn-type-expense" class="flex-1 py-1.5 rounded-md text-sm font-medium transition-all tab-active">Dépense</button>
+                                <button type="button" onclick="setFormType('income')" id="btn-type-income" class="flex-1 py-1.5 rounded-md text-sm font-medium transition-all tab-inactive">Revenu</button>
+                            </div>
+
+                            <form id="expense-form" class="flex flex-col gap-4 w-full">
+                                <div class="grid grid-cols-[1.4fr_1fr] gap-2.5">
+                                    <label class="mb-label">Mois
+                                        <select id="month-select" class="mb-input">
+                                            <option value="01">Janvier</option>
+                                            <option value="02">Février</option>
+                                            <option value="03">Mars</option>
+                                            <option value="04">Avril</option>
+                                            <option value="05">Mai</option>
+                                            <option value="06">Juin</option>
+                                            <option value="07">Juillet</option>
+                                            <option value="08">Août</option>
+                                            <option value="09">Septembre</option>
+                                            <option value="10">Octobre</option>
+                                            <option value="11">Novembre</option>
+                                            <option value="12">Décembre</option>
+                                        </select>
+                                    </label>
+                                    <label class="mb-label">Année
+                                        <select id="year-select" class="mb-input"></select>
+                                    </label>
+                                </div>
+
+                                <label class="mb-label">Nom
+                                    <input type="text" id="desc-input" required placeholder="Ex. Lidl, salaire" class="mb-input">
+                                </label>
+
+                                <label class="mb-label">Montant
+                                    <span class="relative block">
+                                        <input type="number" id="amount-input" required min="0.01" step="0.01" placeholder="0,00" inputmode="decimal" class="mb-input mb-input--money">
+                                        <span class="mb-input__suffix" aria-hidden="true">€</span>
+                                    </span>
+                                </label>
+
+                                <div id="category-wrapper">
+                                    <label class="mb-label">Catégorie
+                                        <select id="category-input" class="mb-input"></select>
+                                    </label>
+                                </div>
+
+                                <div id="fixed-expense-wrapper" style="display:none">
+                                    <button type="button" id="is-fixed-toggle" onclick="toggleFixedExpense()"
+                                            class="mb-fixed-toggle w-full flex items-center gap-2.5 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm text-slate-500 dark:text-slate-400 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-500 dark:hover:text-orange-400 transition-all">
+                                        <i data-lucide="pin" class="w-4 h-4 shrink-0"></i>
+                                        <span class="flex-1 text-left">Dépense fixe<span class="block text-xs opacity-80">Loyer, abonnement : reviendra chaque mois</span></span>
+                                        <span id="fixed-badge" class="hidden text-[11px] font-bold text-white bg-orange-500 px-2 py-0.5 rounded-full">Fixe</span>
+                                    </button>
+                                </div>
+
+                                <div class="flex flex-col sm:flex-row gap-2 pt-1">
+                                    <button type="submit" id="submit-btn"
+                                        class="mb-submit flex-1 w-full bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 dark:focus:ring-indigo-900 transition-all flex justify-center items-center gap-2">
+                                        <i data-lucide="check" class="w-5 h-5"></i>
+                                        <span id="submit-text">Enregistrer</span>
+                                    </button>
+                                    <button type="button" id="cancel-edit-btn" onclick="cancelEdit()" class="hidden mb-btn mb-btn--ghost" title="Annuler la modification">
+                                        <i data-lucide="x" class="w-5 h-5 shrink-0"></i> <span>Annuler</span>
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                        
-                        <div class="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 w-full">
-                            <!-- Barre de recherche -->
-                            <div class="w-full sm:w-[250px] shrink-0 flex items-center gap-2 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 focus-within:border-indigo-400 dark:focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-400 transition-all">
-                                <i data-lucide="search" class="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0"></i>
-                                <input type="text" id="search-filter" oninput="handleSearchDebounce()" placeholder="Rechercher par nom..." class="bg-transparent text-sm font-medium text-slate-700 dark:text-slate-200 focus:outline-none w-full placeholder-slate-400 dark:placeholder-slate-500">
+
+                        <!-- ── RÉPARTITION ── -->
+                        <section class="mb-card mb-rise" aria-labelledby="mb-rep-title">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 id="mb-rep-title" class="mb-h2">Répartition</h3>
+                                <button onclick="openExpandChartModal()" class="mb-btn mb-btn--ghost mb-btn--icon mb-btn--sm border-0" title="Agrandir le graphique" aria-label="Agrandir le graphique">
+                                    <i data-lucide="maximize-2" class="w-4 h-4"></i>
+                                </button>
                             </div>
-
-                            <!-- Filtre Catégorie -->
-                            <div class="flex items-center gap-2 text-sm bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 w-full sm:w-auto shrink-0">
-                                <i data-lucide="folder" class="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0"></i>
-                                <select id="history-category-filter" onchange="changeCategoryFilter()" class="bg-transparent font-medium text-slate-600 dark:text-slate-300 focus:outline-none cursor-pointer w-full sm:w-auto truncate max-w-full sm:max-w-[180px] dark:bg-slate-900">
-                                    <option value="all">Toutes les catégories</option>
-                                    <!-- Options ajoutées via JS -->
-                                </select>
+                            <div class="mb-6 relative h-48 w-full flex justify-center">
+                                <canvas id="budgetChart"></canvas>
                             </div>
+                            <div id="detailed-breakdown" class="space-y-4 max-h-[300px] overflow-y-auto pr-2 border-t border-slate-100 dark:border-slate-700 pt-4"></div>
+                        </section>
 
-                            <!-- Filtre Tri -->
-                            <div class="flex items-center gap-2 text-sm bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 w-full sm:w-auto shrink-0">
-                                <i data-lucide="arrow-up-down" class="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0"></i>
-                                <select id="sort-select" onchange="changeSort()" class="bg-transparent font-medium text-slate-600 dark:text-slate-300 focus:outline-none cursor-pointer w-full sm:w-auto truncate dark:bg-slate-900">
-                                    <option value="date-desc">Plus récent d'abord</option>
-                                    <option value="date-asc">Plus ancien d'abord</option>
-                                    <option value="amount-desc">Plus cher d'abord</option>
-                                    <option value="amount-asc">Moins cher d'abord</option>
-                                    <option value="category">Par Catégorie</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- ENCART SMART INSIGHTS / BILAN GLOBAL -->
-                    <div id="smart-insights-container" class="mb-5 hidden"></div>
-
-                    <!-- SUGGESTIONS DÉPENSES RÉCURRENTES -->
-                    <div id="recurring-suggestion-container" class="mb-4 hidden"></div>
-
-                    <div class="flex-1 relative min-h-[400px] lg:min-h-0">
-                        <div class="absolute inset-0 overflow-y-auto pr-2">
-                            <ul id="expense-list" class="space-y-3">
-                                <!-- JS Injecte les éléments ici -->
-                            </ul>
+                        <!-- ── WIDGET OBJECTIFS D'ÉPARGNE ── -->
+                        <div id="goals-widget" class="mb-card mb-rise">
+                            <!-- contenu injecté par renderGoalsWidget() -->
                         </div>
                     </div>
                 </div>
-            </div>
 
+                <footer class="mb-footer">
+                    <div>&copy; <span id="current-year"></span> <a href="https://axsomette.github.io/lucas-jimenez-boulot/" target="_blank" rel="noopener noreferrer">Lucas Jimenez Boulot</a> alias Axsom · 100 % local, aucune donnée envoyée</div>
+                    <button onclick="openPatchNotesModal()" class="mb-badge mb-badge--btn">Version 2.3.1</button>
+                </footer>
+            </main>
         </div>
-        
-        <footer class="mt-auto pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-500 pb-2">
-            <div>&copy; <span id="current-year"></span> <a href="https://axsomette.github.io/lucas-jimenez-boulot/" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors font-medium">Lucas Jimenez Boulot</a> alias Axsom. Tous droits réservés.</div>
-            <button onclick="openPatchNotesModal()" class="font-medium bg-slate-200/60 dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/20 hover:text-emerald-600 dark:hover:text-emerald-400 px-2.5 py-1 rounded-md tracking-wider transition-colors">Version 2.3.1</button>
-        </footer>
     </div>
 
     <!-- MODAL SIMULATEUR PRO -->
-    <div id="simulator-modal" class="modal-anim hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
+    <div id="simulator-modal" class="mb-sheet mb-sheet--wide modal-anim hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 sm:p-6 md:p-8 shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto flex flex-col border border-transparent dark:border-slate-700">
             <div class="flex justify-between items-center mb-6 sticky top-0 bg-white dark:bg-slate-800 z-20 pb-4 border-b border-slate-100 dark:border-slate-700">
                 <div class="flex items-center gap-3">
@@ -461,7 +418,7 @@
     </div>
 
     <!-- MODAL COMPARAISON GRAPHIQUE AVANCÉE -->
-    <div id="compare-modal" class="modal-anim hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
+    <div id="compare-modal" class="mb-sheet mb-sheet--wide modal-anim hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 sm:p-6 md:p-8 shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-y-auto flex flex-col border border-transparent dark:border-slate-700">
             <div class="flex justify-between items-center mb-6 sticky top-0 bg-white dark:bg-slate-800 z-20 pb-4 border-b border-slate-100 dark:border-slate-700">
                 <h2 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
@@ -517,7 +474,7 @@
     </div>
 
     <!-- MODAL PATCH NOTES -->
-    <div id="patch-notes-modal" class="modal-anim hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
+    <div id="patch-notes-modal" class="mb-sheet modal-anim hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 sm:p-6 md:p-8 shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-y-auto flex flex-col border border-transparent dark:border-slate-700">
             <div class="flex justify-between items-center mb-6 sticky top-0 bg-white dark:bg-slate-800 z-10 pb-4 border-b border-slate-100 dark:border-slate-700">
                 <h2 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
@@ -713,7 +670,7 @@
 
 
     <!-- MODAL AIDE -->
-    <div id="help-modal" class="modal-anim hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
+    <div id="help-modal" class="mb-sheet modal-anim hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 sm:p-6 md:p-8 shadow-2xl w-full max-w-3xl max-h-[95vh] overflow-y-auto flex flex-col border border-transparent dark:border-slate-700">
             <div class="flex justify-between items-center mb-6 sticky top-0 bg-white dark:bg-slate-800 z-10 pb-4 border-b border-slate-100 dark:border-slate-700">
                 <h2 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
@@ -734,7 +691,7 @@
                     <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base sm:text-lg mb-2 flex items-center gap-2">
                         <i data-lucide="plus-circle" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500"></i> 1. Ajouter une opération
                     </h3>
-                    <p class="text-sm">Utilisez le formulaire pour ajouter une <b>dépense</b> ou un <b>revenu</b>. Saisissez le nom, le montant, puis sélectionnez le mois et l'année.<br><br>Pour les charges qui ne changent jamais (loyer, abonnements…), activez le bouton <b>🖈 Dépense fixe</b> avant de valider. Ces dépenses seront automatiquement proposées à l'import sur les prochains mois.</p>
+                    <p class="text-sm">Utilisez le formulaire pour ajouter une <b>dépense</b> ou un <b>revenu</b>. Saisissez le nom, le montant, puis sélectionnez le mois et l'année.<br><br>Pour les charges qui ne changent jamais (loyer, abonnements…), activez le bouton <b>Dépense fixe</b> (icône épingle) avant de valider. Ces dépenses seront automatiquement proposées à l'import sur les prochains mois.</p>
                 </div>
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm">
                     <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base sm:text-lg mb-2 flex items-center gap-2">
@@ -770,7 +727,7 @@
                         <p>Créez un objectif (vacances, voiture, urgences…) avec un montant cible, un emoji et une couleur. Chaque versement se fait via le bouton <b>+ Ajouter</b> à l'intérieur du modal Objectifs.</p>
                         <p><b>Chaque contribution crée automatiquement une ligne dans votre historique</b> (catégorie Épargne, badge teal). Votre reste à vivre reflète donc exactement l'argent réellement disponible.</p>
                         <p><b>Supprimer la ligne</b> dans l'historique annule instantanément la contribution sur l'objectif — aucune désynchronisation possible.</p>
-                        <p class="text-xs text-teal-600 dark:text-teal-400 font-medium pt-1">💡 Le champ "Déjà épargné" n'existe plus — les objectifs se remplissent uniquement via les contributions pour garantir la traçabilité totale.</p>
+                        <p class="text-xs text-teal-600 dark:text-teal-400 font-medium pt-1">Le champ "Déjà épargné" n'existe plus — les objectifs se remplissent uniquement via les contributions pour garantir la traçabilité totale.</p>
                     </div>
                 </div>
 
@@ -825,7 +782,7 @@
 
 
     <!-- MODAL GESTION DES CATÉGORIES -->
-    <div id="category-modal" class="modal-anim hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
+    <div id="category-modal" class="mb-sheet mb-sheet--wide modal-anim hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 sm:p-6 md:p-8 shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-y-auto flex flex-col border border-transparent dark:border-slate-700">
             <div class="flex justify-between items-center mb-6 sticky top-0 bg-white dark:bg-slate-800 z-10 pb-4 border-b border-slate-100 dark:border-slate-700">
                 <h2 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
@@ -1016,7 +973,7 @@
     </div>
 
     <!-- MODAL CONSEIL MENSUEL -->
-    <div id="advice-modal" class="modal-anim hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
+    <div id="advice-modal" class="mb-sheet modal-anim hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 sm:p-6 md:p-8 shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-y-auto flex flex-col border border-transparent dark:border-slate-700">
             <div class="flex justify-between items-center mb-6 sticky top-0 bg-white dark:bg-slate-800 z-10 pb-4 border-b border-slate-100 dark:border-slate-700">
                 <div class="flex items-center gap-3">
@@ -1044,7 +1001,7 @@
     </div>
 
     <!-- MODAL ABONNEMENTS & CHARGES FIXES -->
-    <div id="fixed-charges-modal" class="modal-anim hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
+    <div id="fixed-charges-modal" class="mb-sheet modal-anim hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 sm:p-6 md:p-8 shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-y-auto flex flex-col border border-transparent dark:border-slate-700">
             <div class="flex justify-between items-center mb-6 sticky top-0 bg-white dark:bg-slate-800 z-10 pb-4 border-b border-slate-100 dark:border-slate-700">
                 <div class="flex items-center gap-3">
@@ -1072,7 +1029,7 @@
     </div>
 
     <!-- MODAL OBJECTIFS D'ÉPARGNE -->
-    <div id="goals-modal" class="modal-anim hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
+    <div id="goals-modal" class="mb-sheet modal-anim hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity">
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 sm:p-6 md:p-8 shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-y-auto flex flex-col border border-transparent dark:border-slate-700">
             <div class="flex justify-between items-center mb-6 sticky top-0 bg-white dark:bg-slate-800 z-10 pb-4 border-b border-slate-100 dark:border-slate-700">
                 <div class="flex items-center gap-3">
@@ -1109,5 +1066,6 @@
     </div>
 
     <script src="./app.js"></script>
+    <script src="./ui.js"></script>
 </body>
 </html>

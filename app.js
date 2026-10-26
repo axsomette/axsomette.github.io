@@ -842,7 +842,7 @@
                     <div class="category-card-anim ${col.light} border ${col.border} rounded-2xl p-4">
                         <div class="flex items-start justify-between gap-3 mb-3">
                             <div class="flex items-center gap-2.5 min-w-0">
-                                <span class="text-2xl leading-none shrink-0">${goal.emoji || '🎯'}</span>
+                                <span class="w-10 h-10 rounded-xl bg-white/70 dark:bg-slate-900/40 ${col.text} flex items-center justify-center shrink-0"><i data-lucide="flag" class="w-5 h-5"></i></span>
                                 <div class="min-w-0">
                                     <p class="font-bold text-slate-800 dark:text-slate-100 truncate">${escapeHtml(goal.name)}</p>
                                     ${deadlineStr ? `<p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Objectif : ${deadlineStr}</p>` : ''}
@@ -868,7 +868,7 @@
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-bold ${col.text}">${pct}%</span>
-                            <span class="text-[10px] text-slate-400 dark:text-slate-500">${isComplete ? 'Objectif atteint 🎉' : `Il reste ${formatCurrency(remaining / 100)}`}</span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500">${isComplete ? 'Objectif atteint' : `Il reste ${formatCurrency(remaining / 100)}`}</span>
                         </div>
 
                         ${!isComplete ? `
@@ -964,13 +964,11 @@
             form.innerHTML = `
                 <div class="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-4 mt-2">
                     <h4 class="font-bold text-slate-700 dark:text-slate-200 mb-4 text-sm flex items-center gap-2">
-                        <span class="w-5 h-5 bg-indigo-100 dark:bg-indigo-500/20 rounded-md flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-xs">✦</span>
+                        <span class="w-5 h-5 bg-indigo-100 dark:bg-indigo-500/20 rounded-md flex items-center justify-center text-indigo-600 dark:text-indigo-400"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg></span>
                         ${editId ? 'Modifier l\'objectif' : 'Nouvel objectif'}
                     </h4>
                     <div class="space-y-3">
                         <div class="flex gap-2 items-center">
-                            <input type="text" id="goal-emoji" value="${existing?.emoji || '🎯'}" maxlength="2"
-                                   class="w-12 h-10 text-center text-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 shrink-0">
                             <input type="text" id="goal-name" placeholder="Nom de l'objectif (ex: Vacances…)" value="${escapeHtml(existing?.name || '')}"
                                    class="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:text-white dark:placeholder-slate-500">
                         </div>
@@ -1024,7 +1022,7 @@
         function saveGoalForm() {
             const name = document.getElementById('goal-name')?.value.trim();
             const targetVal = parseFloat(document.getElementById('goal-target')?.value);
-            const emoji = document.getElementById('goal-emoji')?.value.trim() || '🎯';
+            const emoji = document.getElementById('goal-emoji')?.value.trim() || '';
             const colorId = document.querySelector('input[name="goal-color"]:checked')?.value || 'indigo';
 
             if (!name) { showToast("Donnez un nom à votre objectif.", "error"); return; }
@@ -1083,7 +1081,7 @@
                 const pct = goal.targetCents > 0 ? Math.min(100, Math.round((goal.savedCents / goal.targetCents) * 100)) : 0;
                 html += `
                     <div class="flex items-center gap-3 cursor-pointer" onclick="openGoalsModal()">
-                        <span class="text-lg leading-none shrink-0">${goal.emoji || '🎯'}</span>
+                        <span class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700/50 ${col.text} flex items-center justify-center shrink-0"><i data-lucide="flag" class="w-4 h-4"></i></span>
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-center mb-0.5">
                                 <span class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">${escapeHtml(goal.name)}</span>
@@ -1293,20 +1291,20 @@
 
             // — Bilan global —
             let bilanColor = 'emerald';
-            let bilanIcon = '✅';
+            let bilanIcon = 'check-circle-2';
             let bilanText = '';
             if (currRev === 0) {
                 bilanText = `Aucun revenu enregistré pour ${monthLabel(month)}. Pensez à saisir vos entrées d'argent pour obtenir un bilan complet.`;
-                bilanColor = 'slate'; bilanIcon = 'ℹ️';
+                bilanColor = 'slate'; bilanIcon = 'info';
             } else if (currReste < 0) {
                 bilanText = `Mois difficile — vos dépenses (${formatCurrency(currExp/100)}) ont dépassé vos revenus (${formatCurrency(currRev/100)}), avec un solde de <strong class="text-rose-400">−${formatCurrency(Math.abs(currReste)/100)}</strong>.`;
-                bilanColor = 'rose'; bilanIcon = '⚠️';
+                bilanColor = 'rose'; bilanIcon = 'alert-triangle';
             } else if (savingsRate !== null && savingsRate >= 20) {
                 bilanText = `Excellent mois ! Vous avez mis de côté <strong class="text-emerald-400">${Math.round(savingsRate)} %</strong> de vos revenus, soit ${formatCurrency(currReste/100)} — bien au-dessus de l'objectif recommandé de 20 %.`;
-                bilanColor = 'emerald'; bilanIcon = '🌟';
+                bilanColor = 'emerald'; bilanIcon = 'sparkles';
             } else if (savingsRate !== null && savingsRate >= 0) {
                 bilanText = `Bilan équilibré. Taux d'épargne de <strong>${Math.round(savingsRate)} %</strong> (${formatCurrency(currReste/100)} de reste à vivre). Viser 20 % ou plus renforcerait votre sécurité financière.`;
-                bilanColor = 'blue'; bilanIcon = '📊';
+                bilanColor = 'blue'; bilanIcon = 'bar-chart-2';
             }
 
             if (hasPrev) {
@@ -1325,7 +1323,7 @@
                     const pctText = pct !== null ? ` (+${pct} % vs mois précédent)` : ' (nouveau poste ce mois)';
                     return `<li><strong>${escapeHtml(d.cat)}</strong> : ${formatCurrency(d.curr/100)}${pctText}</li>`;
                 }).join('');
-                sections.push({ title: 'Hausses notables', color: 'amber', icon: '📈', html: `<ul class="list-none space-y-1">${lines}</ul>` });
+                sections.push({ title: 'Hausses notables', color: 'amber', icon: 'trending-up', html: `<ul class="list-none space-y-1">${lines}</ul>` });
             }
 
             // — Économies réalisées —
@@ -1334,7 +1332,7 @@
                     const pct = d.prev > 0 ? Math.round((Math.abs(d.delta) / d.prev) * 100) : 0;
                     return `<li><strong>${escapeHtml(d.cat)}</strong> : ${formatCurrency(d.curr/100)} (−${pct} % vs mois précédent)</li>`;
                 }).join('');
-                sections.push({ title: 'Économies réalisées', color: 'emerald', icon: '💚', html: `<ul class="list-none space-y-1">${lines}</ul>` });
+                sections.push({ title: 'Économies réalisées', color: 'emerald', icon: 'piggy-bank', html: `<ul class="list-none space-y-1">${lines}</ul>` });
             }
 
             // — Dépassements de budget —
@@ -1342,7 +1340,7 @@
                 const lines = overBudget.map(d =>
                     `<li><strong>${escapeHtml(d.cat)}</strong> : ${formatCurrency(d.amt/100)} dépensés sur ${formatCurrency(d.lim/100)} prévus — <span class="text-rose-400 font-bold">+${formatCurrency(d.over/100)} de trop</span></li>`
                 ).join('');
-                sections.push({ title: 'Dépassements de budget', color: 'rose', icon: '🚨', html: `<ul class="list-none space-y-1">${lines}</ul>` });
+                sections.push({ title: 'Dépassements de budget', color: 'rose', icon: 'alert-octagon', html: `<ul class="list-none space-y-1">${lines}</ul>` });
             }
 
             // — Recommandations —
@@ -1360,7 +1358,7 @@
 
             if (reco.length > 0) {
                 const lines = reco.slice(0, 3).map(r => `<li>${r}</li>`).join('');
-                sections.push({ title: 'Recommandations', color: 'indigo', icon: '💡', html: `<ul class="list-none space-y-2">${lines}</ul>` });
+                sections.push({ title: 'Recommandations', color: 'indigo', icon: 'lightbulb', html: `<ul class="list-none space-y-2">${lines}</ul>` });
             }
 
             // — Rendu HTML —
@@ -1380,7 +1378,7 @@
                 html += `
                     <div class="list-item-anim border rounded-xl p-4 ${cls}">
                         <div class="flex items-center gap-2 mb-2">
-                            <span class="text-base">${sec.icon}</span>
+                            <i data-lucide="${sec.icon}" class="w-4 h-4 shrink-0"></i>
                             <h3 class="font-bold text-sm">${sec.title}</h3>
                         </div>
                         <div class="text-sm leading-relaxed">${body}</div>
@@ -1393,6 +1391,7 @@
             }
 
             container.innerHTML = html;
+            lucide.createIcons({ root: container });
         }
 
         // ─────────────────────────────────────────────────────────────────────
@@ -1684,11 +1683,11 @@
             const { score, details } = computeHealthScore(totalRevenusCents, totalDepensesCents, filteredData, totalsLarge);
 
             let label, colorRing, colorText, colorBg, colorBar, emoji;
-            if (score >= 80)      { label = 'Excellent';    colorRing = 'border-emerald-400'; colorText = 'text-emerald-300'; colorBg = 'bg-emerald-500/20'; colorBar = 'bg-emerald-400'; emoji = '🌟'; }
-            else if (score >= 60) { label = 'Bon';          colorRing = 'border-blue-400';    colorText = 'text-blue-300';    colorBg = 'bg-blue-500/20';    colorBar = 'bg-blue-400';    emoji = '👍'; }
-            else if (score >= 40) { label = 'Moyen';        colorRing = 'border-amber-400';   colorText = 'text-amber-300';   colorBg = 'bg-amber-500/20';   colorBar = 'bg-amber-400';   emoji = '📊'; }
-            else if (score >= 20) { label = 'À améliorer';  colorRing = 'border-orange-400';  colorText = 'text-orange-300';  colorBg = 'bg-orange-500/20';  colorBar = 'bg-orange-400';  emoji = '⚠️'; }
-            else                  { label = 'Critique';     colorRing = 'border-rose-500';    colorText = 'text-rose-300';    colorBg = 'bg-rose-500/20';    colorBar = 'bg-rose-400';    emoji = '🔴'; }
+            if (score >= 80)      { label = 'Excellent';    colorRing = 'border-emerald-400'; colorText = 'text-emerald-300'; colorBg = 'bg-emerald-500/20'; colorBar = 'bg-emerald-400'; emoji = 'sparkles'; }
+            else if (score >= 60) { label = 'Bon';          colorRing = 'border-blue-400';    colorText = 'text-blue-300';    colorBg = 'bg-blue-500/20';    colorBar = 'bg-blue-400';    emoji = 'thumbs-up'; }
+            else if (score >= 40) { label = 'Moyen';        colorRing = 'border-amber-400';   colorText = 'text-amber-300';   colorBg = 'bg-amber-500/20';   colorBar = 'bg-amber-400';   emoji = 'bar-chart-2'; }
+            else if (score >= 20) { label = 'À améliorer';  colorRing = 'border-orange-400';  colorText = 'text-orange-300';  colorBg = 'bg-orange-500/20';  colorBar = 'bg-orange-400';  emoji = 'alert-triangle'; }
+            else                  { label = 'Critique';     colorRing = 'border-rose-500';    colorText = 'text-rose-300';    colorBg = 'bg-rose-500/20';    colorBar = 'bg-rose-400';    emoji = 'alert-octagon'; }
 
             const detailsHtml = details.map(d => `
                 <div class="flex items-center justify-between text-[10px]">
@@ -1706,11 +1705,12 @@
                         <div class="${colorBar} h-1.5 rounded-full progress-bar-anim" style="width:${score}%"></div>
                     </div>
                     <div class="flex items-center justify-between">
-                        <span class="text-[10px] ${colorText} font-bold">${emoji} ${label}</span>
+                        <span class="text-[10px] ${colorText} font-bold inline-flex items-center gap-1.5"><i data-lucide="${emoji}" class="w-3.5 h-3.5"></i>${label}</span>
                         <button onclick="toggleHealthDetails()" class="text-[10px] text-indigo-300 hover:text-white transition-colors underline" title="Détails">Détails</button>
                     </div>
                     <div id="health-details" class="hidden mt-2 space-y-1">${detailsHtml}</div>
                 </div>`;
+            lucide.createIcons({ root: el });
         }
 
         function toggleHealthDetails() {

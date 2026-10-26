@@ -9,7 +9,8 @@
     <meta name="keywords" content="budget, finance personnelle, suivi dépenses, simulateur financier, gratuit, local, sans compte">
     <meta name="author" content="Lucas Jimenez Boulot">
 
-    <link rel="icon" href="data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 20L7 9L12 14L22 4V20H2Z' fill='%234f46e5' fill-opacity='0.2'/%3E%3Cpath d='M2 20L7 9L12 14L22 4' stroke='%234f46e5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='20' cy='20' r='3' fill='%2334d399' stroke='white' stroke-width='1'/%3E%3C/svg%3E" type="image/svg+xml">
+    <link rel="icon" href="./logo/web/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="./logo/web/favicon.ico" sizes="any">
 
     <!-- Open Graph -->
     <meta property="og:title" content="MonBudget – Gérez vos finances intelligemment">
@@ -17,14 +18,17 @@
     <meta property="og:type" content="website">
     <meta name="theme-color" content="#4f46e5">
     <link rel="manifest" href="./manifest.json">
-    <link rel="apple-touch-icon" href="./icon-hd-v3.png">
+    <link rel="apple-touch-icon" href="./logo/web/apple-touch-icon.png">
 
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
     <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Figtree:wght@400;500;600;700&display=swap">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { darkMode: 'class' }
+        tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Figtree', 'system-ui', 'sans-serif'] } } } }
         if (localStorage.theme === 'dark') {
             document.documentElement.classList.add('dark');
         } else {
@@ -77,498 +81,326 @@
         .imp-arrow { animation: impArrow 1s ease-in-out infinite; }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-sans min-h-screen overflow-x-hidden transition-colors duration-300">
+<body class="mb-body text-slate-800 dark:text-slate-200 font-sans min-h-screen overflow-x-hidden transition-colors duration-300">
 
     <!-- HEADER -->
-    <header class="sticky top-0 z-40 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_-10px_rgba(0,0,0,0.4)]">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-            <!-- Logo -->
-            <div class="flex items-center gap-3 cursor-default">
-                <div class="relative flex items-center justify-center w-10 h-10 bg-gradient-to-tr from-indigo-600 to-indigo-500 rounded-xl shadow-lg shadow-indigo-200/80 dark:shadow-indigo-900/40">
-                    <svg class="w-5 h-5 text-white absolute" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M2 20L7 9L12 14L22 4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M2 20L7 9L12 14L22 4V20H2Z" fill="currentColor" fill-opacity="0.2"/>
-                    </svg>
-                    <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 border-2 border-slate-50 dark:border-slate-900 rounded-full"></div>
-                </div>
-                <div>
-                    <span class="text-lg font-black tracking-tight text-slate-800 dark:text-slate-100">Mon<span class="text-indigo-600 dark:text-indigo-400">Budget</span></span>
-                    <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] leading-none">Finance Manager</p>
-                </div>
-            </div>
+    <header class="mb-topbar">
+        <div class="hp-wrap hp-header">
+            <a href="./index.html" class="mb-brand" aria-label="MonBudget, accueil">
+                <svg class="mb-brand__tile" viewBox="0 0 256 256" aria-hidden="true"><rect width="256" height="256" rx="64" fill="#4f46e5"/><g transform="translate(128 126) scale(.92) translate(-129.5 -126.5)"><path fill="#fff" d="M47 186V100A47 47 0 0 1 128 67.55A47 47 0 0 1 209 100V128A13 13 0 0 1 183 128V100A21 21 0 0 0 141 100V186A13 13 0 0 1 115 186V100A21 21 0 0 0 73 100V186A13 13 0 0 1 47 186Z"/><circle cx="196" cy="184" r="16" fill="#34d399"/></g></svg>
+                <svg class="mb-brand__word" viewBox="6 76 856 174" aria-hidden="true" fill="none" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+                    <path class="mb-word-mon" d="M20 153 V191 M20 153 A24 24 0 0 1 68 153 V191 M68 153 A24 24 0 0 1 116 153 V191 M216 160 A31 31 0 1 1 154 160 A31 31 0 1 1 216 160 M252 129 V191 M252 160 A31 31 0 0 1 314 160 V191"/>
+                    <path class="mb-word-budget" d="M352 89 V191 M414 160 A31 31 0 1 1 352 160 A31 31 0 1 1 414 160 M441 129 V160 A31 31 0 0 0 503 160 M503 129 V191 M601 160 A31 31 0 1 1 539 160 A31 31 0 1 1 601 160 M601 89 V191 M697 160 A31 31 0 1 1 635 160 A31 31 0 1 1 697 160 M697 129 V196 A31 31 0 0 1 635 196 M731 160 H793 A31 31 0 1 0 783.92 181.92 M829 100 V174 A17 17 0 0 0 846 191 H851 M817 129 H849"/>
+                </svg>
+            </a>
 
-            <!-- Actions header -->
-            <div class="flex items-center gap-2 sm:gap-3">
-                <button onclick="toggleTheme()" class="p-2 rounded-lg text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Changer de thème">
-                    <i data-lucide="moon" id="theme-icon" class="w-4 h-4"></i>
+            <nav class="hp-header__nav" aria-label="Sections">
+                <a href="#features" class="hp-link hidden md:inline-flex">Fonctionnalités</a>
+                <a href="#donnees" class="hp-link hidden md:inline-flex">Vos données</a>
+                <button onclick="toggleTheme()" class="mb-btn mb-btn--ghost mb-btn--icon" title="Changer de thème" aria-label="Changer de thème">
+                    <i data-lucide="moon" id="theme-icon" class="w-[18px] h-[18px]"></i>
                 </button>
-                <a href="./app.html"
-                   class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-4 py-2 rounded-xl shadow-sm shadow-indigo-200 dark:shadow-indigo-900/30 transition-colors">
-                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-                    <span class="hidden sm:inline">Ouvrir l'app</span>
-                    <span class="sm:hidden">App</span>
-                </a>
-            </div>
+                <a href="./app.html" class="mb-btn mb-btn--primary">Ouvrir l'app</a>
+            </nav>
         </div>
     </header>
 
     <main>
 
         <!-- HERO -->
-        <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 text-center">
-
-            <!-- Badge -->
-            <div class="animate-fade-in-up delay-100 inline-flex items-center gap-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50 text-xs font-bold px-3.5 py-1.5 rounded-full mb-8 shadow-sm">
-                <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                100% gratuit · 100% local · Aucun compte requis
+        <section class="hp-wrap hp-hero">
+            <span class="mb-eyebrow mb-rise">Budget personnel · gratuit · 100 % local</span>
+            <h1 class="hp-display mb-rise hp-d1">Votre argent,<br>visible mois par mois.</h1>
+            <p class="hp-lead mb-rise hp-d2">Ajoutez une dépense en cinq secondes, fixez vos limites, simulez le mois prochain. Aucun compte, aucun serveur : tout reste dans votre navigateur.</p>
+            <div class="flex flex-wrap gap-3 mb-rise hp-d3">
+                <a href="./app.html" class="mb-btn mb-btn--primary hp-btn-lg">Ouvrir l'app <i data-lucide="arrow-right" class="w-[18px] h-[18px]"></i></a>
+                <a href="#features" class="mb-btn mb-btn--ghost hp-btn-lg">Voir ce qu'elle fait</a>
             </div>
+        </section>
 
-            <!-- Titre -->
-            <h1 class="animate-fade-in-up delay-200 text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-tight mb-6">
-                Voyez enfin<br>
-                où va <span class="gradient-text">votre argent</span>
-            </h1>
+        <!-- APERÇU : rail de l'année + bilan animé -->
+        <section class="hp-wrap hp-preview" aria-label="Aperçu de l'application">
+            <div class="mb-card hp-preview__card">
+                <div id="hp-rail" class="hp-rail" aria-hidden="true"></div>
+                <script>
+                    // Rail de l'année en cours : mois passés pleins, mois en cours jusqu'à aujourd'hui.
+                    (function () {
+                        var rail = document.getElementById('hp-rail');
+                        var names = ['Janv.', 'Févr.', 'Mars', 'Avr.', 'Mai', 'Juin', 'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'];
+                        var now = new Date(), cur = now.getMonth();
+                        var ratio = now.getDate() / new Date(now.getFullYear(), cur + 1, 0).getDate();
+                        names.forEach(function (n, i) {
+                            var state = i < cur ? 'past' : i === cur ? 'current' : 'future';
+                            var cell = document.createElement('div');
+                            cell.className = 'hp-rail__month hp-rail__month--' + state;
+                            var track = '';
+                            if (state === 'past') track = '<span class="mb-rail__fill hp-seg" style="width:100%;animation-delay:' + (i * 0.08).toFixed(2) + 's"></span>';
+                            if (state === 'current') track = '<span class="mb-rail__fill hp-seg" style="width:' + (ratio * 100).toFixed(1) + '%;animation-delay:' + (i * 0.08).toFixed(2) + 's"></span><span class="mb-rail__dot hp-drop" style="left:' + (ratio * 100).toFixed(1) + '%;animation-delay:' + (i * 0.08 + 0.45).toFixed(2) + 's, ' + (i * 0.08 + 1.2).toFixed(2) + 's"></span>';
+                            cell.innerHTML = '<span class="hp-rail__label">' + n + '</span><span class="mb-rail__track">' + track + '</span>';
+                            rail.appendChild(cell);
+                        });
+                    })();
+                </script>
 
-            <!-- Sous-titre -->
-            <p class="animate-fade-in-up delay-300 text-lg sm:text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-                MonBudget est un outil de gestion financière personnelle, simple, puissant et privé.
-                Conçu et utilisé au quotidien par
-                <a href="https://axsomette.github.io/lucas-jimenez-boulot/" target="_blank" rel="noopener noreferrer"
-                   class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline underline-offset-2 decoration-indigo-400/60">
-                    Lucas Jimenez Boulot
-                </a>.
-                Rien ne sort de votre appareil.
-            </p>
-
-            <!-- CTAs -->
-            <div class="animate-fade-in-up delay-400 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <a href="./app.html"
-                   class="group flex items-center gap-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-7 py-3.5 rounded-2xl shadow-lg shadow-indigo-200 dark:shadow-indigo-900/50 transition-all hover:shadow-xl hover:shadow-indigo-300/50 dark:hover:shadow-indigo-900/70 text-base">
-                    <i data-lucide="rocket" class="w-5 h-5 group-hover:translate-x-0.5 transition-transform"></i>
-                    Démarrer maintenant
-                </a>
-                <a href="#features"
-                   class="group flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium text-base transition-colors">
-                    Voir les fonctionnalités
-                    <i data-lucide="chevron-down" class="w-4 h-4 group-hover:translate-y-0.5 transition-transform"></i>
-                </a>
-            </div>
-
-            <!-- Aperçu app fictif -->
-            <div class="animate-fade-in-up delay-500 mt-16 animate-float">
-                <div class="relative max-w-3xl mx-auto" id="mockup-container">
-                    <!-- Glow -->
-                    <div class="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-transparent rounded-3xl blur-2xl -z-10 scale-95 translate-y-4"></div>
-                    <!-- Card démo -->
-                    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl shadow-2xl p-6 sm:p-8 text-left">
-                        <!-- Mini header -->
-                        <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-slate-700">
-                            <div class="flex items-center gap-2">
-                                <div class="w-3 h-3 rounded-full bg-rose-400"></div>
-                                <div class="w-3 h-3 rounded-full bg-amber-400"></div>
-                                <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
-                            </div>
-                            <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Aperçu · MonBudget</span>
-                            <div class="w-16"></div>
+                <div id="mockup-container" class="hp-mockup">
+                    <div class="hp-mockup__bilan">
+                        <p class="mb-bilan__label">Bilan du mois</p>
+                        <div class="flex flex-col gap-1">
+                            <span class="hp-mockup__caption">Reste à vivre</span>
+                            <span id="mockup-reste" class="hp-mockup__reste">1 256,50 €</span>
                         </div>
-                        <!-- Bilan -->
-                        <div class="grid grid-cols-3 gap-3 mb-5">
-                            <div class="bg-indigo-900 text-white rounded-xl p-4 col-span-3 sm:col-span-1">
-                                <p class="text-indigo-300 text-[10px] font-bold uppercase tracking-wider mb-3">Bilan du mois</p>
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-indigo-200 text-xs flex items-center gap-1.5"><i data-lucide="arrow-down-circle" class="w-3 h-3 text-emerald-400"></i> Revenus</span>
-                                    <span id="mockup-revenus" class="text-emerald-300 font-bold text-sm tabular-nums">2 500,00 €</span>
-                                </div>
-                                <div class="flex justify-between items-center mb-3">
-                                    <span class="text-indigo-200 text-xs flex items-center gap-1.5"><i data-lucide="arrow-up-circle" class="w-3 h-3 text-rose-400"></i> Dépenses</span>
-                                    <span id="mockup-depenses" class="text-rose-300 font-bold text-sm tabular-nums">1 243,50 €</span>
-                                </div>
-                                <div class="flex justify-between items-center border-t border-indigo-700/50 pt-2">
-                                    <span class="text-white text-xs font-medium">Reste à vivre</span>
-                                    <span id="mockup-reste" class="text-white font-extrabold text-lg tabular-nums">1 256,50 €</span>
-                                </div>
-                            </div>
-                            <div id="mockup-cat1" class="bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 rounded-xl p-4 hidden sm:flex flex-col gap-1.5"></div>
-                            <div id="mockup-cat2" class="bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 rounded-xl p-4 hidden sm:flex flex-col gap-1.5"></div>
+                        <div class="flex gap-6 flex-wrap">
+                            <div class="flex flex-col gap-0.5"><span class="hp-mockup__caption">Revenus</span><span id="mockup-revenus" class="text-emerald-300 font-semibold tabular-nums">2 500,00 €</span></div>
+                            <div class="flex flex-col gap-0.5"><span class="hp-mockup__caption">Dépenses</span><span id="mockup-depenses" class="text-rose-200 font-semibold tabular-nums">1 243,50 €</span></div>
                         </div>
-                        <!-- Mini liste (animée par JS) -->
-                        <div id="mockup-tx-list" class="space-y-2 min-h-[148px]"></div>
                     </div>
+                    <div id="mockup-cat1" class="hp-mockup__cat hidden sm:flex flex-col gap-1.5"></div>
+                    <div id="mockup-cat2" class="hp-mockup__cat hidden sm:flex flex-col gap-1.5"></div>
+                    <!-- Mini liste (animée par JS) -->
+                    <div id="mockup-tx-list" class="hp-mockup__list space-y-2 min-h-[148px]"></div>
+                </div>
+                <p class="hp-note">Exemple animé. Les mois passés sont des traits pleins, le mois en cours s'arrête à aujourd'hui.</p>
+            </div>
+        </section>
+
+        <!-- FONCTIONNALITÉS -->
+        <section id="features" class="hp-wrap hp-features">
+            <div class="hp-section-head">
+                <h2 class="hp-h2">Conçu pour être utilisé, pas pour être appris.</h2>
+                <p class="hp-lead">Chaque fonctionnalité répond à une vraie question. Pas de superflu, pas de complexité inutile.</p>
+            </div>
+
+            <div class="hp-feat">
+                <div class="hp-feat__text">
+                    <span class="mb-eyebrow">Limites</span>
+                    <h3 class="hp-h3">Fixer des limites. Les tenir vraiment.</h3>
+                    <p>Créez vos catégories, donnez un plafond à chaque poste. La barre se met à jour en temps réel : pas de mauvaise surprise en fin de mois.</p>
+                </div>
+                <div class="hp-feat__vis mb-card hp-stack">
+                    <div class="hp-bar-row"><div class="hp-bar-row__head"><span>Essentielles</span><span class="tabular-nums">1 214 / 1 300 €</span></div><div class="hp-track"><span class="hp-fill hp-grow" style="width:93%"></span></div><span class="hp-status hp-status--warn">Bientôt au plafond · 86 € restants</span></div>
+                    <div class="hp-bar-row"><div class="hp-bar-row__head"><span>Abonnements</span><span class="tabular-nums">96 / 110 €</span></div><div class="hp-track"><span class="hp-fill hp-grow" style="width:87%;background:#0ea5e9"></span></div><span class="hp-status">Tout est prélevé</span></div>
+                    <div class="hp-bar-row"><div class="hp-bar-row__head"><span>Loisirs / Autre</span><span class="tabular-nums hp-danger">397,82 / 350 €</span></div><div class="hp-track"><span class="hp-fill hp-grow hp-fill--over" style="width:100%"></span></div><span class="hp-status hp-status--danger">Dépassé de 47,82 €</span></div>
+                </div>
+            </div>
+
+            <div class="hp-feat hp-feat--rev">
+                <div class="hp-feat__text">
+                    <span class="mb-eyebrow">Simulateur</span>
+                    <h3 class="hp-h3">Savoir avant de dépenser.</h3>
+                    <p>Fixez un plafond pour le mois prochain. Le simulateur répartit l'effort catégorie par catégorie : vous savez où couper avant d'y être forcé.</p>
+                </div>
+                <div class="hp-feat__vis mb-card hp-stack">
+                    <div class="flex justify-between items-baseline gap-3 flex-wrap"><span class="font-semibold">Plafond visé le mois prochain</span><span class="hp-num-lg">1 650 €</span></div>
+                    <div class="hp-sim-row"><span>Loisirs / Autre</span><span class="hp-muted tabular-nums">398 €</span><span class="hp-good tabular-nums">→ 260 €</span></div>
+                    <div class="hp-sim-row"><span>Essentielles</span><span class="hp-muted tabular-nums">1 214 €</span><span class="hp-good tabular-nums">→ 1 194 €</span></div>
+                    <div class="hp-sim-row"><span>Abonnements</span><span class="hp-muted tabular-nums">96 €</span><span class="tabular-nums font-semibold">96 €</span></div>
+                    <div class="hp-sim-row"><span>Épargne</span><span class="hp-muted tabular-nums">100 €</span><span class="tabular-nums font-semibold">100 €</span></div>
+                </div>
+            </div>
+
+            <div class="hp-feat">
+                <div class="hp-feat__text">
+                    <span class="mb-eyebrow">Comparer</span>
+                    <h3 class="hp-h3">Deux mois côte à côte, les dérives en évidence.</h3>
+                    <p>Choisissez deux périodes et comparez-les poste par poste. Barres, radar, courbe : ce qui a changé dans vos habitudes saute aux yeux.</p>
+                </div>
+                <div class="hp-feat__vis mb-card hp-stack">
+                    <div class="flex gap-5 text-sm hp-muted"><span class="flex items-center gap-1.5"><span class="hp-key" style="background:#c7cbe0"></span>Septembre</span><span class="flex items-center gap-1.5"><span class="hp-key" style="background:#4f46e5"></span>Octobre</span></div>
+                    <div class="hp-bars">
+                        <div><span style="height:88%" class="hp-bar hp-bar--a"></span><span style="height:92%" class="hp-bar"></span></div>
+                        <div><span style="height:9%" class="hp-bar hp-bar--a"></span><span style="height:8%" class="hp-bar"></span></div>
+                        <div><span style="height:18%" class="hp-bar hp-bar--a"></span><span style="height:30%" class="hp-bar"></span></div>
+                        <div><span style="height:8%" class="hp-bar hp-bar--a"></span><span style="height:8%" class="hp-bar"></span></div>
+                    </div>
+                    <div class="hp-bars-labels"><span>Essentielles</span><span>Abonnements</span><span class="hp-danger font-bold">Loisirs +67 %</span><span>Épargne</span></div>
+                </div>
+            </div>
+
+            <div class="hp-feat hp-feat--rev">
+                <div class="hp-feat__text">
+                    <span class="mb-eyebrow">Épargne & santé</span>
+                    <h3 class="hp-h3">Épargner avec une vraie traçabilité.</h3>
+                    <p>Chaque versement vers un objectif devient une ligne de l'historique et ajuste votre reste à vivre. Le score de santé, calculé sur quatre critères (épargne, budgets, charges fixes, objectifs), dit honnêtement où vous en êtes.</p>
+                </div>
+                <div class="hp-feat__vis mb-card flex flex-wrap gap-7 items-center">
+                    <div class="flex-1 min-w-[220px] hp-stack">
+                        <div class="hp-bar-row"><div class="hp-bar-row__head"><span>Vacances été 2027</span><span class="tabular-nums hp-muted">49 %</span></div><div class="hp-track"><span class="hp-fill hp-grow" style="width:49.6%;background:#10b981"></span></div><span class="hp-status tabular-nums">1 240 € sur 2 500 €</span></div>
+                        <div class="hp-bar-row"><div class="hp-bar-row__head"><span>Fonds d'urgence</span><span class="tabular-nums hp-muted">62 %</span></div><div class="hp-track"><span class="hp-fill hp-grow" style="width:62%;background:#10b981"></span></div><span class="hp-status tabular-nums">3 100 € sur 5 000 €</span></div>
+                    </div>
+                    <svg viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Score de santé : 72 sur 100" class="hp-gauge">
+                        <circle cx="64" cy="64" r="52" fill="none" stroke-width="12" class="hp-gauge__bg"/>
+                        <circle cx="64" cy="64" r="52" fill="none" stroke="#4f46e5" stroke-width="12" stroke-linecap="round" stroke-dasharray="235.2 326.7" transform="rotate(-90 64 64)"/>
+                        <circle cx="12.9" cy="73.7" r="7" fill="#10b981" class="hp-gauge__dot" stroke-width="3"/>
+                        <text x="64" y="73" text-anchor="middle" class="hp-gauge__txt">72</text>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="hp-feat">
+                <div class="hp-feat__text">
+                    <span class="mb-eyebrow">Tendances</span>
+                    <h3 class="hp-h3">Les tendances qui méritent votre attention.</h3>
+                    <p>Postes dominants, évolution mois par mois, bilan sur plusieurs mois : les analyses arrivent toutes seules, sans que vous ayez à chercher.</p>
+                </div>
+                <div class="hp-feat__vis mb-card hp-stack">
+                    <div class="hp-insight"><i data-lucide="check-circle-2" class="hp-good"></i><span>Vous avez un solde positif de <strong class="tabular-nums">742,18 €</strong>.</span></div>
+                    <div class="hp-insight"><i data-lucide="trending-up" class="hp-warn"></i><span>Vos dépenses ont augmenté de <strong>5 %</strong> par rapport au mois dernier.</span></div>
+                    <div class="hp-insight"><i data-lucide="pie-chart" class="hp-muted"></i><span><strong>Essentielles</strong> représente 67 % de vos dépenses ce mois-ci.</span></div>
+                    <div class="hp-insight"><i data-lucide="alert-triangle" class="hp-danger"></i><span><strong>Loisirs / Autre</strong> a dépassé sa limite de <strong class="tabular-nums">47,82 €</strong>.</span></div>
                 </div>
             </div>
         </section>
 
-        <!-- FEATURES -->
-        <section id="features" class="bg-white dark:bg-slate-800/50 border-y border-slate-200 dark:border-slate-700/50 py-20">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-
-                <div class="text-center mb-14">
-                    <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mb-4">Conçu pour être utilisé,<br class="hidden sm:block"> pas pour être appris</h2>
-                    <p class="text-slate-500 dark:text-slate-400 text-lg max-w-xl mx-auto">Chaque fonctionnalité répond à une vraie question. Pas de superflu, pas de complexité inutile.</p>
+        <!-- VOS DONNÉES -->
+        <section id="donnees" class="hp-dark">
+            <div class="hp-wrap hp-dark__inner">
+                <div class="hp-dark__text">
+                    <span class="mb-eyebrow" style="color:#94a3b8">Vos données</span>
+                    <h2 class="hp-h2" style="color:#f1f5f9">Elles ne quittent jamais votre appareil.</h2>
+                    <p class="hp-lead" style="color:#cbd5e1">Aucun serveur, aucun compte, aucune publicité. Tout vit dans votre navigateur. Un export JSON pour sauvegarder, un import pour tout remettre en place sur un autre appareil, en fusionnant ou en remplaçant.</p>
+                    <dl class="hp-facts">
+                        <div><dt>gratuit, pour toujours</dt><dd>0 €</dd></div>
+                        <div><dt>donnée transmise</dt><dd>0</dd></div>
+                        <div><dt>stocké chez vous</dt><dd>100 %</dd></div>
+                    </dl>
+                    <div class="hp-file">
+                        <span class="hp-file__icon"><i data-lucide="download" class="w-[18px] h-[18px]"></i></span>
+                        <div class="min-w-0 flex-1"><div class="font-semibold truncate tabular-nums">budget_global_2026-10-26.json</div><div class="text-sm" style="color:#94a3b8">Entrées, catégories, limites et historique</div></div>
+                        <i data-lucide="check" class="w-[18px] h-[18px]" style="color:#34d399"></i>
+                    </div>
+                    <pre class="hp-code">{
+  <span class="k">"date"</span>: <span class="s">"2026-10-01"</span>,
+  <span class="k">"desc"</span>: <span class="s">"Salaire"</span>,
+  <span class="k">"amountCents"</span>: <span class="n">245000</span>,
+  <span class="k">"type"</span>: <span class="s">"income"</span>
+}</pre>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Import animé (piloté par le script d'origine) -->
+                <div class="hp-dark__demo">
+                    <div id="import-panel-inner" class="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800" style="min-height:260px;">
 
-                    <!-- Feature 1 -->
-                    <div class="card-hover bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm">
-                        <div class="w-11 h-11 bg-indigo-100 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center mb-4 shadow-sm">
-                            <i data-lucide="list" class="w-5 h-5"></i>
+                        <!-- State 1: Drop zone -->
+                        <div id="imp-state-drop" class="absolute inset-0 p-5 flex flex-col items-center justify-center gap-3 transition-opacity duration-500">
+                            <div class="imp-float flex flex-col items-center gap-1">
+                                <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-500/10 border-2 border-indigo-300 dark:border-indigo-700 rounded-xl flex items-center justify-center shadow-md">
+                                    <i data-lucide="file-json" class="w-6 h-6 text-indigo-500 dark:text-indigo-400"></i>
+                                </div>
+                                <div class="imp-arrow text-indigo-400 dark:text-indigo-500">
+                                    <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                                </div>
+                            </div>
+                            <div class="w-full border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl py-3 px-3 text-center">
+                                <p class="text-sm font-semibold text-slate-500 dark:text-slate-400">Glissez votre fichier ici</p>
+                                <p class="text-xs font-mono text-indigo-500 dark:text-indigo-400 mt-0.5 truncate">budget_global_2026-10-26.json</p>
+                            </div>
                         </div>
-                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg mb-2">Votre argent, visible mois par mois</h3>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Ajoutez une entrée en 5 secondes. Filtrez par mois, catégorie ou montant. Votre historique complet, toujours là.</p>
-                    </div>
 
-                    <!-- Feature 2 -->
-                    <div class="card-hover bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm">
-                        <div class="w-11 h-11 bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center mb-4 shadow-sm">
-                            <i data-lucide="folder-tree" class="w-5 h-5"></i>
+                        <!-- State 2: Loading/parsing -->
+                        <div id="imp-state-load" class="absolute inset-0 p-5 hidden flex flex-col justify-center gap-4 transition-opacity duration-500">
+                            <div class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/40 rounded-xl">
+                                <div class="w-9 h-9 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg flex items-center justify-center shrink-0 shadow-sm">
+                                    <i data-lucide="file-json" class="w-4 h-4 text-indigo-500"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">budget_global_2026-10-26.json</p>
+                                    <p class="text-xs text-indigo-500 dark:text-indigo-400 mt-0.5">Lecture des données…</p>
+                                </div>
+                            </div>
+                            <div class="space-y-1.5 px-1">
+                                <div class="flex justify-between text-xs text-slate-500 dark:text-slate-400">
+                                    <span>Importation en cours</span>
+                                    <span id="imp-pct" class="tabular-nums font-bold">0%</span>
+                                </div>
+                                <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                    <div id="imp-bar" class="h-2 bg-indigo-500 rounded-full" style="width:0%;transition:none"></div>
+                                </div>
+                            </div>
                         </div>
-                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg mb-2">Fixer des limites. Les tenir vraiment.</h3>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Créez vos propres catégories, définissez un plafond par poste. La barre de progression se met à jour en temps réel. Pas de mauvaises surprises en fin de mois.</p>
-                    </div>
 
-                    <!-- Feature 3 -->
-                    <div class="card-hover bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm">
-                        <div class="w-11 h-11 bg-purple-100 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center mb-4 shadow-sm">
-                            <i data-lucide="target" class="w-5 h-5"></i>
+                        <!-- State 3: Success with data -->
+                        <div id="imp-state-done" class="absolute inset-0 p-5 hidden flex flex-col gap-2 transition-opacity duration-500">
+                            <div class="flex items-center justify-between mb-1 px-0.5">
+                                <div class="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                                    <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                                    <span class="text-sm font-bold">127 entrées importées</span>
+                                </div>
+                                <span class="text-[11px] text-slate-500 bg-slate-100 dark:bg-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-full font-medium">4 mois</span>
+                            </div>
+                            <div class="imp-row flex justify-between items-center p-2.5 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700/50" style="opacity:0;transform:translateY(6px);transition:opacity 0.35s ease,transform 0.35s ease">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 px-1.5 py-0.5 rounded shrink-0">Loyer</span>
+                                    <span class="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">Loyer</span>
+                                </div>
+                                <span class="text-sm font-bold text-slate-600 dark:text-slate-300 tabular-nums shrink-0">− 832,00 €</span>
+                            </div>
+                            <div class="imp-row flex justify-between items-center p-2.5 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700/50" style="opacity:0;transform:translateY(6px);transition:opacity 0.35s ease 0.12s,transform 0.35s ease 0.12s">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="text-[10px] font-bold bg-orange-100 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-800/50 px-1.5 py-0.5 rounded shrink-0">Restaurants</span>
+                                    <span class="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">Umami</span>
+                                </div>
+                                <span class="text-sm font-bold text-slate-600 dark:text-slate-300 tabular-nums shrink-0">− 72,00 €</span>
+                            </div>
+                            <div class="imp-row flex justify-between items-center p-2.5 bg-white dark:bg-slate-800 rounded-xl border border-emerald-200 dark:border-emerald-800/30" style="opacity:0;transform:translateY(6px);transition:opacity 0.35s ease 0.24s,transform 0.35s ease 0.24s">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 px-1.5 py-0.5 rounded shrink-0">Revenu</span>
+                                    <span class="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">Salaire</span>
+                                </div>
+                                <span class="text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums shrink-0">+ 2 200,00 €</span>
+                            </div>
                         </div>
-                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg mb-2">Savoir avant de dépenser</h3>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Fixez un objectif pour le mois prochain. L'algorithme répartit les efforts catégorie par catégorie. Vous savez exactement où couper avant d'y être forcé.</p>
                     </div>
-
-                    <!-- Feature 4 -->
-                    <div class="card-hover bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm">
-                        <div class="w-11 h-11 bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center mb-4 shadow-sm">
-                            <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
-                        </div>
-                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg mb-2">Deux mois côte à côte, les dérives en évidence</h3>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Sélectionnez deux périodes et comparez-les poste par poste. Barres, radar, courbe : visualisez instantanément ce qui a changé dans vos habitudes.</p>
-                    </div>
-
-                    <!-- Feature 5 -->
-                    <div class="card-hover bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-700/40 rounded-2xl p-6 shadow-sm">
-                        <div class="w-11 h-11 bg-teal-100 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center mb-4 shadow-sm">
-                            <i data-lucide="piggy-bank" class="w-5 h-5"></i>
-                        </div>
-                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg mb-2">Épargner avec une vraie traçabilité</h3>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Créez des objectifs d'épargne. Chaque versement génère une ligne dans l'historique — votre reste à vivre s'ajuste en temps réel. Supprimer la ligne annule la contribution. Zéro désynchronisation.</p>
-                    </div>
-
-                    <!-- Feature 6 -->
-                    <div class="card-hover bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700/40 rounded-2xl p-6 shadow-sm">
-                        <div class="w-11 h-11 bg-indigo-100 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center mb-4 shadow-sm">
-                            <i data-lucide="heart-pulse" class="w-5 h-5"></i>
-                        </div>
-                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg mb-2">Votre score de santé financière</h3>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Un score 0–100 calculé en temps réel sur 4 critères : taux d'épargne, respect des budgets, ratio charges fixes, objectifs actifs. Un tableau de bord honnête, pas un chiffre décoratif.</p>
-                    </div>
-
-                    <!-- Feature 7 -->
-                    <div class="card-hover bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm">
-                        <div class="w-11 h-11 bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center mb-4 shadow-sm">
-                            <i data-lucide="sparkles" class="w-5 h-5"></i>
-                        </div>
-                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg mb-2">Les tendances qui méritent votre attention</h3>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Postes dominants, évolution mois par mois, bilan global multi-mois. Des insights générés automatiquement, sans que vous ayez à chercher.</p>
-                    </div>
-
-                    <!-- Feature 8 -->
-                    <div class="card-hover bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm">
-                        <div class="w-11 h-11 bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-xl flex items-center justify-center mb-4 shadow-sm">
-                            <i data-lucide="shield-check" class="w-5 h-5"></i>
-                        </div>
-                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg mb-2">Vos données ne quittent jamais votre appareil</h3>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Aucun serveur, aucun compte, zéro pub. Tout vit dans votre navigateur. Un export JSON pour sauvegarder, un import pour restaurer. C'est tout.</p>
-                    </div>
+                    <p class="text-sm mt-3" style="color:#94a3b8">Changez d'appareil ou réinstallez votre navigateur : un import remet tout en place.</p>
                 </div>
             </div>
         </section>
 
-        <!-- SECTION CONFIANCE -->
-        <section class="py-16 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
-                <div class="p-6">
-                    <p class="text-3xl font-black text-indigo-600 dark:text-indigo-400 mb-1">0 €</p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Pour toujours gratuit</p>
-                </div>
-                <div class="p-6">
-                    <p class="text-3xl font-black text-indigo-600 dark:text-indigo-400 mb-1">0</p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Donnée transmise</p>
-                </div>
-                <div class="p-6">
-                    <p class="text-3xl font-black text-indigo-600 dark:text-indigo-400 mb-1">100%</p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Stocké chez vous</p>
-                </div>
-                <div class="p-6">
-                    <p class="text-3xl font-black text-indigo-600 dark:text-indigo-400 mb-1">∞</p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Mois archivés</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION EXPORT / IMPORT -->
-        <section class="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-800/50 border-y border-slate-200 dark:border-slate-700/50">
-            <div class="max-w-5xl mx-auto">
-
-                <div class="text-center mb-10 sm:mb-14">
-                    <p class="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-3">Portabilité totale</p>
-                    <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mb-3">Vos données vous appartiennent</h2>
-                    <p class="text-slate-500 dark:text-slate-400 max-w-lg mx-auto leading-relaxed">Exportez en un clic, importez sur n'importe quel appareil. Rien ne transite par un serveur. Tout se passe entre vous et votre fichier.</p>
-                </div>
-
-                <!-- Three equal-height cards -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
-
-                    <!-- Card 1: Export -->
-                    <div class="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm flex flex-col card-hover">
-                        <div class="w-11 h-11 bg-indigo-100 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center mb-4 shadow-sm">
-                            <i data-lucide="download" class="w-5 h-5"></i>
-                        </div>
-                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base mb-2">Exportez en un clic</h3>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-5 flex-1">Un fichier <code class="font-mono text-xs bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded">.json</code> complet : entrées, catégories, budgets max et historique. Lisible, portable, permanent.</p>
-
-                        <!-- File preview visual -->
-                        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-xl p-4 space-y-3 shadow-sm">
-                            <div class="flex items-center gap-3">
-                                <!-- File icon -->
-                                <div class="w-10 h-12 shrink-0 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-700/50 rounded-lg flex flex-col items-center justify-center gap-0.5 shadow-sm">
-                                    <i data-lucide="braces" class="w-4 h-4 text-indigo-500 dark:text-indigo-400"></i>
-                                    <span class="text-[8px] font-black text-indigo-600 dark:text-indigo-400 leading-none">.json</span>
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">budget_global_2026-04-26.json</p>
-                                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">8.2 KB · 26 avr. 2026</p>
-                                    <div class="flex items-center gap-1 mt-1">
-                                        <span class="text-[9px] font-medium bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded">127 entrées</span>
-                                        <span class="text-[9px] font-medium bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded">4 mois</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-center gap-2 bg-indigo-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl cursor-default select-none opacity-90 w-full">
-                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                                Exporter mes données
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card 2: JSON format -->
-                    <div class="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm flex flex-col card-hover">
-                        <div class="w-11 h-11 bg-slate-200 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 rounded-xl flex items-center justify-center mb-4 shadow-sm">
-                            <i data-lucide="braces" class="w-5 h-5"></i>
-                        </div>
-                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base mb-2">Format ouvert</h3>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4">Chaque entrée, catégorie et limite de budget, lisible par n'importe quel outil. Aucun verrou propriétaire.</p>
-
-                        <!-- Code preview card -->
-                        <div class="flex-1 bg-slate-900 dark:bg-slate-950 border border-slate-700/60 rounded-xl font-mono text-[9.5px] leading-[1.6] overflow-hidden flex flex-col shadow-lg" style="min-height:200px;">
-                            <div class="flex items-center gap-1.5 px-3 py-2 border-b border-slate-700/80 bg-slate-800/80 shrink-0">
-                                <div class="w-2 h-2 rounded-full bg-rose-400"></div>
-                                <div class="w-2 h-2 rounded-full bg-amber-400"></div>
-                                <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
-                                <span class="text-slate-400 text-[9px] ml-2 truncate">budget_global_2026-04-26.json</span>
-                            </div>
-                            <div class="p-3 overflow-hidden flex-1 relative">
-                                <span class="text-slate-400">{</span><br>
-                                <span class="ml-2 text-violet-400">"expenses"</span><span class="text-slate-500">: [</span><br>
-                                <span class="ml-3 text-slate-500">{</span><br>
-                                <span class="ml-4 text-sky-400">"type"</span><span class="text-slate-500">: </span><span class="text-amber-300">"expense"</span><span class="text-slate-500">,</span><br>
-                                <span class="ml-4 text-sky-400">"desc"</span><span class="text-slate-500">: </span><span class="text-amber-300">"Loyer"</span><span class="text-slate-500">,</span><br>
-                                <span class="ml-4 text-sky-400">"amountCents"</span><span class="text-slate-500">: </span><span class="text-rose-300">83200</span><span class="text-slate-500">,</span><br>
-                                <span class="ml-4 text-sky-400">"date"</span><span class="text-slate-500">: </span><span class="text-emerald-300">"2026-04-01"</span><span class="text-slate-500">,</span><br>
-                                <span class="ml-4 text-sky-400">"smallCat"</span><span class="text-slate-500">: </span><span class="text-amber-300">"Loyer"</span><span class="text-slate-500">,</span><br>
-                                <span class="ml-4 text-sky-400">"largeCat"</span><span class="text-slate-500">: </span><span class="text-amber-300">"Essentielles"</span><br>
-                                <span class="ml-3 text-slate-500">},</span><br>
-                                <span class="ml-3 text-slate-500">{</span><br>
-                                <span class="ml-4 text-sky-400">"type"</span><span class="text-slate-500">: </span><span class="text-emerald-300">"income"</span><span class="text-slate-500">,</span><br>
-                                <span class="ml-4 text-sky-400">"desc"</span><span class="text-slate-500">: </span><span class="text-amber-300">"Revenu"</span><span class="text-slate-500">,</span><br>
-                                <span class="ml-4 text-sky-400">"amountCents"</span><span class="text-slate-500">: </span><span class="text-emerald-300">220000</span><br>
-                                <span class="ml-3 text-slate-500">}</span><br>
-                                <span class="ml-2 text-slate-500">],</span><br>
-                                <span class="ml-2 text-violet-400">"categories"</span><span class="text-slate-500">: {</span><br>
-                                <span class="ml-3 text-amber-300">"Essentielles"</span><span class="text-slate-500">: {</span><br>
-                                <span class="ml-4 text-sky-400">"limitCents"</span><span class="text-slate-500">: </span><span class="text-rose-300">170000</span><br>
-                                <span class="ml-3 text-slate-500">}</span><br>
-                                <span class="ml-2 text-slate-500">},</span><br>
-                                <span class="ml-2 text-violet-400">"exportDate"</span><span class="text-slate-500">: </span><span class="text-emerald-300">"2026-04-26T18:59:25.027Z"</span><br>
-                                <span class="text-slate-400">}</span>
-                                <div class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-slate-900 dark:from-slate-950 to-transparent pointer-events-none"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card 3: Import with animation -->
-                    <div class="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm flex flex-col card-hover">
-                        <div class="w-11 h-11 bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center mb-4 shadow-sm">
-                            <i data-lucide="upload" class="w-5 h-5"></i>
-                        </div>
-                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base mb-2">Importez n'importe où</h3>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4">Changez d'appareil ou réinstallez votre navigateur : un import remet tout en place. Fusion ou remplacement complet, au choix.</p>
-
-                        <!-- Animated import preview -->
-                        <div id="import-panel-inner" class="flex-1 relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800" style="min-height:200px;">
-
-                            <!-- State 1: Drop zone -->
-                            <div id="imp-state-drop" class="absolute inset-0 p-4 flex flex-col items-center justify-center gap-3 transition-opacity duration-500">
-                                <div class="imp-float flex flex-col items-center gap-1">
-                                    <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-500/10 border-2 border-indigo-300 dark:border-indigo-700 rounded-xl flex items-center justify-center shadow-md">
-                                        <i data-lucide="file-json" class="w-6 h-6 text-indigo-500 dark:text-indigo-400"></i>
-                                    </div>
-                                    <div class="imp-arrow text-indigo-400 dark:text-indigo-500">
-                                        <i data-lucide="chevron-down" class="w-4 h-4"></i>
-                                    </div>
-                                </div>
-                                <div class="w-full border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg py-3 px-3 text-center">
-                                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">Glissez votre fichier ici</p>
-                                    <p class="text-[10px] font-mono text-indigo-500 dark:text-indigo-400 mt-0.5 truncate">budget_global_2026-04-26.json</p>
-                                </div>
-                            </div>
-
-                            <!-- State 2: Loading/parsing -->
-                            <div id="imp-state-load" class="absolute inset-0 p-4 hidden flex flex-col justify-center gap-4 transition-opacity duration-500">
-                                <div class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/40 rounded-xl">
-                                    <div class="w-9 h-9 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg flex items-center justify-center shrink-0 shadow-sm">
-                                        <i data-lucide="file-json" class="w-4 h-4 text-indigo-500"></i>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">budget_global_2026-04-26.json</p>
-                                        <p class="text-[10px] text-indigo-500 dark:text-indigo-400 mt-0.5">Lecture des données...</p>
-                                    </div>
-                                </div>
-                                <div class="space-y-1.5 px-1">
-                                    <div class="flex justify-between text-[10px] text-slate-400">
-                                        <span>Importation en cours</span>
-                                        <span id="imp-pct" class="tabular-nums font-bold">0%</span>
-                                    </div>
-                                    <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                        <div id="imp-bar" class="h-2 bg-indigo-500 rounded-full" style="width:0%;transition:none"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- State 3: Success with data -->
-                            <div id="imp-state-done" class="absolute inset-0 p-4 hidden flex flex-col gap-2 transition-opacity duration-500">
-                                <div class="flex items-center justify-between mb-1 px-0.5">
-                                    <div class="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
-                                        <span class="text-xs font-bold">127 entrées importées</span>
-                                    </div>
-                                    <span class="text-[9px] text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full font-medium">4 mois</span>
-                                </div>
-                                <div class="imp-row flex justify-between items-center p-2.5 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700/50" style="opacity:0;transform:translateY(6px);transition:opacity 0.35s ease,transform 0.35s ease">
-                                    <div class="flex items-center gap-2 min-w-0">
-                                        <span class="text-[9px] font-bold bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 px-1.5 py-0.5 rounded shrink-0">Loyer</span>
-                                        <span class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">Loyer</span>
-                                    </div>
-                                    <span class="text-xs font-bold text-slate-600 dark:text-slate-300 tabular-nums shrink-0">− 832,00 €</span>
-                                </div>
-                                <div class="imp-row flex justify-between items-center p-2.5 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700/50" style="opacity:0;transform:translateY(6px);transition:opacity 0.35s ease 0.12s,transform 0.35s ease 0.12s">
-                                    <div class="flex items-center gap-2 min-w-0">
-                                        <span class="text-[9px] font-bold bg-orange-100 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-800/50 px-1.5 py-0.5 rounded shrink-0">Restaurants</span>
-                                        <span class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">Umami</span>
-                                    </div>
-                                    <span class="text-xs font-bold text-slate-600 dark:text-slate-300 tabular-nums shrink-0">− 72,00 €</span>
-                                </div>
-                                <div class="imp-row flex justify-between items-center p-2.5 bg-white dark:bg-slate-800 rounded-xl border border-emerald-200 dark:border-emerald-800/30" style="opacity:0;transform:translateY(6px);transition:opacity 0.35s ease 0.24s,transform 0.35s ease 0.24s">
-                                    <div class="flex items-center gap-2 min-w-0">
-                                        <span class="text-[9px] font-bold bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 px-1.5 py-0.5 rounded shrink-0">REVENU</span>
-                                        <span class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">Revenu</span>
-                                    </div>
-                                    <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 tabular-nums shrink-0">+ 2 200,00 €</span>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION CRÉATEUR -->
-        <section class="py-16 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-3xl mx-auto">
-                <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-8 sm:p-10 shadow-sm flex flex-col sm:flex-row items-center gap-8">
-                    <!-- Avatar -->
-                    <div class="shrink-0">
-                        <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-indigo-900/50 overflow-hidden">
-                            <img src="https://axsomette.github.io/lucas-jimenez-boulot/assets/img/avatar.jpg"
-                                 alt="Lucas Jimenez Boulot"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                                 class="w-full h-full object-cover">
-                            <div style="display:none" class="w-full h-full items-center justify-center">
-                                <i data-lucide="user" class="w-10 h-10 text-white/80"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Texte -->
-                    <div class="flex-1 text-center sm:text-left">
-                        <p class="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-2">Créé par</p>
-                        <h3 class="text-2xl font-black text-slate-900 dark:text-white mb-3">Lucas Jimenez Boulot</h3>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm sm:text-base leading-relaxed mb-6">
-                            Je suis développeur Full-Stack, et j'ai construit MonBudget parce que je n'avais rien trouvé
-                            qui soit à la fois simple, privé, et vraiment utile. Je l'utilise tous les mois et je le mets à
-                            disposition gratuitement, sans conditions.
-                        </p>
-                        <a href="https://axsomette.github.io/lucas-jimenez-boulot/" target="_blank" rel="noopener noreferrer"
-                           class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-sm shadow-indigo-200 dark:shadow-indigo-900/30 transition-all hover:shadow-md text-sm">
-                            <i data-lucide="external-link" class="w-4 h-4"></i>
-                            Voir mon portfolio
-                        </a>
+        <!-- CRÉATEUR -->
+        <section class="hp-wrap hp-maker">
+            <div class="mb-card hp-maker__card">
+                <div class="hp-maker__avatar">
+                    <img src="https://axsomette.github.io/lucas-jimenez-boulot/assets/img/avatar.jpg"
+                         alt="Lucas Jimenez Boulot"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                         class="w-full h-full object-cover">
+                    <div style="display:none" class="w-full h-full items-center justify-center">
+                        <i data-lucide="user" class="w-10 h-10 text-white/80"></i>
                     </div>
                 </div>
-            </div>
-        </section>
-
-        <!-- CTA FINAL -->
-        <section class="py-20 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-3xl mx-auto text-center bg-gradient-to-br from-indigo-600 to-indigo-700 dark:from-indigo-700 dark:to-indigo-900 rounded-3xl p-10 sm:p-14 shadow-2xl shadow-indigo-300/30 dark:shadow-indigo-900/60 relative overflow-hidden">
-                <!-- Déco fond -->
-                <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-                <div class="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
-
-                <div class="relative z-10">
-                    <div class="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                        <i data-lucide="trending-up" class="w-7 h-7 text-white"></i>
-                    </div>
-                    <h2 class="text-2xl sm:text-3xl font-black text-white mb-4 leading-tight">Votre premier mois analysé<br class="hidden sm:block"> en moins de 2 minutes</h2>
-                    <p class="text-indigo-200 mb-8 text-base sm:text-lg leading-relaxed">Aucune installation, aucun compte. Ouvrez l'app, entrez vos données, et voyez où part réellement votre argent.</p>
-                    <a href="./app.html"
-                       class="inline-flex items-center gap-2.5 bg-white text-indigo-700 hover:bg-indigo-50 font-black px-8 py-4 rounded-2xl shadow-lg transition-all hover:shadow-xl text-base">
-                        <i data-lucide="rocket" class="w-5 h-5"></i>
-                        Ouvrir MonBudget
+                <div class="flex-1 flex flex-col gap-3 text-center sm:text-left items-center sm:items-start">
+                    <span class="mb-eyebrow">Créé par</span>
+                    <h2 class="hp-h3">Lucas Jimenez Boulot</h2>
+                    <p class="hp-body">Je suis développeur Full-Stack, et j'ai construit MonBudget parce que je n'avais rien trouvé qui soit à la fois simple, privé, et vraiment utile. Je l'utilise tous les mois et je le mets à disposition gratuitement, sans conditions.</p>
+                    <a href="https://axsomette.github.io/lucas-jimenez-boulot/" target="_blank" rel="noopener noreferrer" class="mb-btn mb-btn--ghost">
+                        <i data-lucide="external-link" class="w-4 h-4"></i>
+                        Voir mon portfolio
                     </a>
                 </div>
             </div>
         </section>
 
+        <!-- CTA FINAL -->
+        <section class="hp-wrap hp-cta">
+            <svg viewBox="34.5 31.5 190 190" width="72" height="72" aria-hidden="true"><path fill="#4f46e5" d="M46 186V100A48 48 0 0 1 128 66.12A48 48 0 0 1 210 100V128A14 14 0 0 1 182 128V100A20 20 0 0 0 142 100V186A14 14 0 0 1 114 186V100A20 20 0 0 0 74 100V186A14 14 0 0 1 46 186Z"/><circle cx="196" cy="184" r="17" fill="#10b981"/></svg>
+            <h2 class="hp-h2">Votre premier mois analysé en moins de deux minutes.</h2>
+            <p class="hp-lead">Aucune installation, aucun compte. Ouvrez l'app, entrez vos lignes, et voyez où part réellement votre argent.</p>
+            <a href="./app.html" class="mb-btn mb-btn--primary hp-btn-lg">Ouvrir MonBudget</a>
+        </section>
+
     </main>
 
     <!-- FOOTER -->
-    <footer class="border-t border-slate-200 dark:border-slate-800 py-8 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-400 dark:text-slate-500">
-            <div class="flex items-center gap-2">
+    <footer class="hp-footer">
+        <div class="hp-wrap hp-footer__inner">
+            <div class="flex items-center gap-2 flex-wrap">
                 <span>&copy; <span id="current-year"></span></span>
-                <a href="https://axsomette.github.io/lucas-jimenez-boulot/" target="_blank" rel="noopener noreferrer"
-                   class="font-bold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-1.5">
-                    Lucas Jimenez Boulot
-                    <i data-lucide="external-link" class="w-3 h-3"></i>
-                </a>
+                <a href="https://axsomette.github.io/lucas-jimenez-boulot/" target="_blank" rel="noopener noreferrer" class="hp-footer__link">Lucas Jimenez Boulot</a>
                 <span>alias Axsom</span>
             </div>
-            <div class="flex items-center gap-4">
-                <a href="https://axsomette.github.io/lucas-jimenez-boulot/" target="_blank" rel="noopener noreferrer"
-                   class="hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors flex items-center gap-1.5 font-medium">
-                    <i data-lucide="user" class="w-3.5 h-3.5"></i>
-                    Mon portfolio
-                </a>
-                <a href="./app.html" class="hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors flex items-center gap-1.5 font-medium">
-                    <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
-                    Accéder à l'app
-                </a>
-                <span class="bg-slate-200/60 dark:bg-slate-800 px-2.5 py-1 rounded-md tracking-wider font-medium text-xs">v2.01</span>
+            <div class="flex items-center gap-5 flex-wrap">
+                <a href="https://axsomette.github.io/lucas-jimenez-boulot/" target="_blank" rel="noopener noreferrer" class="hp-footer__link">Mon portfolio</a>
+                <a href="./app.html" class="hp-footer__link">Accéder à l'app</a>
+                <span class="mb-badge">v2.3.1</span>
             </div>
         </div>
     </footer>
