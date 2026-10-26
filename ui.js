@@ -78,6 +78,16 @@
     // app.js reconstruit les options du filtre à chaque rendu : on suit.
     new MutationObserver(buildRail).observe(select, { childList: true });
     select.addEventListener('change', buildRail);
+
+    // Le mois peut aussi changer sans passer par le rail : on resynchronise après chaque changeMonthFilter().
+    if (typeof window.changeMonthFilter === 'function') {
+        const originalChange = window.changeMonthFilter;
+        window.changeMonthFilter = function () {
+            const result = originalChange.apply(this, arguments);
+            buildRail();
+            return result;
+        };
+    }
     buildRail();
 })();
 
