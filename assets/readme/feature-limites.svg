@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340" width="600" height="340" role="img" aria-labelledby="t"><title id="t">Limites par catégorie</title><desc>Trois catégories avec leur plafond : Essentielles 1 214 sur 1 300 €, Abonnements 96 sur 110 €, Loisirs dépassé de 47,82 €.</desc><style>
+.d{font-family:Outfit,'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif}.t{font-family:Figtree,'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif}
+.rise{animation:rise .5s cubic-bezier(.2,0,0,1) both}
+.grow{transform-box:fill-box;transform-origin:0 50%;animation:grow .7s cubic-bezier(.2,0,0,1) both}
+.growy{transform-box:fill-box;transform-origin:50% 100%;animation:growy .7s cubic-bezier(.2,0,0,1) both}
+.draw{stroke-dasharray:1 2;stroke-dashoffset:0;animation:draw 1s cubic-bezier(.65,0,.35,1) both}
+.odo{animation:odo 1.5s cubic-bezier(.2,0,0,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+@keyframes grow{from{transform:scaleX(0)}}
+@keyframes growy{from{transform:scaleY(0)}}
+@keyframes draw{from{stroke-dashoffset:1.01}}
+@keyframes odo{from{transform:translateY(0)}}
+
+.eb{font-family:Figtree,'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.6px;fill:#4f46e5}
+.h{font-family:Outfit,'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:25px;font-weight:700;fill:#0f172a;letter-spacing:-.5px}
+.p{font-family:Figtree,'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:14.5px;fill:#475569}
+.l{font-family:Figtree,'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:14px;fill:#0f172a;font-weight:600}
+.s{font-family:Figtree,'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:12.5px;fill:#5b6578}
+.n{font-family:Figtree,'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:13.5px;fill:#475569;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important}}</style><rect x=".5" y=".5" width="599" height="339" rx="22" fill="#fff" stroke="#e2e8f0"/><text x="28" y="42" class="eb">LIMITES</text><text x="28" y="76" class="h">Fixer des limites. Les tenir vraiment.</text><text x="28" y="102" class="p">Un plafond par catégorie, une barre qui suit en temps réel.</text><g class="rise" style="animation-delay:0.30s"><text x="28" y="146" class="l">Essentielles</text><text x="572" y="146" class="n" text-anchor="end" fill="#475569" style="fill:#475569">1 214 / 1 300 €</text></g><rect x="28" y="156" width="544" height="10" rx="5" fill="#eef0f6"/><rect class="grow" style="animation-delay:0.40s;animation-duration:1s" x="28" y="156" width="505.9" height="10" rx="5" fill="#4f46e5"/><g class="rise" style="animation-delay:1.00s"><text x="28" y="184" class="s" style="fill:#5b6578">Bientôt au plafond · 86 € restants</text></g><g class="rise" style="animation-delay:0.55s"><text x="28" y="212" class="l">Abonnements</text><text x="572" y="212" class="n" text-anchor="end" fill="#475569" style="fill:#475569">96 / 110 €</text></g><rect x="28" y="222" width="544" height="10" rx="5" fill="#eef0f6"/><rect class="grow" style="animation-delay:0.65s;animation-duration:1s" x="28" y="222" width="473.3" height="10" rx="5" fill="#0ea5e9"/><g class="rise" style="animation-delay:1.25s"><text x="28" y="250" class="s" style="fill:#5b6578">Tout est prélevé</text></g><g class="rise" style="animation-delay:0.80s"><text x="28" y="278" class="l">Loisirs / Autre</text><text x="572" y="278" class="n" text-anchor="end" fill="#be123c" style="fill:#be123c">397,82 / 350 €</text></g><rect x="28" y="288" width="544" height="10" rx="5" fill="#eef0f6"/><rect class="grow" style="animation-delay:0.90s;animation-duration:1s" x="28" y="288" width="544.0" height="10" rx="5" fill="#be123c"/><g class="rise" style="animation-delay:1.50s"><text x="28" y="316" class="s" style="fill:#be123c">Dépassé de 47,82 €</text></g></svg>
